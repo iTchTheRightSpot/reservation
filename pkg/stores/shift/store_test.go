@@ -1,4 +1,4 @@
-package staff
+package shift
 
 import (
 	"context"
@@ -6,13 +6,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/database"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/shift"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
-	profileStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"
+	staffStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"log"
 	"reflect"
 	"testing"
+	"time"
 )
 
 var dbInstance *sql.DB
@@ -58,44 +59,40 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 	return tx, rollback
 }
 
-func TestStaffStore(t *testing.T) {
+func TestShiftStore(t *testing.T) {
 	mockLog := utils.NewMockLogger()
 
-	t.Run("should save staff", func(t *testing.T) {
+	t.Run("should save staff shift", func(t *testing.T) {
 		con, fn := setupTest(t)
 		defer fn()
 
 		ctx := context.Background()
-		repo := profileStore.NewProfileStore(mockLog, con)
 
 		// given
-		p := profile.Profile{
-			Firstname: "frog",
-			Lastname:  "lastname",
-			Email:     "frog@email.com",
+		staffObj := staff.Staff{StaffUUID: uuid.New()}
+		if _, err := staffStore.NewStaffStore(mockLog, con).Save(ctx, &staffObj); err != nil {
+			t.Errorf("%s", err)
 		}
 
-		if _, err := repo.Save(ctx, &p); err != nil {
-			t.Errorf("%s", err)
+		s := &shift.Shift{
+			StaffId: staffObj.StaffId,
+			Start:   mockLog.Date(),
+			End:     mockLog.Date().Add(time.Duration(8) * time.Hour),
 		}
 
 		// method to test
-		s := staff.Staff{
-			StaffUUID: uuid.New(),
-			ProfileId: &p.ProfileId,
-		}
-
-		save, err := NewStaffStore(mockLog, con).Save(ctx, &s)
+		save, err := NewShiftStore(mockLog, con).Save(ctx, s)
 		if err != nil {
-			t.Errorf("%s", err)
+			t.Errorf("shift not saved")
 		}
 
-		if save.StaffId < 1 {
-			t.Errorf("staff not saved. Expected StaffId > 0, got %d", save.StaffId)
+		// assert
+		if save.ShiftId < 1 {
+			t.Errorf("shift not save as ShiftId is less than 1")
 		}
 
-		if !reflect.DeepEqual(&s, save) {
-			t.Errorf("staff not saved correctly. expected: %+v, Got: %+v", s, save)
+		if !reflect.DeepEqual(save, s) {
+			t.Errorf("expect %v to equal %v", s, save)
 		}
 	})
 }

@@ -1,6 +1,10 @@
 # Landscape ERP application powered by Go
 
 # Development docs
-1. [Validator](https://github.com/go-playground/validator/blob/master/README.md).
-2. [Go migrate](https://github.com/golang-migrate/migrate/blob/master/README.md).
-3. [PG](https://neon.tech/postgresql/postgresql-tutorial/postgresql-foreign-key).
+1. [Db Schema](https://dbdiagram.io/d/landscape-erp-66303ee65b24a634d01e83ea).
+2. [Validator](https://github.com/go-playground/validator/blob/master/README.md).
+3. [Go migrate](https://github.com/golang-migrate/migrate/blob/master/README.md).
+4. [PG](https://neon.tech/postgresql/postgresql-tutorial/postgresql-foreign-key).
+
+## Cmd
+1. `migrate create -ext sql -dir ./pkg/database/migrations/ -seq create_users_table`.

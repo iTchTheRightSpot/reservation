@@ -57,7 +57,7 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 	return tx, rollback
 }
 
-func TestRole(t *testing.T) {
+func TestRoleStore(t *testing.T) {
 	mockLog := utils.NewMockLogger()
 
 	t.Run("should save role", func(t *testing.T) {

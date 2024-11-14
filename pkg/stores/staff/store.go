@@ -25,10 +25,6 @@ func (dep *staffStore) Save(ctx context.Context, r *staff.Staff) (*staff.Staff, 
 		return nil, fmt.Errorf("staff object is nil")
 	}
 
-	if r.ProfileId == nil {
-		return nil, fmt.Errorf("profile_id cannot be nil to save a staff")
-	}
-
 	q := `
     	INSERT INTO staff (staff_uuid, bio, profile_id)
         VALUES ($1, $2, $3)

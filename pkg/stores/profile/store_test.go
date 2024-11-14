@@ -55,7 +55,7 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 	return tx, rollback
 }
 
-func TestProfile(t *testing.T) {
+func TestProfileStore(t *testing.T) {
 	mockLog := utils.NewMockLogger()
 
 	t.Run("should Save profile when image_key is not null", func(t *testing.T) {
