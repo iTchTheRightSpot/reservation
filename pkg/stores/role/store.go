@@ -1,0 +1,44 @@
+package role
+
+import (
+	"context"
+	"fmt"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/model"
+	"github.com/iTchTheRightSpot/erp-golang/utils"
+)
+
+type IRoleStore interface {
+	Save(ctx context.Context, r *model.Role) (*model.Role, error)
+}
+
+type roleStore struct {
+	logger utils.ILogger
+	db     utils.Db
+}
+
+func NewRoleStore(l utils.ILogger, db utils.Db) IRoleStore {
+	return &roleStore{logger: l, db: db}
+}
+
+func (dep *roleStore) Save(ctx context.Context, r *model.Role) (*model.Role, error) {
+	if r == nil {
+		return nil, fmt.Errorf("role object is nil")
+	}
+
+	q := `
+    	INSERT INTO role (role, profile_id)
+        VALUES ($1, $2)
+        RETURNING role_id, role, profile_id
+	`
+
+	row := dep.db.QueryRowContext(ctx, q, r.Role, r.ProfileId)
+
+	err := row.Scan(&r.RoleId, &r.Role, &r.ProfileId)
+
+	if err != nil {
+		dep.logger.Error(err)
+		return nil, fmt.Errorf("exception saving to role table")
+	}
+
+	return r, nil
+}

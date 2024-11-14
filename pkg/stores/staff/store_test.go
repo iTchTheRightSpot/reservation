@@ -1,11 +1,14 @@
-package profile
+package staff
 
 import (
 	"context"
 	"database/sql"
+	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/database"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/model/profile"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/model/staff"
+	profileStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"log"
 	"reflect"
@@ -55,44 +58,15 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 	return tx, rollback
 }
 
-func TestProfile(t *testing.T) {
+func TestStaff(t *testing.T) {
 	mockLog := utils.NewMockLogger()
 
-	t.Run("should Save profile when image_key is not null", func(t *testing.T) {
+	t.Run("should save staff", func(t *testing.T) {
 		con, fn := setupTest(t)
 		defer fn()
 
-		repo := NewProfileStore(mockLog, con)
-
-		// given
-		key := "image-key"
-		p := profile.Profile{
-			Firstname: "frog",
-			Lastname:  "lastname",
-			Email:     "frog@email.com",
-			ImageKey:  &key,
-		}
-
-		// method to test
-		save, err := repo.Save(context.Background(), &p)
-		if err != nil {
-			t.Errorf("%s", err)
-		}
-
-		if save.ProfileId < 1 {
-			t.Errorf("profile not saved. Expected ProfileId > 0, got %d", save.ProfileId)
-		}
-
-		if !reflect.DeepEqual(&p, save) {
-			t.Errorf("staff not saved correctly. expected: %+v, Got: %+v", p, save)
-		}
-	})
-
-	t.Run("should Save profile when image_key is null", func(t *testing.T) {
-		con, fn := setupTest(t)
-		defer fn()
-
-		repo := NewProfileStore(mockLog, con)
+		ctx := context.Background()
+		repo := profileStore.NewProfileStore(mockLog, con)
 
 		// given
 		p := profile.Profile{
@@ -101,18 +75,27 @@ func TestProfile(t *testing.T) {
 			Email:     "frog@email.com",
 		}
 
+		if _, err := repo.Save(ctx, &p); err != nil {
+			t.Errorf("%s", err)
+		}
+
 		// method to test
-		save, err := repo.Save(context.Background(), &p)
+		s := staff.Staff{
+			StaffUUID: uuid.New(),
+			ProfileId: &p.ProfileId,
+		}
+
+		save, err := NewStaffStore(mockLog, con).Save(ctx, &s)
 		if err != nil {
 			t.Errorf("%s", err)
 		}
 
-		if save.ProfileId < 1 {
-			t.Errorf("profile not saved. Expected ProfileId > 0, got %d", save.ProfileId)
+		if save.StaffId < 1 {
+			t.Errorf("staff not saved. Expected StaffId > 0, got %d", save.StaffId)
 		}
 
-		if !reflect.DeepEqual(&p, save) {
-			t.Errorf("staff not saved correctly. expected: %+v, Got: %+v", p, save)
+		if !reflect.DeepEqual(&s, save) {
+			t.Errorf("staff not saved correctly. expected: %+v, Got: %+v", s, save)
 		}
 	})
 }

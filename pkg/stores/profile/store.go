@@ -8,7 +8,7 @@ import (
 )
 
 type IProfileStore interface {
-	save(ctx context.Context, p *profile.Profile) (*profile.Profile, error)
+	Save(ctx context.Context, p *profile.Profile) (*profile.Profile, error)
 }
 
 type profileStore struct {
@@ -20,7 +20,7 @@ func NewProfileStore(l utils.ILogger, db utils.Db) IProfileStore {
 	return &profileStore{logger: l, db: db}
 }
 
-func (dep *profileStore) save(ctx context.Context, p *profile.Profile) (*profile.Profile, error) {
+func (dep *profileStore) Save(ctx context.Context, p *profile.Profile) (*profile.Profile, error) {
 	if p == nil {
 		return nil, fmt.Errorf("profile object is nil")
 	}
@@ -36,7 +36,7 @@ func (dep *profileStore) save(ctx context.Context, p *profile.Profile) (*profile
 
 	if err != nil {
 		dep.logger.Error(err)
-		return nil, fmt.Errorf("exception saving to profile details")
+		return nil, fmt.Errorf("exception saving to profile table")
 	}
 
 	return p, nil
