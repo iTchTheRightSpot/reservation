@@ -1,6 +1,8 @@
 package shift
 
-import "time"
+import (
+	"time"
+)
 
 type Shift struct {
 	ShiftId   uint64    `json:"shift_id"`
@@ -8,4 +10,15 @@ type Shift struct {
 	Start     time.Time `json:"start"`
 	End       time.Time `json:"shift_end"`
 	IsEnabled bool      `json:"is_enabled"`
+}
+
+type TimeSlot struct {
+	IsVisible bool   `json:"is_visible" validate:"required"`
+	Start     string `json:"start" validate:"required"`
+	Duration  int    `json:"duration" validate:"required"`
+}
+
+type ShiftDto struct {
+	StaffUUID string      `json:"staff_uuid"`
+	TimeSlots *[]TimeSlot `json:"time_slots" validate:"required,dive,required"`
 }
