@@ -1,4 +1,4 @@
-# Landscape ERP powered by Go
+# Landscape ERP application powered by Go
 
 # Development docs
 1. [Validator](https://github.com/go-playground/validator/blob/master/README.md).

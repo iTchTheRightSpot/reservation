@@ -3,7 +3,7 @@ package staff
 import (
 	"context"
 	"fmt"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/model/staff"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 )
 

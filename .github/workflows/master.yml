@@ -24,6 +24,11 @@ jobs:
       - name: Docker compose up
         run: docker compose up -d
 
+      - name: Env
+        run: |
+          openssl genrsa -out keys/private.key 2048
+          openssl rsa -in keys/private.key -pubout -out keys/public.key
+
       - name: Install dependencies
         run: go get .
 

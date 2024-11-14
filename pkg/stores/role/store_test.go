@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/database"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/model"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/model/profile"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
 	profileStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"log"
@@ -79,7 +79,7 @@ func TestRole(t *testing.T) {
 		}
 
 		// method to test
-		r := model.Role{Role: model.STAFF, ProfileId: p.ProfileId}
+		r := models.Role{Role: models.STAFF, ProfileId: p.ProfileId}
 
 		save, err := NewRoleStore(mockLog, con).Save(ctx, &r)
 		if err != nil {
