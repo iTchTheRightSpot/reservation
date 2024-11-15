@@ -2,9 +2,10 @@ package models
 
 import "time"
 
-type StaffJwtObj struct {
-	Roles     []RoleEnum `json:"roles"`
-	StaffUUID string     `json:"staff_uuid"`
+type JwtObj struct {
+	Roles    []RoleEnum `json:"roles"`
+	UserUUID string     `json:"user_uuid"`
+	ExpireAt time.Time  `json:"expire_at"`
 }
 
 type JwtResponse struct {

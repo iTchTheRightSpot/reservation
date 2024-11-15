@@ -19,7 +19,7 @@ type HandlerRegistry struct {
 
 func NewHandlerRegistry(mux *http.ServeMux, db *sql.DB, l utils.ILogger, e *config.SecretVariables) *HandlerRegistry {
 	s := newServiceRegistry(db, l, e)
-	m := &middleware.Middleware{Logger: l, Auth: s.JwtService, CookieName: e.CookieName}
+	m := &middleware.Middleware{Logger: l, Auth: s.JwtService, Param: e.CookieParam}
 	return &HandlerRegistry{
 		log:        l,
 		env:        e,

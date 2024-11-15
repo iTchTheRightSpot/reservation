@@ -24,9 +24,9 @@ func (w *wrappedWriter) WriteHeader(statusCode int) {
 }
 
 type Middleware struct {
-	Logger     utils.ILogger
-	Auth       auth.IJwtService
-	CookieName string
+	Logger utils.ILogger
+	Auth   auth.IJwtService
+	Param  *utils.CookieParam
 }
 
 type middlewareFunc func(http.Handler) http.Handler
@@ -90,7 +90,7 @@ func (dep *Middleware) logging(next http.Handler) http.Handler {
 
 func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Cookies() == nil {
+		if r.Cookies() == nil || len(r.Cookies()) == 0 {
 			dep.Logger.Error("no cookie present")
 			utils.ConstructErrorResponse(
 				w,
@@ -102,8 +102,8 @@ func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 			return
 		}
 
-		cookie, err := r.Cookie(dep.CookieName)
-		if err != nil {
+		cookie, err := r.Cookie(dep.Param.CookieName)
+		if err != nil || cookie == nil {
 			dep.Logger.Error(err)
 			utils.ConstructErrorResponse(
 				w,
@@ -115,7 +115,7 @@ func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 			return
 		}
 
-		u, err := dep.Auth.ValidateJwt(cookie.Value)
+		obj, err := dep.Auth.ValidateJwt(cookie.Value)
 		if err != nil {
 			dep.Logger.Error(err)
 			utils.ConstructErrorResponse(
@@ -128,11 +128,26 @@ func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 			return
 		}
 
-		// TODO refresh token if about to expire
+		// validate if token is about to expire
+		isTokenExpiringSoon := func(now time.Time, t time.Time, expirationInSeconds int) bool {
+			return t.Before(now.Add(time.Duration(expirationInSeconds) * time.Second))
+		}
+
+		b := !strings.HasSuffix(r.URL.Path, "/logout")
+		if b && isTokenExpiringSoon(dep.Logger.Date(), obj.ExpireAt, utils.TwoDaysInSeconds) {
+			if o, err := dep.Auth.GenerateJwt(obj, utils.TwoDaysInSeconds); err != nil {
+				dep.Logger.Error(fmt.Sprintf("failed to refresh token %s", err))
+			} else {
+				cookie.Value = o.Token
+				cookie.Expires = o.ExpireAt
+				http.SetCookie(w, cookie)
+				dep.Logger.Log("Refreshed jwt")
+			}
+		}
 
 		// add the user to the context
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, utils.UserContextKey, u)
+		ctx = context.WithValue(ctx, utils.UserContextKey, obj)
 		r = r.WithContext(ctx)
 
 		// call the function if the token is valid
@@ -142,9 +157,9 @@ func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 
 func (dep *Middleware) Permission(next http.Handler, roles ...models.RoleEnum) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		obj := r.Context().Value(utils.UserContextKey).(*models.StaffJwtObj)
+		obj := r.Context().Value(utils.UserContextKey).(*models.JwtObj)
 
-		var contains bool
+		contains := false
 		for i := 0; i < len(roles); i++ {
 			contains = slices.ContainsFunc(obj.Roles, func(role models.RoleEnum) bool {
 				return reflect.DeepEqual(role, roles[i])

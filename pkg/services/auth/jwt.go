@@ -40,8 +40,8 @@ func loadPublicKey(path string) (*rsa.PublicKey, error) {
 }
 
 type IJwtService interface {
-	GenerateJwt(o *models.StaffJwtObj, expirationInSeconds int) (*models.JwtResponse, error)
-	ValidateJwt(str string) (*models.StaffJwtObj, error)
+	GenerateJwt(o *models.JwtObj, expirationInSeconds int) (*models.JwtResponse, error)
+	ValidateJwt(str string) (*models.JwtObj, error)
 }
 
 type jwtService struct {
@@ -64,13 +64,13 @@ func NewJwtService(l utils.ILogger, env *config.SecretVariables) IJwtService {
 	return &jwtService{logger: l, privKey: priv, pubKey: pub}
 }
 
-func (dep *jwtService) GenerateJwt(o *models.StaffJwtObj, expirationInSeconds int) (*models.JwtResponse, error) {
+func (dep *jwtService) GenerateJwt(o *models.JwtObj, expirationInSeconds int) (*models.JwtResponse, error) {
 	exp := dep.logger.Date().Add(time.Duration(expirationInSeconds) * time.Second)
 
 	claims := jwt.NewWithClaims(
 		jwt.SigningMethodRS256,
 		jwt.MapClaims{
-			"sub": o.StaffUUID,
+			"sub": o.UserUUID,
 			"obj": o,
 			"iss": "Landscape ERP",
 			"exp": exp.Unix(),
@@ -87,7 +87,7 @@ func (dep *jwtService) GenerateJwt(o *models.StaffJwtObj, expirationInSeconds in
 	return &models.JwtResponse{Token: token, ExpireAt: exp}, nil
 }
 
-func (dep *jwtService) ValidateJwt(str string) (*models.StaffJwtObj, error) {
+func (dep *jwtService) ValidateJwt(str string) (*models.JwtObj, error) {
 	token, err := jwt.Parse(str, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			errMsg := fmt.Sprintf("unexpected signing method: %v", token.Header["alg"])
@@ -108,19 +108,24 @@ func (dep *jwtService) ValidateJwt(str string) (*models.StaffJwtObj, error) {
 		return nil, fmt.Errorf("failed to parse claims")
 	}
 
+	exp, err := claims.GetExpirationTime()
+	if err != nil {
+		dep.logger.Error(err)
+		return nil, fmt.Errorf("jwt expired")
+	}
+
 	obj, ok := claims["obj"].(map[string]interface{})
 	if !ok {
 		dep.logger.Error("invalid object format in claims")
 		return nil, fmt.Errorf("invalid object format in claims")
 	}
 
-	staffObj := &models.StaffJwtObj{}
-
-	if staffUUID, ok := obj["staff_uuid"].(string); ok {
-		staffObj.StaffUUID = staffUUID
+	jwtObj := &models.JwtObj{ExpireAt: exp.Time}
+	if uuid, ok := obj["user_uuid"].(string); ok {
+		jwtObj.UserUUID = uuid
 	} else {
-		dep.logger.Error("missing or invalid StaffUUID in token claims")
-		return nil, fmt.Errorf("invalid or missing StaffUUID")
+		dep.logger.Error("missing or invalid UserUUID in token claims")
+		return nil, fmt.Errorf("invalid or missing UserUUID")
 	}
 
 	if roles, ok := obj["roles"].([]interface{}); ok {
@@ -133,12 +138,12 @@ func (dep *jwtService) ValidateJwt(str string) (*models.StaffJwtObj, error) {
 				return nil, fmt.Errorf("invalid role format in token claims")
 			}
 		}
-		staffObj.Roles = parsedRoles
+		jwtObj.Roles = parsedRoles
 	} else {
 		dep.logger.Error("missing or invalid roles in token claims")
 		return nil, fmt.Errorf("invalid or missing roles")
 	}
 
 	dep.logger.Log("successfully validated jwt")
-	return staffObj, nil
+	return jwtObj, nil
 }

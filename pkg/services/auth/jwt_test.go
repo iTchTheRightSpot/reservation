@@ -22,16 +22,15 @@ func TestJwtService(t *testing.T) {
 		}
 
 		s := NewJwtService(utils.NewMockLogger(), con)
-		twoDaysInSeconds := 172800
 
 		// method to test
 		roles := []models.RoleEnum{models.STAFF, models.DEVELOPER, models.USER}
-		o := &models.StaffJwtObj{Roles: roles, StaffUUID: "staff-uuid"}
+		o := &models.JwtObj{Roles: roles, UserUUID: "staff-uuid"}
 
 		// method to test & assert
 		obj, err := s.GenerateJwt(
 			o,
-			twoDaysInSeconds,
+			utils.TwoDaysInSeconds,
 		)
 		if err != nil {
 			t.Errorf("exception generating jwt %s", err)
@@ -43,8 +42,12 @@ func TestJwtService(t *testing.T) {
 			t.Errorf("exception validating generated token jwt %s", err)
 		}
 
-		if !reflect.DeepEqual(o, v) {
-			t.Errorf("expect %s to equal given %s", o, v)
+		if !reflect.DeepEqual(o.UserUUID, v.UserUUID) {
+			t.Errorf("expect %s to equal given %s", o.UserUUID, v.UserUUID)
+		}
+
+		if !reflect.DeepEqual(o.Roles, v.Roles) {
+			t.Errorf("expect %s to equal given %s", o.Roles, v.Roles)
 		}
 	})
 }
