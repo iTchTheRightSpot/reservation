@@ -13,7 +13,17 @@ import (
 	"time"
 )
 
-type Middleware[T any] struct {
+type wrappedWriter struct {
+	http.ResponseWriter
+	status int
+}
+
+func (w *wrappedWriter) WriteHeader(statusCode int) {
+	w.status = statusCode
+	w.ResponseWriter.WriteHeader(statusCode)
+}
+
+type Middleware struct {
 	Logger     utils.ILogger
 	Auth       auth.IJwtService
 	CookieName string
@@ -21,12 +31,12 @@ type Middleware[T any] struct {
 
 type middlewareFunc func(http.Handler) http.Handler
 
-func (dep *Middleware[T]) Initialize(router *http.ServeMux) http.Handler {
+func (dep *Middleware) Initialize(router *http.ServeMux) http.Handler {
 	stack := dep.createStack(dep.timeout, dep.logging)
 	return stack(router)
 }
 
-func (dep *Middleware[T]) createStack(m ...middlewareFunc) middlewareFunc {
+func (dep *Middleware) createStack(m ...middlewareFunc) middlewareFunc {
 	return func(next http.Handler) http.Handler {
 		for i := len(m) - 1; i >= 0; i-- {
 			next = m[i](next)
@@ -36,7 +46,7 @@ func (dep *Middleware[T]) createStack(m ...middlewareFunc) middlewareFunc {
 }
 
 // https://stackoverflow.com/questions/27234861/correct-way-of-getting-clients-ip-addresses-from-http-request
-func (dep *Middleware[T]) requestIP(r *http.Request) string {
+func (dep *Middleware) requestIP(r *http.Request) string {
 	ip := r.Header.Get("X-Forwarded-For")
 	if ip != "" {
 		// the header can contain multiple IPs, so take the first one
@@ -46,7 +56,7 @@ func (dep *Middleware[T]) requestIP(r *http.Request) string {
 	return r.RemoteAddr
 }
 
-func (dep *Middleware[T]) timeout(next http.Handler) http.Handler {
+func (dep *Middleware) timeout(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		dur := time.Second * time.Duration(5)
 		ctx, cancel := context.WithTimeout(r.Context(), dur)
@@ -60,28 +70,38 @@ func (dep *Middleware[T]) timeout(next http.Handler) http.Handler {
 	})
 }
 
-func (dep *Middleware[T]) logging(next http.Handler) http.Handler {
+func (dep *Middleware) logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ip := dep.requestIP(r)
-		dep.Logger.Log(fmt.Sprintf("[Request] IP: %s | Method: %s | Path: %s", ip, r.Method, r.URL.Path))
-
-		type wrappedWriter struct {
-			http.ResponseWriter
-			statusCode int
-		}
-
-		wrapped := &wrappedWriter{
+		dep.Logger.Log(fmt.Sprintf(
+			"[Request] IP: %s | Method: %s | Path: %s", ip, r.Method, r.URL.Path,
+		))
+		obj := &wrappedWriter{
 			ResponseWriter: w,
-			statusCode:     http.StatusOK,
+			status:         http.StatusOK,
 		}
-
-		next.ServeHTTP(wrapped, r)
-		dep.Logger.Log(fmt.Sprintf("[Request] IP: %s | [Response] Status: %v | Method: %s | Path: %s", ip, wrapped.statusCode, r.Method, r.URL.Path))
+		next.ServeHTTP(obj, r)
+		dep.Logger.Log(fmt.Sprintf(
+			"[Response] IP: %s | Status: %d | Method: %s | Path: %s",
+			ip, obj.status, r.Method, r.URL.Path,
+		))
 	})
 }
 
-func (dep *Middleware[T]) Authentication(next http.Handler) http.Handler {
+func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Cookies() == nil {
+			dep.Logger.Error("no cookie present")
+			utils.ConstructErrorResponse(
+				w,
+				utils.ErrorResponse{
+					Status:  http.StatusUnauthorized,
+					Message: fmt.Sprintf("unauthorized cookie not present"),
+				},
+			)
+			return
+		}
+
 		cookie, err := r.Cookie(dep.CookieName)
 		if err != nil {
 			dep.Logger.Error(err)
@@ -120,7 +140,7 @@ func (dep *Middleware[T]) Authentication(next http.Handler) http.Handler {
 	})
 }
 
-func (dep *Middleware[T]) Permission(next http.Handler, roles ...models.RoleEnum) http.Handler {
+func (dep *Middleware) Permission(next http.Handler, roles ...models.RoleEnum) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		obj := r.Context().Value(utils.UserContextKey).(*models.StaffJwtObj)
 
@@ -148,4 +168,8 @@ func (dep *Middleware[T]) Permission(next http.Handler, roles ...models.RoleEnum
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (dep *Middleware) ChainAuth(next http.Handler, roles ...models.RoleEnum) http.Handler {
+	return dep.Authentication(dep.Permission(next, roles...))
 }

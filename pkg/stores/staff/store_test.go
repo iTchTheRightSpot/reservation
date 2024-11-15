@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/database"
+	"github.com/iTchTheRightSpot/erp-golang/database"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	profileStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"

@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/database"
+	"github.com/iTchTheRightSpot/erp-golang/database"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
 	profileStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"

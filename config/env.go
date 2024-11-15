@@ -11,6 +11,7 @@ type SecretVariables struct {
 	DbConnectionString string
 	PrivateKeyPath     string
 	PublicKeyPath      string
+	CookieName         string
 }
 
 func (dep *SecretVariables) Config() (*SecretVariables, error) {
@@ -20,5 +21,6 @@ func (dep *SecretVariables) Config() (*SecretVariables, error) {
 		DbConnectionString: cmp.Or(os.Getenv("DB_CONN"), "postgres://mrp:mrp@localhost:5432/mrp_db?sslmode=disable"),
 		PrivateKeyPath:     cmp.Or(os.Getenv("JWT_PRIV_PATH"), "./keys/private.key"),
 		PublicKeyPath:      cmp.Or(os.Getenv("JWT_PUB_PATH"), "./keys/public.key"),
+		CookieName:         cmp.Or(os.Getenv("COOKIENAME"), "ERPCOOKIE"),
 	}, nil
 }

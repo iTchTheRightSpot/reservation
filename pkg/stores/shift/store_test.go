@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/database"
+	"github.com/iTchTheRightSpot/erp-golang/database"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/shift"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	staffStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"

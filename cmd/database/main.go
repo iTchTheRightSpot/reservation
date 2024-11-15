@@ -5,7 +5,7 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/database"
+	"github.com/iTchTheRightSpot/erp-golang/database"
 	"log"
 )
 
@@ -26,7 +26,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://./pkg/database/migrations/", "postgres", driver)
+	m, err := migrate.NewWithDatabaseInstance("file://./database/migrations/", "postgres", driver)
 	if err != nil {
 		log.Fatal(err)
 	}
