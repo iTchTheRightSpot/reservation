@@ -20,7 +20,7 @@ func NewShiftHandler(mux *http.ServeMux, w *middleware.Middleware, l utils.ILogg
 }
 
 func (dep *ShiftHandler) RegisterRoutes() {
-	m := middleware.RequestBodyMiddleware[shiftModel.ShiftDto]{}
+	m := middleware.RequestBodyMiddleware[shiftModel.ShiftDto]{Logger: dep.logger}
 	next := http.HandlerFunc(dep.create)
 	dep.mux.Handle("POST /shift", dep.middleware.ChainAuth(m.RequestBody(next)))
 }

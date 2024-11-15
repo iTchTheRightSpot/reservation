@@ -19,6 +19,6 @@ type TimeSlot struct {
 }
 
 type ShiftDto struct {
-	StaffUUID string      `json:"staff_uuid"`
-	TimeSlots *[]TimeSlot `json:"time_slots" validate:"required,dive,required"`
+	StaffUUID string      `json:"staff_uuid" validate:"required"`
+	TimeSlots *[]TimeSlot `json:"time_slots" validate:"required,min=1,dive,required"`
 }
