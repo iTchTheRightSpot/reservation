@@ -3,7 +3,7 @@ package staff
 import (
 	"context"
 	"fmt"
-	utils2 "github.com/iTchTheRightSpot/erp-golang/pkg"
+	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 )
@@ -14,10 +14,10 @@ type IStaffStore interface {
 
 type staffStore struct {
 	logger utils.ILogger
-	db     utils2.Db
+	db     pkg.Db
 }
 
-func NewStaffStore(l utils.ILogger, db utils2.Db) IStaffStore {
+func NewStaffStore(l utils.ILogger, db pkg.Db) IStaffStore {
 	return &staffStore{logger: l, db: db}
 }
 

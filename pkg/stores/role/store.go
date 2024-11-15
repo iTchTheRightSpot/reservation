@@ -3,7 +3,7 @@ package role
 import (
 	"context"
 	"fmt"
-	utils2 "github.com/iTchTheRightSpot/erp-golang/pkg"
+	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 )
@@ -14,10 +14,10 @@ type IRoleStore interface {
 
 type roleStore struct {
 	logger utils.ILogger
-	db     utils2.Db
+	db     pkg.Db
 }
 
-func NewRoleStore(l utils.ILogger, db utils2.Db) IRoleStore {
+func NewRoleStore(l utils.ILogger, db pkg.Db) IRoleStore {
 	return &roleStore{logger: l, db: db}
 }
 

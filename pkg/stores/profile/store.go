@@ -3,7 +3,7 @@ package profile
 import (
 	"context"
 	"fmt"
-	utils2 "github.com/iTchTheRightSpot/erp-golang/pkg"
+	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 )
@@ -14,10 +14,10 @@ type IProfileStore interface {
 
 type profileStore struct {
 	logger utils.ILogger
-	db     utils2.Db
+	db     pkg.Db
 }
 
-func NewProfileStore(l utils.ILogger, db utils2.Db) IProfileStore {
+func NewProfileStore(l utils.ILogger, db pkg.Db) IProfileStore {
 	return &profileStore{logger: l, db: db}
 }
 
