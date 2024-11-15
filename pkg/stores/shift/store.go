@@ -3,6 +3,7 @@ package shift
 import (
 	"context"
 	"fmt"
+	utils2 "github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/shift"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 )
@@ -13,10 +14,10 @@ type IShiftStore interface {
 
 type profileStore struct {
 	logger utils.ILogger
-	db     utils.Db
+	db     utils2.Db
 }
 
-func NewShiftStore(l utils.ILogger, db utils.Db) IShiftStore {
+func NewShiftStore(l utils.ILogger, db utils2.Db) IShiftStore {
 	return &profileStore{logger: l, db: db}
 }
 
