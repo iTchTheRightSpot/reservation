@@ -45,4 +45,4 @@
 5. [In-memory caching](https://www.codingexplorations.com/blog/harnessing-in-memory-caching-in-go).
 
 ## Cmd
-1. `migrate create -ext sql -dir ./pkg/database/migrations/ -seq create_users_table`.
+1. `migrate create -ext sql -dir ./database/migrations/ -seq create_users_table`.
