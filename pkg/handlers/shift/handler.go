@@ -24,11 +24,10 @@ func (dep *ShiftHandler) Register() {
 	shiftMux := http.NewServeMux()
 
 	m := middleware.RequestBodyMiddleware[shiftModel.ShiftDto]{Logger: dep.logger}
-	create := m.RequestBody(http.HandlerFunc(dep.create))
 	shiftMux.Handle(
 		"POST /",
 		dep.middleware.HasRoleAndPermissions(
-			create,
+			m.RequestBody(http.HandlerFunc(dep.create)),
 			&models.RolePermission{
 				Role:        models.STAFF,
 				Permissions: []models.PermissionEnum{models.WRITE},
