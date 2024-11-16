@@ -3,9 +3,9 @@ package models
 import "time"
 
 type JwtObj struct {
-	Roles    []RoleEnum `json:"roles"`
-	UserUUID string     `json:"user_uuid"`
-	ExpireAt time.Time  `json:"expire_at"`
+	UserUUID       string           `json:"user_uuid"`
+	AccessControls []RolePermission `json:"access_controls"`
+	ExpireAt       *time.Time       `json:"expire_at"`
 }
 
 type JwtResponse struct {

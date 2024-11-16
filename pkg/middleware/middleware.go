@@ -7,7 +7,6 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"net/http"
-	"reflect"
 	"slices"
 	"strings"
 	"time"
@@ -52,7 +51,6 @@ func (dep *Middleware) requestIP(r *http.Request) string {
 		// the header can contain multiple IPs, so take the first one
 		return strings.Split(ip, ",")[0]
 	}
-	// fallback to RemoteAddr
 	return r.RemoteAddr
 }
 
@@ -61,12 +59,7 @@ func (dep *Middleware) timeout(next http.Handler) http.Handler {
 		dur := time.Second * time.Duration(5)
 		ctx, cancel := context.WithTimeout(r.Context(), dur)
 		defer cancel()
-
-		// create a new request with the timeout context
-		r = r.WithContext(ctx)
-
-		// call the next handler
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -134,7 +127,7 @@ func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 		}
 
 		b := !strings.HasSuffix(r.URL.Path, "/logout")
-		if b && isTokenExpiringSoon(dep.Logger.Date(), obj.ExpireAt, utils.TwoDaysInSeconds) {
+		if b && isTokenExpiringSoon(dep.Logger.Date(), *obj.ExpireAt, utils.TwoDaysInSeconds) {
 			if o, err := dep.Auth.GenerateJwt(obj, utils.TwoDaysInSeconds); err != nil {
 				dep.Logger.Error(fmt.Sprintf("failed to refresh token %s", err))
 			} else {
@@ -155,22 +148,35 @@ func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 	})
 }
 
-func (dep *Middleware) Permission(next http.Handler, roles ...models.RoleEnum) http.Handler {
+func (dep *Middleware) HasRole(next http.Handler, role *models.RoleEnum) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		obj := r.Context().Value(utils.UserContextKey).(*models.JwtObj)
-
-		contains := false
-		for i := 0; i < len(roles); i++ {
-			contains = slices.ContainsFunc(obj.Roles, func(role models.RoleEnum) bool {
-				return reflect.DeepEqual(role, roles[i])
-			})
-			if contains {
-				break
-			}
+		if role == nil {
+			dep.Logger.Error("HasRole: role cannot be nil")
+			utils.ConstructErrorResponse(
+				w,
+				utils.ErrorResponse{
+					Status:  http.StatusInternalServerError,
+					Message: "internal server error",
+				},
+			)
+			return
 		}
 
+		obj, ok := r.Context().Value(utils.UserContextKey).(*models.JwtObj)
+		if !ok || obj == nil {
+			dep.Logger.Error("HasRoleAndPermissions: invalid user context")
+			utils.ConstructErrorResponse(w, utils.ErrorResponse{
+				Status:  http.StatusUnauthorized,
+				Message: "unauthorized",
+			})
+			return
+		}
+
+		contains := slices.ContainsFunc(obj.AccessControls, func(access models.RolePermission) bool {
+			return access.Role == *role
+		})
 		if !contains {
-			dep.Logger.Error("access denied")
+			dep.Logger.Error(fmt.Sprintf("access denied request role does not match %v", role))
 			utils.ConstructErrorResponse(
 				w,
 				utils.ErrorResponse{
@@ -180,11 +186,57 @@ func (dep *Middleware) Permission(next http.Handler, roles ...models.RoleEnum) h
 			)
 			return
 		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (dep *Middleware) HasRoleAndPermissions(next http.Handler, cred *models.RolePermission) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if cred == nil {
+			dep.Logger.Error("HasRoleAndPermissions: cred cannot be nil")
+			utils.ConstructErrorResponse(w, utils.ErrorResponse{
+				Status:  http.StatusInternalServerError,
+				Message: "internal server error",
+			})
+			return
+		}
+
+		obj, ok := r.Context().Value(utils.UserContextKey).(*models.JwtObj)
+		if !ok || obj == nil {
+			dep.Logger.Error("HasRoleAndPermissions: invalid user context")
+			utils.ConstructErrorResponse(w, utils.ErrorResponse{
+				Status:  http.StatusUnauthorized,
+				Message: "unauthorized",
+			})
+			return
+		}
+
+		if !dep.validateRoleAndPermissions(obj.AccessControls, cred) {
+			dep.Logger.Error("HasRoleAndPermissions: insufficient roles or permissions")
+			utils.ConstructErrorResponse(w, utils.ErrorResponse{
+				Status:  http.StatusForbidden,
+				Message: "access denied",
+			})
+			return
+		}
 
 		next.ServeHTTP(w, r)
 	})
 }
 
-func (dep *Middleware) ChainAuth(next http.Handler, roles ...models.RoleEnum) http.Handler {
-	return dep.Authentication(dep.Permission(next, roles...))
+func (dep *Middleware) validateRoleAndPermissions(arr []models.RolePermission, param *models.RolePermission) bool {
+	return slices.ContainsFunc(arr, func(obj models.RolePermission) bool {
+		if obj.Role == param.Role {
+			if len(param.Permissions) < 1 {
+				return false
+			}
+			for _, permission := range param.Permissions {
+				if !slices.Contains(obj.Permissions, permission) {
+					return false
+				}
+			}
+			return true
+		}
+		return false
+	})
 }

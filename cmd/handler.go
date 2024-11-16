@@ -19,22 +19,19 @@ type HandlerRegistry struct {
 
 func NewHandlerRegistry(mux *http.ServeMux, db *sql.DB, l utils.ILogger, e *config.SecretVariables) *HandlerRegistry {
 	s := newServiceRegistry(db, l, e)
-	m := &middleware.Middleware{Logger: l, Auth: s.JwtService, Param: e.CookieParam}
 	return &HandlerRegistry{
 		log:        l,
 		env:        e,
 		mux:        mux,
 		services:   s,
-		middleware: m,
+		middleware: &middleware.Middleware{Logger: l, Auth: s.JwtService, Param: e.CookieParam},
 	}
 }
 
 func (dep *HandlerRegistry) Initialize() http.Handler {
-	// v1 subroutine
 	v1 := http.NewServeMux()
 
-	// register handlers
-	shift.NewShiftHandler(v1, dep.middleware, dep.log, dep.services.ShiftService).RegisterRoutes()
+	shift.NewShiftHandler(v1, dep.middleware, dep.log, dep.services.ShiftService).Register()
 
 	// register v1 with mux
 	dep.mux.Handle("/api/v1/", http.StripPrefix("/api/v1", v1))
