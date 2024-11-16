@@ -211,11 +211,32 @@ func TestMiddleware(t *testing.T) {
 	t.Run("HasRole middleware", func(t *testing.T) {
 		t.Parallel()
 
+		t.Run("reject request. role is nil", func(t *testing.T) {
+			t.Parallel()
+
+			// given
+			mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			})
+
+			req := httptest.NewRequest(http.MethodGet, "/path", nil)
+			resp := httptest.NewRecorder()
+
+			middleware := Middleware{Logger: logger}
+
+			// method to test
+			middleware.HasRole(mockHandler, nil).ServeHTTP(resp, req)
+
+			if resp.Code != http.StatusInternalServerError {
+				t.Errorf("expected status code %d, got %d", http.StatusInternalServerError, resp.Code)
+			}
+		})
+
 		t.Run(fmt.Sprintf("reject request. not of role %s", models.DEVELOPER), func(t *testing.T) {
 			t.Parallel()
 
 			// given
-			cred := make([]models.RolePermission, 2)
+			cred := make([]models.RolePermission, 1)
 			cred[0] = models.RolePermission{
 				Role:        models.STAFF,
 				Permissions: []models.PermissionEnum{models.READ, models.DELETE},
@@ -250,7 +271,7 @@ func TestMiddleware(t *testing.T) {
 			t.Parallel()
 
 			// given
-			cred := make([]models.RolePermission, 2)
+			cred := make([]models.RolePermission, 1)
 			cred[0] = models.RolePermission{
 				Role:        models.STAFF,
 				Permissions: []models.PermissionEnum{models.READ, models.DELETE, models.WRITE},
@@ -284,6 +305,241 @@ func TestMiddleware(t *testing.T) {
 
 	t.Run("HasRoleAndPermissions middleware", func(t *testing.T) {
 		t.Parallel()
+
+		t.Run("reject request RolePermission", func(t *testing.T) {
+			t.Parallel()
+
+			t.Run("is nil", func(t *testing.T) {
+				t.Parallel()
+
+				// given
+				mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusOK)
+				})
+
+				req := httptest.NewRequest(http.MethodGet, "/path", nil)
+				resp := httptest.NewRecorder()
+
+				middleware := Middleware{Logger: logger}
+
+				// method to test
+				middleware.HasRoleAndPermissions(mockHandler, nil).ServeHTTP(resp, req)
+
+				if resp.Code != http.StatusInternalServerError {
+					t.Errorf("expected status code %d, got %d", http.StatusInternalServerError, resp.Code)
+				}
+			})
+
+			t.Run("missing role property", func(t *testing.T) {
+				t.Parallel()
+
+				// given
+				cred := make([]models.RolePermission, 1)
+				cred[0] = models.RolePermission{
+					Role:        models.USER,
+					Permissions: []models.PermissionEnum{},
+				}
+				obj := &models.JwtObj{
+					AccessControls: cred,
+					UserUUID:       "staff-id",
+				}
+
+				mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusOK)
+				})
+
+				req := httptest.NewRequest(http.MethodGet, "/path", nil)
+				ctx := req.Context()
+				ctx = context.WithValue(ctx, utils.UserContextKey, obj)
+				req = req.WithContext(ctx)
+				resp := httptest.NewRecorder()
+
+				middleware := Middleware{Logger: logger}
+
+				// method to test
+				param := &models.RolePermission{}
+				middleware.HasRoleAndPermissions(mockHandler, param).ServeHTTP(resp, req)
+
+				if resp.Code != http.StatusForbidden {
+					t.Errorf("expected status code %d, got %d", http.StatusForbidden, resp.Code)
+				}
+			})
+
+			t.Run("permissions is empty", func(t *testing.T) {
+				t.Parallel()
+
+				// given
+				cred := make([]models.RolePermission, 1)
+				cred[0] = models.RolePermission{
+					Role:        models.USER,
+					Permissions: []models.PermissionEnum{},
+				}
+				obj := &models.JwtObj{
+					AccessControls: cred,
+					UserUUID:       "staff-id",
+				}
+
+				mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusOK)
+				})
+
+				req := httptest.NewRequest(http.MethodGet, "/path", nil)
+				ctx := req.Context()
+				ctx = context.WithValue(ctx, utils.UserContextKey, obj)
+				req = req.WithContext(ctx)
+				resp := httptest.NewRecorder()
+
+				middleware := Middleware{Logger: logger}
+
+				// method to test
+				param := &models.RolePermission{Role: models.USER}
+				middleware.HasRoleAndPermissions(mockHandler, param).ServeHTTP(resp, req)
+
+				if resp.Code != http.StatusForbidden {
+					t.Errorf("expected status code %d, got %d", http.StatusForbidden, resp.Code)
+				}
+			})
+		})
+
+		t.Run("reject request no obj in context", func(t *testing.T) {
+			t.Parallel()
+
+			// given
+			mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			})
+
+			req := httptest.NewRequest(http.MethodGet, "/path", nil)
+			resp := httptest.NewRecorder()
+
+			middleware := Middleware{Logger: logger}
+
+			// method to test
+			middleware.HasRoleAndPermissions(mockHandler, &models.RolePermission{}).ServeHTTP(resp, req)
+
+			if resp.Code != http.StatusUnauthorized {
+				t.Errorf("expected status code %d, got %d", http.StatusUnauthorized, resp.Code)
+			}
+		})
+
+		t.Run("reject request not matching role", func(t *testing.T) {
+			t.Parallel()
+
+			// given
+			cred := make([]models.RolePermission, 2)
+			cred[0] = models.RolePermission{
+				Role:        models.USER,
+				Permissions: []models.PermissionEnum{},
+			}
+			cred[1] = models.RolePermission{
+				Role:        models.STAFF,
+				Permissions: []models.PermissionEnum{models.READ, models.DELETE},
+			}
+			obj := &models.JwtObj{
+				AccessControls: cred,
+				UserUUID:       "staff-id",
+			}
+
+			mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			})
+
+			req := httptest.NewRequest(http.MethodGet, "/path", nil)
+			ctx := req.Context()
+			ctx = context.WithValue(ctx, utils.UserContextKey, obj)
+			req = req.WithContext(ctx)
+			resp := httptest.NewRecorder()
+
+			middleware := Middleware{Logger: logger}
+
+			// method to test
+			param := &models.RolePermission{Role: models.DEVELOPER}
+			middleware.HasRoleAndPermissions(mockHandler, param).ServeHTTP(resp, req)
+
+			if resp.Code != http.StatusForbidden {
+				t.Errorf("expected status code %d, got %d", http.StatusForbidden, resp.Code)
+			}
+		})
+
+		t.Run("reject request matching role but not permissions", func(t *testing.T) {
+			t.Parallel()
+
+			// given
+			cred := make([]models.RolePermission, 2)
+			cred[0] = models.RolePermission{
+				Role:        models.USER,
+				Permissions: []models.PermissionEnum{},
+			}
+			cred[1] = models.RolePermission{
+				Role:        models.STAFF,
+				Permissions: []models.PermissionEnum{models.READ, models.WRITE},
+			}
+			obj := &models.JwtObj{
+				AccessControls: cred,
+				UserUUID:       "staff-id",
+			}
+
+			mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			})
+
+			req := httptest.NewRequest(http.MethodGet, "/path", nil)
+			ctx := req.Context()
+			ctx = context.WithValue(ctx, utils.UserContextKey, obj)
+			req = req.WithContext(ctx)
+			resp := httptest.NewRecorder()
+
+			middleware := Middleware{Logger: logger}
+
+			// method to test
+			param := &models.RolePermission{
+				Role:        models.STAFF,
+				Permissions: []models.PermissionEnum{models.READ, models.WRITE, models.DELETE},
+			}
+			middleware.HasRoleAndPermissions(mockHandler, param).ServeHTTP(resp, req)
+
+			if resp.Code != http.StatusForbidden {
+				t.Errorf("expected status code %d, got %d", http.StatusForbidden, resp.Code)
+			}
+		})
+
+		t.Run("accept request matching role & permissions", func(t *testing.T) {
+			t.Parallel()
+
+			// given
+			cred := make([]models.RolePermission, 2)
+			cred[0] = models.RolePermission{
+				Role:        models.STAFF,
+				Permissions: []models.PermissionEnum{models.READ, models.WRITE},
+			}
+			obj := &models.JwtObj{
+				AccessControls: cred,
+				UserUUID:       "staff-id",
+			}
+
+			mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			})
+
+			req := httptest.NewRequest(http.MethodGet, "/path", nil)
+			ctx := req.Context()
+			ctx = context.WithValue(ctx, utils.UserContextKey, obj)
+			req = req.WithContext(ctx)
+			resp := httptest.NewRecorder()
+
+			middleware := Middleware{Logger: logger}
+
+			// method to test
+			param := &models.RolePermission{
+				Role:        models.STAFF,
+				Permissions: []models.PermissionEnum{models.WRITE},
+			}
+			middleware.HasRoleAndPermissions(mockHandler, param).ServeHTTP(resp, req)
+
+			if resp.Code != http.StatusOK {
+				t.Errorf("expected status code %d, got %d", http.StatusOK, resp.Code)
+			}
+		})
 	})
 
 }

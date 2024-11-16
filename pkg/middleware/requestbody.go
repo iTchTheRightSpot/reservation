@@ -18,7 +18,7 @@ func (dep *RequestBodyMiddleware[T]) RequestBody(next http.Handler) http.Handler
 		var payload T
 
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-			dep.Logger.Error(err)
+			dep.Logger.Error(err.Error())
 			utils.ConstructErrorResponse(
 				w,
 				utils.ErrorResponse{

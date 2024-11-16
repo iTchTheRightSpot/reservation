@@ -224,10 +224,13 @@ func (dep *Middleware) HasRoleAndPermissions(next http.Handler, cred *models.Rol
 	})
 }
 
-func (dep *Middleware) validateRoleAndPermissions(arr []models.RolePermission, cred *models.RolePermission) bool {
+func (dep *Middleware) validateRoleAndPermissions(arr []models.RolePermission, param *models.RolePermission) bool {
 	return slices.ContainsFunc(arr, func(obj models.RolePermission) bool {
-		if obj.Role == cred.Role {
-			for _, permission := range cred.Permissions {
+		if obj.Role == param.Role {
+			if len(param.Permissions) < 1 {
+				return false
+			}
+			for _, permission := range param.Permissions {
 				if !slices.Contains(obj.Permissions, permission) {
 					return false
 				}
@@ -236,8 +239,4 @@ func (dep *Middleware) validateRoleAndPermissions(arr []models.RolePermission, c
 		}
 		return false
 	})
-}
-
-func (dep *Middleware) ChainAuth(next http.Handler, roles ...models.RoleEnum) http.Handler {
-	return dep.Authentication(dep.HasRoleAndPermissions(next, nil))
 }
