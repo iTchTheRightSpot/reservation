@@ -3,6 +3,9 @@ module github.com/iTchTheRightSpot/erp-golang
 go 1.22.4
 
 require (
+	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
+	github.com/casbin/casbin/v2 v2.100.0 // indirect
+	github.com/casbin/govaluate v1.2.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect

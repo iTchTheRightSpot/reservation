@@ -1,0 +1,3 @@
+p, STAFF, /api/v1/shift, GET
+p, [STAFF: [CREATE]], /api/v1/shift, POST
+p, [STAFF: [DELETE]], /api/v1/shift, GET

@@ -13,3 +13,17 @@ type Role struct {
 	Role      RoleEnum `json:"role"`
 	ProfileId uint64   `json:"profile_id"`
 }
+
+type PermissionEnum string
+
+const (
+	READ   PermissionEnum = "READ"
+	WRITE  PermissionEnum = "WRITE"
+	DELETE PermissionEnum = "DELETE"
+)
+
+type Permission struct {
+	PermissionId uint64         `json:"permission_id"`
+	Permission   PermissionEnum `json:"permission"`
+	RoleId       uint64         `json:"role_id"`
+}

@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -90,6 +91,14 @@ func (dep *Middleware) logging(next http.Handler) http.Handler {
 
 func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		allowed, err := pkg.CasbinEnforcer.Enforce(models.STAFF, r.URL.Path, r.Method)
+
+		if err != nil {
+			dep.Logger.Error(fmt.Sprintf("CASBIN ENFORCER ERROR %s", err))
+		} else {
+			dep.Logger.Log(fmt.Sprintf("CASBIN ENFORCER LOG %v", allowed))
+		}
+
 		if r.Cookies() == nil || len(r.Cookies()) == 0 {
 			dep.Logger.Error("no cookie present")
 			utils.ConstructErrorResponse(
