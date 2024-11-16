@@ -14,11 +14,12 @@ type Shift struct {
 
 type TimeSlot struct {
 	IsVisible bool   `json:"is_visible" validate:"required"`
-	Start     string `json:"start" validate:"required"`
+	StartDate string `json:"start_date" validate:"required"`
+	StartTime string `json:"start_time" validate:"required"`
 	Duration  int    `json:"duration" validate:"required"`
 }
 
 type ShiftDto struct {
 	StaffUUID string      `json:"staff_uuid" validate:"required"`
-	TimeSlots *[]TimeSlot `json:"time_slots" validate:"required,min=1,dive,required"`
+	TimeSlots *[]TimeSlot `json:"time_slots" validate:"required,dive,required"`
 }

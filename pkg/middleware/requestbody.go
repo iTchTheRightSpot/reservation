@@ -1,20 +1,34 @@
 package middleware
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/go-playground/validator/v10"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"io"
 	"net/http"
 )
+
+var validate = validator.New()
 
 type RequestBodyMiddleware[T any] struct {
 	Logger utils.ILogger
 }
 
-var validate = validator.New()
-
 func (dep *RequestBodyMiddleware[T]) RequestBody(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Body == nil {
+			dep.Logger.Error("request body is nil")
+			utils.ConstructErrorResponse(
+				w,
+				utils.ErrorResponse{
+					Status:  http.StatusBadRequest,
+					Message: "invalid request body",
+				},
+			)
+			return
+		}
+
 		var payload T
 
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -40,6 +54,9 @@ func (dep *RequestBodyMiddleware[T]) RequestBody(next http.Handler) http.Handler
 			)
 			return
 		}
+
+		by, _ := json.Marshal(payload)
+		r.Body = io.NopCloser(bytes.NewBuffer(by))
 
 		next.ServeHTTP(w, r)
 	})

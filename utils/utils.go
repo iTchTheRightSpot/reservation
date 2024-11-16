@@ -3,7 +3,6 @@ package utils
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 )
 
 var TwoDaysInSeconds = 172800
@@ -29,20 +28,4 @@ func ConstructErrorResponse(w http.ResponseWriter, e ErrorResponse) {
 	res, _ := json.Marshal(e)
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(res)
-}
-
-func WriteCookie(w http.ResponseWriter, param *CookieParam, token string, expireAt time.Time) {
-	http.SetCookie(
-		w,
-		&http.Cookie{
-			Name:     param.CookieName,
-			Value:    token,
-			Expires:  expireAt,
-			HttpOnly: true,
-			SameSite: http.SameSiteLaxMode,
-			Secure:   param.CookieSecure,
-			Domain:   param.CookieDomain,
-			Path:     "/",
-		},
-	)
 }

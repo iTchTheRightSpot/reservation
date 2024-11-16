@@ -45,13 +45,11 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 		t.Fatalf("failed to start transaction: %v", err)
 	}
 
-	rollback := func() {
+	return tx, func() {
 		if err := tx.Rollback(); err != nil {
 			return
 		}
 	}
-
-	return tx, rollback
 }
 
 func TestProfileStore(t *testing.T) {

@@ -1,6 +1,7 @@
 package shift
 
 import (
+	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	shiftModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/shift"
@@ -22,6 +23,7 @@ func NewShiftHandler(mux *http.ServeMux, w *middleware.Middleware, l utils.ILogg
 
 func (dep *ShiftHandler) Register() {
 	shiftMux := http.NewServeMux()
+	staff := models.STAFF
 
 	m := middleware.RequestBodyMiddleware[shiftModel.ShiftDto]{Logger: dep.logger}
 	shiftMux.Handle(
@@ -29,19 +31,42 @@ func (dep *ShiftHandler) Register() {
 		dep.middleware.HasRoleAndPermissions(
 			m.RequestBody(http.HandlerFunc(dep.create)),
 			&models.RolePermission{
-				Role:        models.STAFF,
+				Role:        staff,
 				Permissions: []models.PermissionEnum{models.WRITE},
 			},
 		),
 	)
 	shiftMux.Handle("GET /", http.HandlerFunc(dep.shifts))
 
-	dep.mux.Handle("/shift", dep.middleware.Authentication(shiftMux))
+	dep.mux.Handle("/shift", dep.middleware.Authentication(dep.middleware.HasRole(shiftMux, &staff)))
 }
 
 func (dep *ShiftHandler) create(w http.ResponseWriter, r *http.Request) {
+	dto, err := pkg.ReadBody[shiftModel.ShiftDto](r)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ConstructErrorResponse(
+			w,
+			utils.ErrorResponse{
+				Status:  http.StatusInternalServerError,
+				Message: err.Error(),
+			},
+		)
+		return
+	}
+
+	if err = dep.service.Create(r.Context(), dto); err != nil {
+		utils.ConstructErrorResponse(
+			w,
+			utils.ErrorResponse{
+				Status:  http.StatusConflict,
+				Message: err.Error(),
+			},
+		)
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
-	_, _ = w.Write([]byte("shift handler post route hit"))
 }
 
 func (dep *ShiftHandler) shifts(w http.ResponseWriter, r *http.Request) {

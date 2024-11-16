@@ -7,6 +7,7 @@ import (
 )
 
 type SecretVariables struct {
+	RoutePrefix        string
 	Profile            string
 	Address            string
 	DbConnectionString string
@@ -18,6 +19,7 @@ type SecretVariables struct {
 func (dep *SecretVariables) Config() (*SecretVariables, error) {
 	profile := cmp.Or(os.Getenv("PROFILE"), "development")
 	return &SecretVariables{
+		RoutePrefix:        cmp.Or(os.Getenv("ROUTE_PREFIX"), "/api/v1/"),
 		Address:            cmp.Or(os.Getenv("PORT"), ":8080"),
 		Profile:            profile,
 		DbConnectionString: cmp.Or(os.Getenv("DB_CONN"), "postgres://mrp:mrp@localhost:5432/mrp_db?sslmode=disable"),

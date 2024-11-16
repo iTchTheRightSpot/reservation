@@ -54,8 +54,8 @@ func TestRequestBodyMiddleware(t *testing.T) {
 			Role models.RoleEnum `json:"role" validate:"required"`
 		}
 		type obj struct {
-			Id   string `json:"id" validate:"required"`
-			Nest []nest `json:"nest" validate:"required,dive,required"`
+			Id   string  `json:"id" validate:"required"`
+			Nest *[]nest `json:"nest" validate:"required,dive,required"`
 		}
 
 		dto, err := json.Marshal(obj{Id: "staff-id"})
@@ -76,8 +76,8 @@ func TestRequestBodyMiddleware(t *testing.T) {
 		b.RequestBody(mockHandler).ServeHTTP(rr, req)
 
 		// assert
-		if rr.Code == http.StatusOK {
-			t.Errorf("expected status code %d, got %d", http.StatusOK, rr.Code)
+		if rr.Code != http.StatusBadRequest {
+			t.Errorf("expected status code %d, got %d", http.StatusBadRequest, rr.Code)
 		}
 	})
 

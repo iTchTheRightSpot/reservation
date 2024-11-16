@@ -11,17 +11,17 @@ type ITransactionProvider interface {
 }
 
 type transactionProvider struct {
-	log utils.ILogger
-	db  *sql.DB
+	logger utils.ILogger
+	db     *sql.DB
 }
 
 func NewTransactionProvider(l utils.ILogger, db *sql.DB) ITransactionProvider {
-	return &transactionProvider{log: l, db: db}
+	return &transactionProvider{logger: l, db: db}
 }
 
 func (p *transactionProvider) RunInTransaction(txFunc func(adapters *Adapters) error) error {
 	return p.runInTx(p.db, func(tx *sql.Tx) error {
-		return txFunc(NewAdapters(p.log, tx, nil))
+		return txFunc(NewAdapters(p.logger, tx, nil))
 	})
 }
 

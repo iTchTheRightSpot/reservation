@@ -21,6 +21,5 @@ func NewShiftService(l utils.ILogger, a *stores.Adapters) IShiftService {
 }
 
 func (dep *shiftService) Create(ctx context.Context, dto *shift.ShiftDto) error {
-	//TODO implement me
-	panic("implement me")
+	return nil
 }
