@@ -27,3 +27,8 @@ type Permission struct {
 	Permission   PermissionEnum `json:"permission"`
 	RoleId       uint64         `json:"role_id"`
 }
+
+type RolePermission struct {
+	Role        RoleEnum         `json:"role"`
+	Permissions []PermissionEnum `json:"permissions"`
+}

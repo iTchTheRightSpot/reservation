@@ -120,7 +120,7 @@ func (dep *jwtService) ValidateJwt(str string) (*models.JwtObj, error) {
 		return nil, fmt.Errorf("invalid object format in claims")
 	}
 
-	jwtObj := &models.JwtObj{ExpireAt: exp.Time}
+	jwtObj := &models.JwtObj{ExpireAt: &exp.Time}
 	if uuid, ok := obj["user_uuid"].(string); ok {
 		jwtObj.UserUUID = uuid
 	} else {
@@ -128,17 +128,28 @@ func (dep *jwtService) ValidateJwt(str string) (*models.JwtObj, error) {
 		return nil, fmt.Errorf("invalid or missing UserUUID")
 	}
 
-	if roles, ok := obj["roles"].([]interface{}); ok {
-		parsedRoles := make([]models.RoleEnum, len(roles))
-		for i, role := range roles {
-			if roleStr, ok := role.(string); ok {
-				parsedRoles[i] = models.RoleEnum(roleStr)
-			} else {
-				dep.logger.Error("invalid role format in token claims")
-				return nil, fmt.Errorf("invalid role format in token claims")
+	if credentials, ok := obj["access_controls"].([]interface{}); ok {
+		parsedRoles := make([]models.RolePermission, len(credentials))
+
+		for i, cred := range credentials {
+			if rolePermission, ok := cred.(map[string]interface{}); ok {
+				role := models.RoleEnum(rolePermission["role"].(string))
+				var permissions []models.PermissionEnum
+
+				if perms, ok := rolePermission["permissions"].([]interface{}); ok {
+					for _, perm := range perms {
+						permissions = append(permissions, models.PermissionEnum(perm.(string)))
+					}
+				}
+
+				parsedRoles[i] = models.RolePermission{
+					Role:        role,
+					Permissions: permissions,
+				}
 			}
 		}
-		jwtObj.Roles = parsedRoles
+
+		jwtObj.AccessControls = parsedRoles
 	} else {
 		dep.logger.Error("missing or invalid roles in token claims")
 		return nil, fmt.Errorf("invalid or missing roles")
