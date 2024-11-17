@@ -25,6 +25,7 @@
       - Only staffs with `WRITE or DELETE` permission can create or delete a service.
       - A service cannot be deleted if it has an existing relationship with another table.
       Instead, it's visibility can be marked as false so clients can reserve for said service.
+      - Only staff with `WRITE` can assign a service to another staff.
     - **Reservations**
       - Only staffs with `WRITE` permission can cancel a reservation.
       - A reservation can include multiple services.

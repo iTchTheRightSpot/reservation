@@ -16,12 +16,12 @@ type Shift struct {
 	IsReoccurring bool      `json:"is_reoccurring"`
 }
 
-type ShiftDto struct {
-	StaffId string          `json:"staff_id" validate:"required"`
-	Times   *[]ShiftSegment `json:"shift_segments" validate:"required,min=1,dive,required"`
+type ShiftPayload struct {
+	StaffId string                 `json:"staff_id" validate:"required"`
+	Times   *[]ShiftSegmentPayload `json:"shift_segments" validate:"required,min=1,dive,required"`
 }
 
-type ShiftSegment struct {
+type ShiftSegmentPayload struct {
 	IsVisible     bool   `json:"is_visible"`
 	IsReoccurring bool   `json:"is_reoccurring"`
 	Start         string `json:"start" validate:"required"` // in ISO 8601 standard
@@ -35,7 +35,7 @@ type ScheduledPeriod struct {
 	End           time.Time
 }
 
-func (dto *ShiftDto) CheckForOverlappingSegments(now time.Time, timezone *time.Location) ([]ScheduledPeriod, error) {
+func (dto *ShiftPayload) CheckForOverlappingSegments(now time.Time, timezone *time.Location) ([]ScheduledPeriod, error) {
 	if dto.Times == nil {
 		return nil, fmt.Errorf("time_slots cannot be nil")
 	}

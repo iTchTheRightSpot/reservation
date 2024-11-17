@@ -2,7 +2,7 @@ CREATE TYPE roleenum AS ENUM ('STAFF', 'DEVELOPER', 'USER');
 
 CREATE TABLE IF NOT EXISTS role
 (
-    role_id    BIGSERIAL NOT NULL UNIQUE,
+    role_id    BIGSERIAL NOT NULL UNIQUE PRIMARY KEY,
     role       roleenum  NOT NULL DEFAULT ('USER'),
     profile_id BIGINT    NOT NULL,
     CONSTRAINT FK_role_to_profile_profile_id

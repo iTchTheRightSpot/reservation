@@ -10,7 +10,7 @@ import (
 )
 
 type IShiftService interface {
-	Create(ctx context.Context, dto *shift.ShiftDto) error
+	Create(ctx context.Context, dto *shift.ShiftPayload) error
 }
 
 type shiftService struct {
@@ -47,7 +47,7 @@ func (dep *shiftService) validateSegments(ctx context.Context, staffID uint64, s
 	return <-errChan
 }
 
-func (dep *shiftService) Create(ctx context.Context, dto *shift.ShiftDto) error {
+func (dep *shiftService) Create(ctx context.Context, dto *shift.ShiftPayload) error {
 	segments, err := dto.CheckForOverlappingSegments(dep.logger.Date(), dep.logger.Timezone())
 	if err != nil {
 		dep.logger.Error(err)

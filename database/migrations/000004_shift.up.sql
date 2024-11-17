@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS shift
 (
-    shift_id       BIGSERIAL NOT NULL UNIQUE,
+    shift_id       BIGSERIAL NOT NULL UNIQUE PRIMARY KEY,
     shift_start    TIMESTAMP NOT NULL,
     shift_end      TIMESTAMP NOT NULL,
     is_visible     BOOLEAN   NOT NULL DEFAULT FALSE,

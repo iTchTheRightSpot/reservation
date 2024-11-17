@@ -130,9 +130,9 @@ func TestShiftHandler(t *testing.T) {
 			utils.TwoDaysInSeconds,
 		)
 
-		dto := shiftModel.ShiftDto{
+		dto := shiftModel.ShiftPayload{
 			StaffId: save.UUID.String(),
-			Times: &[]shiftModel.ShiftSegment{
+			Times: &[]shiftModel.ShiftSegmentPayload{
 				{
 					IsVisible:     true,
 					IsReoccurring: false,
@@ -150,7 +150,7 @@ func TestShiftHandler(t *testing.T) {
 
 		dtoBytes, err := json.Marshal(dto)
 		if err != nil {
-			t.Errorf("failed to marshal ShiftDto: %s", err)
+			t.Errorf("failed to marshal ShiftPayload: %s", err)
 		}
 
 		req := httptest.NewRequest(http.MethodPost, "/shift", bytes.NewBuffer(dtoBytes))

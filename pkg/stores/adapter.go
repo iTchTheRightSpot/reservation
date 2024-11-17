@@ -3,8 +3,9 @@ package stores
 import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/service"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/shift"
-	staffStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 )
 
@@ -13,7 +14,8 @@ type Adapters struct {
 	RoleStore       profile.IRoleStore
 	PermissionStore profile.IPermissionStore
 	ShiftStore      shift.IShiftStore
-	StaffStore      staffStore.IStaffStore
+	StaffStore      staff.IStaffStore
+	ServiceStore    service.IServiceStore
 	Transaction     ITransactionProvider
 }
 
@@ -23,7 +25,8 @@ func NewAdapters(l utils.ILogger, db pkg.Db, p ITransactionProvider) *Adapters {
 		RoleStore:       profile.NewRoleStore(l, db),
 		PermissionStore: profile.NewPermissionStore(l, db),
 		ShiftStore:      shift.NewShiftStore(l, db),
-		StaffStore:      staffStore.NewStaffStore(l, db),
+		StaffStore:      staff.NewStaffStore(l, db),
+		ServiceStore:    service.NewServiceStore(l, db),
 		Transaction:     p,
 	}
 }

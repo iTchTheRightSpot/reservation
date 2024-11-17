@@ -67,14 +67,14 @@ func TestShiftStore(t *testing.T) {
 	t.Run("should save staff shift", func(t *testing.T) {
 		t.Parallel()
 
-		con, fn := setupTest(t)
+		tx, fn := setupTest(t)
 		defer fn()
 
 		ctx := context.Background()
 
 		// given
 		staffObj := staff.Staff{UUID: uuid.New()}
-		if _, err := staffStore.NewStaffStore(mockLog, con).Save(ctx, &staffObj); err != nil {
+		if _, err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
 			t.Errorf("%s", err)
 		}
 
@@ -85,7 +85,7 @@ func TestShiftStore(t *testing.T) {
 		}
 
 		// method to test
-		save, err := NewShiftStore(mockLog, con).Save(ctx, s)
+		save, err := NewShiftStore(mockLog, tx).Save(ctx, s)
 		if err != nil {
 			t.Errorf("shift not saved")
 		}
@@ -103,15 +103,15 @@ func TestShiftStore(t *testing.T) {
 	t.Run("shift count should be greater than zero for staff", func(t *testing.T) {
 		t.Parallel()
 
-		con, fn := setupTest(t)
+		tx, fn := setupTest(t)
 		defer fn()
 
-		store := NewShiftStore(mockLog, con)
+		store := NewShiftStore(mockLog, tx)
 		ctx := context.Background()
 
 		// given
 		staffObj := staff.Staff{UUID: uuid.New()}
-		if _, err := staffStore.NewStaffStore(mockLog, con).Save(ctx, &staffObj); err != nil {
+		if _, err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
 			t.Errorf("%s", err)
 		}
 
@@ -140,14 +140,14 @@ func TestShiftStore(t *testing.T) {
 	t.Run("count should be zero for shifts for staff", func(t *testing.T) {
 		t.Parallel()
 
-		con, fn := setupTest(t)
+		tx, fn := setupTest(t)
 		defer fn()
 
-		store := NewShiftStore(mockLog, con)
+		store := NewShiftStore(mockLog, tx)
 		ctx := context.Background()
 
 		staffObj := staff.Staff{UUID: uuid.New()}
-		if _, err := staffStore.NewStaffStore(mockLog, con).Save(ctx, &staffObj); err != nil {
+		if _, err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
 			t.Errorf("%s", err)
 		}
 

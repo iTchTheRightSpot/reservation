@@ -25,7 +25,7 @@ func (dep *ShiftHandler) Register() {
 	shiftMux := http.NewServeMux()
 	staff := models.STAFF
 
-	m := middleware.RequestBodyMiddleware[shiftModel.ShiftDto]{Logger: dep.logger}
+	m := middleware.RequestBodyMiddleware[shiftModel.ShiftPayload]{Logger: dep.logger}
 	shiftMux.Handle(
 		"POST /",
 		dep.middleware.HasRoleAndPermissions(
@@ -42,7 +42,7 @@ func (dep *ShiftHandler) Register() {
 }
 
 func (dep *ShiftHandler) create(w http.ResponseWriter, r *http.Request) {
-	dto, err := pkg.ReadBody[shiftModel.ShiftDto](r)
+	dto, err := pkg.ReadBody[shiftModel.ShiftPayload](r)
 	if err != nil {
 		dep.logger.Error(err.Error())
 		utils.ConstructErrorResponse(
