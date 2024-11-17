@@ -60,9 +60,13 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 }
 
 func TestShiftStore(t *testing.T) {
+	t.Parallel()
+
 	mockLog := utils.NewMockLogger()
 
 	t.Run("should save staff shift", func(t *testing.T) {
+		t.Parallel()
+
 		con, fn := setupTest(t)
 		defer fn()
 
@@ -93,6 +97,81 @@ func TestShiftStore(t *testing.T) {
 
 		if !reflect.DeepEqual(save, s) {
 			t.Errorf("expect %v to equal %v", s, save)
+		}
+	})
+
+	t.Run("shift count should be greater than zero for staff", func(t *testing.T) {
+		t.Parallel()
+
+		con, fn := setupTest(t)
+		defer fn()
+
+		store := NewShiftStore(mockLog, con)
+		ctx := context.Background()
+
+		// given
+		staffObj := staff.Staff{StaffUUID: uuid.New()}
+		if _, err := staffStore.NewStaffStore(mockLog, con).Save(ctx, &staffObj); err != nil {
+			t.Errorf("%s", err)
+		}
+
+		date := mockLog.Date()
+		s := &shift.Shift{
+			StaffId: staffObj.StaffId,
+			Start:   date,
+			End:     mockLog.Date().Add(time.Duration(8) * time.Hour),
+		}
+
+		if _, err := store.Save(ctx, s); err != nil {
+			t.Errorf("shift not saved")
+		}
+
+		// method to test
+		count, err := store.CountExistingShiftsForStaff(ctx, staffObj.StaffId, s.Start, s.End)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if count != 1 {
+			t.Errorf("expect 1 given %v", count)
+		}
+	})
+
+	t.Run("count should be zero for shifts for staff", func(t *testing.T) {
+		t.Parallel()
+
+		con, fn := setupTest(t)
+		defer fn()
+
+		store := NewShiftStore(mockLog, con)
+		ctx := context.Background()
+
+		staffObj := staff.Staff{StaffUUID: uuid.New()}
+		if _, err := staffStore.NewStaffStore(mockLog, con).Save(ctx, &staffObj); err != nil {
+			t.Errorf("%s", err)
+		}
+
+		date := mockLog.Date()
+		s := &shift.Shift{
+			StaffId: staffObj.StaffId,
+			Start:   date,
+			End:     mockLog.Date().Add(time.Duration(8) * time.Hour),
+		}
+
+		if _, err := store.Save(ctx, s); err != nil {
+			t.Errorf("shift not saved")
+		}
+
+		// method to test
+		param1 := s.End.Add(time.Duration(1) * time.Second)
+		param2 := s.End.Add(time.Duration(8) * time.Hour)
+		count, err := store.CountExistingShiftsForStaff(ctx, staffObj.StaffId, param1, param2)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if count != 0 {
+			t.Errorf("expect 0 given %v", count)
 		}
 	})
 }

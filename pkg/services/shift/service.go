@@ -21,5 +21,17 @@ func NewShiftService(l utils.ILogger, a *stores.Adapters) IShiftService {
 }
 
 func (dep *shiftService) Create(ctx context.Context, dto *shift.ShiftDto) error {
+	_, err := dto.CheckForOverlappingSegments(dep.logger.Timezone())
+	if err != nil {
+		return err
+	}
+
+	_, err = dep.adapters.StaffStore.StaffByUUID(ctx, dto.StaffUUID)
+	if err != nil {
+		return err
+	}
+
+	// asynchronously validate no duplicate shift already saved
+
 	return nil
 }

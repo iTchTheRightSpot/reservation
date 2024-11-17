@@ -10,6 +10,7 @@ import (
 
 type IStaffStore interface {
 	Save(ctx context.Context, r *staff.Staff) (*staff.Staff, error)
+	StaffByUUID(ctx context.Context, staffUUID string) (*staff.Staff, error)
 }
 
 type staffStore struct {
@@ -42,4 +43,18 @@ func (dep *staffStore) Save(ctx context.Context, r *staff.Staff) (*staff.Staff, 
 	}
 
 	return r, nil
+}
+
+func (dep *staffStore) StaffByUUID(ctx context.Context, staffUUID string) (*staff.Staff, error) {
+	var r staff.Staff
+	q := "SELECT * FROM staff WHERE staff_uuid = $1"
+
+	row := dep.db.QueryRowContext(ctx, q, staffUUID)
+	err := row.Scan(&r.StaffId, &r.StaffUUID, &r.Bio, &r.ProfileId)
+	if err != nil {
+		dep.logger.Error(err)
+		return nil, fmt.Errorf("exception retrieving staff with uuid %s", staffUUID)
+	}
+
+	return &r, nil
 }
