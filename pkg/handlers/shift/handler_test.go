@@ -22,6 +22,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 )
 
 var db *sql.DB
@@ -67,10 +68,39 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 	}
 }
 
+func preSaveStaff(a *stores.Adapters) (*staff.Staff, error) {
+	ctx := context.Background()
+
+	p := profile.Profile{
+		Firstname: "erp",
+		Lastname:  "erp",
+		Email:     "erp@email.com",
+	}
+
+	if _, err := a.ProfileStore.Save(ctx, &p); err != nil {
+		return nil, err
+	}
+
+	s := staff.Staff{
+		StaffUUID: uuid.New(),
+		ProfileId: &p.ProfileId,
+	}
+
+	if _, err := a.StaffStore.Save(ctx, &s); err != nil {
+		return nil, err
+	}
+
+	return &s, nil
+}
+
 func TestShiftHandler(t *testing.T) {
+	t.Parallel()
+
 	logger := utils.NewMockLogger()
 
 	t.Run("should save shift", func(t *testing.T) {
+		t.Parallel()
+
 		tx, fn := setupTest(t)
 		defer fn()
 
@@ -102,7 +132,20 @@ func TestShiftHandler(t *testing.T) {
 
 		dto := shiftModel.ShiftDto{
 			StaffUUID: save.StaffUUID.String(),
-			Times:     &[]shiftModel.ShiftSegment{},
+			Times: &[]shiftModel.ShiftSegment{
+				{
+					IsVisible:     true,
+					IsReoccurring: false,
+					Start:         logger.Date().Add(time.Duration(1) * time.Hour).Format(utils.TimeFormat),
+					Duration:      3600,
+				},
+				{
+					IsVisible:     false,
+					IsReoccurring: true,
+					Start:         logger.Date().Add(time.Duration(2) * time.Hour).Format(utils.TimeFormat),
+					Duration:      3600,
+				},
+			},
 		}
 
 		dtoBytes, err := json.Marshal(dto)
@@ -126,29 +169,4 @@ func TestShiftHandler(t *testing.T) {
 			t.Errorf("expected status code %d, got %d", http.StatusCreated, rr.Code)
 		}
 	})
-}
-
-func preSaveStaff(a *stores.Adapters) (*staff.Staff, error) {
-	ctx := context.Background()
-
-	p := profile.Profile{
-		Firstname: "erp",
-		Lastname:  "erp",
-		Email:     "erp@email.com",
-	}
-
-	if _, err := a.ProfileStore.Save(ctx, &p); err != nil {
-		return nil, err
-	}
-
-	s := staff.Staff{
-		StaffUUID: uuid.New(),
-		ProfileId: &p.ProfileId,
-	}
-
-	if _, err := a.StaffStore.Save(ctx, &s); err != nil {
-		return nil, err
-	}
-
-	return &s, nil
 }

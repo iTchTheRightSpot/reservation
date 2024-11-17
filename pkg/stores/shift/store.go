@@ -29,13 +29,13 @@ func (dep *profileStore) Save(ctx context.Context, s *shift.Shift) (*shift.Shift
 	}
 
 	q := `
-		INSERT INTO shift (shift_start, shift_end, is_enabled, is_reoccurring, staff_id)
+		INSERT INTO shift (shift_start, shift_end, is_visible, is_reoccurring, staff_id)
 		VALUES ($1, $2, $3, $4, $5)
-		RETURNING shift_id, shift_start, shift_end, is_enabled, is_reoccurring, staff_id
+		RETURNING shift_id, shift_start, shift_end, is_visible, is_reoccurring, staff_id
 	`
 
-	row := dep.db.QueryRowContext(ctx, q, s.Start, s.End, s.IsEnabled, s.IsReoccurring, s.StaffId)
-	err := row.Scan(&s.ShiftId, &s.Start, &s.End, &s.IsEnabled, &s.IsReoccurring, &s.StaffId)
+	row := dep.db.QueryRowContext(ctx, q, s.Start, s.End, s.IsVisible, s.IsReoccurring, s.StaffId)
+	err := row.Scan(&s.ShiftId, &s.Start, &s.End, &s.IsVisible, &s.IsReoccurring, &s.StaffId)
 
 	if err != nil {
 		dep.logger.Error(err)

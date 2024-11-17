@@ -12,18 +12,18 @@ type Shift struct {
 	StaffId       uint64    `json:"staff_id"`
 	Start         time.Time `json:"shift_start"`
 	End           time.Time `json:"shift_end"`
-	IsEnabled     bool      `json:"is_enabled"`
+	IsVisible     bool      `json:"is_visible"`
 	IsReoccurring bool      `json:"is_reoccurring"`
 }
 
 type ShiftDto struct {
 	StaffUUID string          `json:"staff_uuid" validate:"required"`
-	Times     *[]ShiftSegment `json:"shift_segments" validate:"required,dive,required"`
+	Times     *[]ShiftSegment `json:"shift_segments" validate:"required,min=1,dive,required"`
 }
 
 type ShiftSegment struct {
-	IsVisible     bool   `json:"is_visible" validate:"required"`
-	IsReoccurring bool   `json:"is_reoccurring" validate:"required"`
+	IsVisible     bool   `json:"is_visible"`
+	IsReoccurring bool   `json:"is_reoccurring"`
 	Start         string `json:"start" validate:"required"` // in ISO 8601 standard
 	Duration      int    `json:"duration" validate:"required"`
 }
@@ -35,7 +35,7 @@ type ScheduledPeriod struct {
 	End           time.Time
 }
 
-func (dto *ShiftDto) CheckForOverlappingSegments(timezone *time.Location) ([]ScheduledPeriod, error) {
+func (dto *ShiftDto) CheckForOverlappingSegments(now time.Time, timezone *time.Location) ([]ScheduledPeriod, error) {
 	if dto.Times == nil {
 		return nil, fmt.Errorf("time_slots cannot be nil")
 	}
@@ -49,6 +49,13 @@ func (dto *ShiftDto) CheckForOverlappingSegments(timezone *time.Location) ([]Sch
 		}
 
 		start := parse.In(timezone)
+
+		// validate no date in the past
+		if now.After(start) {
+			times := *dto.Times
+			return nil, fmt.Errorf("%s is in the past ", times[idx].Start)
+		}
+
 		end := start.Add(time.Duration(slot.Duration) * time.Second)
 
 		// validate no conflicts
