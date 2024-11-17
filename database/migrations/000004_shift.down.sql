@@ -7,4 +7,7 @@ ALTER TABLE shift
 ALTER TABLE shift
     DROP CONSTRAINT IF EXISTS IX_shift_composite2;
 
+ALTER TABLE shift
+    DROP CONSTRAINT IF EXISTS IX_shift_composite3;
+
 DROP TABLE IF EXISTS shift;

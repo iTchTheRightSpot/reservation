@@ -5,25 +5,35 @@ import (
 	"time"
 )
 
-type mockLogger struct{}
+type mockLogger struct {
+	date time.Time
+	loc  *time.Location
+}
 
 func NewMockLogger() ILogger {
-	return &mockLogger{}
+	utc, loc, err := dateInTimezone("")
+	if err != nil {
+		return nil
+	}
+	return &mockLogger{date: utc, loc: loc}
 }
 
-func (m mockLogger) Date() time.Time {
-	utc, _ := dateTimeToUTC("")
-	return utc
+func (m *mockLogger) Timezone() *time.Location {
+	return m.loc
 }
 
-func (m mockLogger) Error(variables ...interface{}) {
+func (m *mockLogger) Date() time.Time {
+	return m.date
+}
+
+func (m *mockLogger) Error(variables ...interface{}) {
 	log.Printf("%s", variables)
 }
 
-func (m mockLogger) Log(variables ...interface{}) {
+func (m *mockLogger) Log(variables ...interface{}) {
 	log.Printf("%s", variables)
 }
 
-func (m mockLogger) Fatal(variables ...interface{}) {
+func (m *mockLogger) Fatal(variables ...interface{}) {
 	log.Fatalf("%s", variables)
 }

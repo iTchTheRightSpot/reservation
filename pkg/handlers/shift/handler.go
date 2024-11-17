@@ -55,11 +55,13 @@ func (dep *ShiftHandler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// validate no overlapping shifts
+
 	if err = dep.service.Create(r.Context(), dto); err != nil {
 		utils.ConstructErrorResponse(
 			w,
 			utils.ErrorResponse{
-				Status:  http.StatusConflict,
+				Status:  http.StatusBadRequest,
 				Message: err.Error(),
 			},
 		)

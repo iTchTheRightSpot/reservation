@@ -5,7 +5,10 @@ import (
 	"time"
 )
 
+var TimeFormat = time.RFC3339
+
 type ILogger interface {
+	Timezone() *time.Location
 	Date() time.Time
 	Error(variables ...interface{})
 	Log(variables ...interface{})
@@ -19,32 +22,40 @@ const (
 )
 
 type logger struct {
-	time time.Time
+	time     time.Time
+	location *time.Location
 }
 
 func NewLogger(timezone string) (ILogger, error) {
-	if utc, err := dateTimeToUTC(timezone); err != nil {
+	if utc, loc, err := dateInTimezone(timezone); err != nil {
 		log.Fatalf("failed to instantiate logger %v", err)
-		return &logger{}, err
+		return nil, err
 	} else {
-		return &logger{time: utc}, nil
+		return &logger{time: utc, location: loc}, nil
 	}
 }
 
-func dateTimeToUTC(timezone string) (time.Time, error) {
+func dateInTimezone(timezone string) (time.Time, *time.Location, error) {
 	if timezone == "" {
 		timezone = "America/Toronto"
 	}
+
 	location, err := time.LoadLocation(timezone)
 	if err != nil {
-		return time.Time{}, err
+		return time.Time{}, nil, err
 	}
-	format := "2006-01-02 15:04:05"
-	dt, err := time.Parse(format, time.Now().In(location).Format(format))
+
+	dt, err := time.Parse(TimeFormat, time.Now().In(location).Format(TimeFormat))
+
 	if err != nil {
-		return time.Time{}, err
+		return time.Time{}, nil, err
 	}
-	return dt, nil
+
+	return dt, location, nil
+}
+
+func (l *logger) Timezone() *time.Location {
+	return l.location
 }
 
 func (l *logger) Date() time.Time {

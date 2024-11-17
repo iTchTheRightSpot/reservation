@@ -102,7 +102,7 @@ func TestShiftHandler(t *testing.T) {
 
 		dto := shiftModel.ShiftDto{
 			StaffUUID: save.StaffUUID.String(),
-			TimeSlots: &[]shiftModel.TimeSlot{},
+			Times:     &[]shiftModel.ShiftSegment{},
 		}
 
 		dtoBytes, err := json.Marshal(dto)
