@@ -1,41 +1,56 @@
-# Landscape ERP application powered by Go
+# Landscape ERP application powered by Go & PostgresSQL
 
 ## Core Requirements
 
-1. **Roles and Permissions**
-    - Staff members should have different roles.
-    - Staff members should have different permissions. For example, not all staffs should have
-   `WRITE` permissions.
+1. **Personal Identifiable Information**
+   - A user should be able to delete their personal info but only after 1 year of inactivity.
+   - Data integrity should not be affected.
 
-2. **Working Hour Creation**
-    - Only staff members with the `WRITE` permission can create working hours for other staff.
+2. **Roles and Permissions**
+    - Data should be protected and only allowed to users with specific roles and or permissions.
 
-3. **Bulk Shift Creation**
-    - Allow bulk creation of shifts with the following constraints:
-        - No duplicate shifts.
-        - Shifts cannot be created for past dates.
+3. **Staff**
+    - Bares minimum to be a staff is to have a role `STAFF`.
+    - **Shifts**
+      - Only staffs with `WRITE` permission can create working hours for other staffs.
+      - Allow bulk creation of shifts with the following constraints:
+      - No conflicts in working hrs.
+      - A schedule can only be deleted if not reservation is attached to it, but it can be as not
+      visible.
+      - Schedule cannot be created for past date.
+      - **Autonomous Weekly Recurring Schedule**
+        - Similar to marking a reoccurring alarm, autonomous schedule that runs weekly, for shifts
+        that have been marked as reoccurring. Cron would fire once a week.
+   - **Services**
+      - Only staffs with `WRITE or DELETE` permission can create or delete a service.
+      - A service cannot be deleted if it has an existing relationship with another table.
+      Instead, it's visibility can be marked as false so clients can reserve for said service.
+    - **Reservations**
+      - Only staffs with `WRITE` permission can cancel a reservation.
+      - A reservation can include multiple services.
+      - A reservation can can have an amount quoted.
+      - No overbooking or time overlap for n number of services for a specific staff.
+      - A reservation can never be deleted rather cancelled.
+      - Said staff should receive a notification on reservation creation and status change.
+      - For a reservation status to be marked as `COMPLETED`, it has to have a payment detail.
+      That is an existing relationship with payment_detail.
+      - Both staff & client should receive a notification 1 day before a `PENDING` appointment.
 
-4. **Autonomous Weekly Recurring Schedule**
-    - Implement an autonomous schedule that runs weekly, potentially as a cron job every Sunday.
+4. **Clients**
+   - **Services**
+     - A client should see all the services offered.
+     - n number of services can be for one reservation.
+   - **Reservations**
+     - A client can only be shown n valid reservation times for 1 staff.
+     - Although business can be in a different timezone, valid reservation times should match out to
+     said clients timezone.
+     - Clients cannot reschedule a reservation. The reservation has to be cancelled
+     - A reservation cannot be made for past dates.
+     - Clients & staffs should receive notifications on appointment status change.
 
-5. **Recurring Shift Flag**
-    - Add an `isRecurring` field to shifts. The cron job should:
-        - Retrieve shifts from the past 7 days when `isRecurring` is true.
-        - Recreate these recurring shifts.
-
-6. **Client Scheduling**
-    - Clients should be able to schedule a time based on the working hours of staff.
-    - No two clients can reserve the same time for a staff member.
-
-7. **Timezone Handling**
-    - Time slots for clients should be reflected in the client's timezone.
-
-8. **Invoice Permissions**
-    - Only staff members with the appropriate permissions can send invoices to clients.
-
-9. **Payment Flexibility**
-    - Some appointments/jobs require a partial (half) prepayment, while others do not.
-    - Although an appointment has a fixed price, payments can be split across different times.
+5. **Payment**
+    - Only staffs can send invoices to clients. 
+    - Clients should be able to pay via online invoice.
 
 # Development docs
 1. [Db Schema](https://dbdiagram.io/d/landscape-erp-66303ee65b24a634d01e83ea).
