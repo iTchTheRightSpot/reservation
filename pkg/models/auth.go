@@ -3,7 +3,7 @@ package models
 import "time"
 
 type JwtObj struct {
-	UserUUID       string           `json:"user_uuid"`
+	UserId         string           `json:"user_id"`
 	AccessControls []RolePermission `json:"access_controls"`
 	ExpireAt       *time.Time       `json:"expire_at"`
 }

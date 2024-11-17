@@ -243,7 +243,7 @@ func TestMiddleware(t *testing.T) {
 			}
 			obj := &models.JwtObj{
 				AccessControls: cred,
-				UserUUID:       "staff-id",
+				UserId:         "staff-id",
 			}
 
 			mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -278,7 +278,7 @@ func TestMiddleware(t *testing.T) {
 			}
 			obj := &models.JwtObj{
 				AccessControls: cred,
-				UserUUID:       "staff-id",
+				UserId:         "staff-id",
 			}
 
 			mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -341,7 +341,7 @@ func TestMiddleware(t *testing.T) {
 				}
 				obj := &models.JwtObj{
 					AccessControls: cred,
-					UserUUID:       "staff-id",
+					UserId:         "staff-id",
 				}
 
 				mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -376,7 +376,7 @@ func TestMiddleware(t *testing.T) {
 				}
 				obj := &models.JwtObj{
 					AccessControls: cred,
-					UserUUID:       "staff-id",
+					UserId:         "staff-id",
 				}
 
 				mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -437,7 +437,7 @@ func TestMiddleware(t *testing.T) {
 			}
 			obj := &models.JwtObj{
 				AccessControls: cred,
-				UserUUID:       "staff-id",
+				UserId:         "staff-id",
 			}
 
 			mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -476,7 +476,7 @@ func TestMiddleware(t *testing.T) {
 			}
 			obj := &models.JwtObj{
 				AccessControls: cred,
-				UserUUID:       "staff-id",
+				UserId:         "staff-id",
 			}
 
 			mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -514,7 +514,7 @@ func TestMiddleware(t *testing.T) {
 			}
 			obj := &models.JwtObj{
 				AccessControls: cred,
-				UserUUID:       "staff-id",
+				UserId:         "staff-id",
 			}
 
 			mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

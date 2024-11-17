@@ -54,7 +54,7 @@ func (dep *shiftService) Create(ctx context.Context, dto *shift.ShiftDto) error 
 		return err
 	}
 
-	staff, err := dep.adapters.StaffStore.StaffByUUID(ctx, dto.StaffUUID)
+	staff, err := dep.adapters.StaffStore.StaffByUUID(ctx, dto.StaffId)
 	if err != nil {
 		return err
 	}

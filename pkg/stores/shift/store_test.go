@@ -73,7 +73,7 @@ func TestShiftStore(t *testing.T) {
 		ctx := context.Background()
 
 		// given
-		staffObj := staff.Staff{StaffUUID: uuid.New()}
+		staffObj := staff.Staff{UUID: uuid.New()}
 		if _, err := staffStore.NewStaffStore(mockLog, con).Save(ctx, &staffObj); err != nil {
 			t.Errorf("%s", err)
 		}
@@ -110,7 +110,7 @@ func TestShiftStore(t *testing.T) {
 		ctx := context.Background()
 
 		// given
-		staffObj := staff.Staff{StaffUUID: uuid.New()}
+		staffObj := staff.Staff{UUID: uuid.New()}
 		if _, err := staffStore.NewStaffStore(mockLog, con).Save(ctx, &staffObj); err != nil {
 			t.Errorf("%s", err)
 		}
@@ -146,7 +146,7 @@ func TestShiftStore(t *testing.T) {
 		store := NewShiftStore(mockLog, con)
 		ctx := context.Background()
 
-		staffObj := staff.Staff{StaffUUID: uuid.New()}
+		staffObj := staff.Staff{UUID: uuid.New()}
 		if _, err := staffStore.NewStaffStore(mockLog, con).Save(ctx, &staffObj); err != nil {
 			t.Errorf("%s", err)
 		}

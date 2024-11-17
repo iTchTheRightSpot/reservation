@@ -22,8 +22,8 @@ func TestShift(t *testing.T) {
 			{IsVisible: true, Start: now.Format(utils.TimeFormat), Duration: 3600},
 		}
 		dto := ShiftDto{
-			StaffUUID: "test-staff-uuid",
-			Times:     &timeSlots,
+			StaffId: "test-staff-uuid",
+			Times:   &timeSlots,
 		}
 		future := now.Add(time.Duration(10) * time.Minute)
 
@@ -57,8 +57,8 @@ func TestShift(t *testing.T) {
 		}
 
 		dto := ShiftDto{
-			StaffUUID: "test-staff-uuid",
-			Times:     &timeSlots,
+			StaffId: "test-staff-uuid",
+			Times:   &timeSlots,
 		}
 
 		sub := now.Add(time.Duration(-3) * time.Hour)
@@ -90,8 +90,8 @@ func TestShift(t *testing.T) {
 			{IsVisible: false, Start: start1, Duration: 3600},
 		}
 		dto := ShiftDto{
-			StaffUUID: "test-staff-uuid",
-			Times:     &timeSlots,
+			StaffId: "test-staff-uuid",
+			Times:   &timeSlots,
 		}
 		sub := now.Add(time.Duration(-3) * time.Hour)
 
@@ -116,8 +116,8 @@ func TestShift(t *testing.T) {
 		}
 
 		dto := ShiftDto{
-			StaffUUID: "test-staff-uuid",
-			Times:     &timeSlots,
+			StaffId: "test-staff-uuid",
+			Times:   &timeSlots,
 		}
 
 		_, err := dto.CheckForOverlappingSegments(logger.Date(), timezone)
@@ -130,8 +130,8 @@ func TestShift(t *testing.T) {
 		t.Parallel()
 
 		dto := ShiftDto{
-			StaffUUID: "test-staff-uuid",
-			Times:     nil,
+			StaffId: "test-staff-uuid",
+			Times:   nil,
 		}
 
 		_, err := dto.CheckForOverlappingSegments(logger.Date(), timezone)

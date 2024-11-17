@@ -85,7 +85,7 @@ func TestStaffStore(t *testing.T) {
 		}
 
 		s := staff.Staff{
-			StaffUUID: uuid.New(),
+			UUID:      uuid.New(),
 			ProfileId: &p.ProfileId,
 		}
 
@@ -108,7 +108,7 @@ func TestStaffStore(t *testing.T) {
 			t.Errorf("should not find staff that does not exist")
 		}
 
-		find, err := staffRepo.StaffByUUID(ctx, s.StaffUUID.String())
+		find, err := staffRepo.StaffByUUID(ctx, s.UUID.String())
 		if err != nil {
 			t.Error(err)
 		}

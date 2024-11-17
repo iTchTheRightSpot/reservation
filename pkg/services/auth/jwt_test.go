@@ -35,7 +35,7 @@ func TestJwtService(t *testing.T) {
 			Permissions: []models.PermissionEnum{models.READ, models.DELETE},
 		}
 
-		o := &models.JwtObj{AccessControls: cred, UserUUID: "staff-uuid"}
+		o := &models.JwtObj{AccessControls: cred, UserId: "staff-uuid"}
 
 		// method to test & assert
 		obj, err := s.GenerateJwt(o, utils.TwoDaysInSeconds)
@@ -49,8 +49,8 @@ func TestJwtService(t *testing.T) {
 			t.Errorf("exception validating generated token jwt %s", err)
 		}
 
-		if !(o.UserUUID == v.UserUUID) {
-			t.Errorf("expect %s to equal given %s", o.UserUUID, v.UserUUID)
+		if !(o.UserId == v.UserId) {
+			t.Errorf("expect %s to equal given %s", o.UserId, v.UserId)
 		}
 	})
 }

@@ -82,7 +82,7 @@ func preSaveStaff(a *stores.Adapters) (*staff.Staff, error) {
 	}
 
 	s := staff.Staff{
-		StaffUUID: uuid.New(),
+		UUID:      uuid.New(),
 		ProfileId: &p.ProfileId,
 	}
 
@@ -124,14 +124,14 @@ func TestShiftHandler(t *testing.T) {
 		}
 		obj, err := jwtSer.GenerateJwt(
 			&models.JwtObj{
-				UserUUID:       save.StaffUUID.String(),
+				UserId:         save.UUID.String(),
 				AccessControls: cred,
 			},
 			utils.TwoDaysInSeconds,
 		)
 
 		dto := shiftModel.ShiftDto{
-			StaffUUID: save.StaffUUID.String(),
+			StaffId: save.UUID.String(),
 			Times: &[]shiftModel.ShiftSegment{
 				{
 					IsVisible:     true,

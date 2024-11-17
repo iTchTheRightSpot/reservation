@@ -28,14 +28,14 @@ func (dep *staffStore) Save(ctx context.Context, r *staff.Staff) (*staff.Staff, 
 	}
 
 	q := `
-    	INSERT INTO staff (staff_uuid, bio, profile_id)
+    	INSERT INTO staff (uuid, bio, profile_id)
         VALUES ($1, $2, $3)
-        RETURNING staff_id, staff_uuid, bio, profile_id
+        RETURNING staff_id, uuid, bio, profile_id
 	`
 
-	row := dep.db.QueryRowContext(ctx, q, r.StaffUUID, r.Bio, r.ProfileId)
+	row := dep.db.QueryRowContext(ctx, q, r.UUID, r.Bio, r.ProfileId)
 
-	err := row.Scan(&r.StaffId, &r.StaffUUID, &r.Bio, &r.ProfileId)
+	err := row.Scan(&r.StaffId, &r.UUID, &r.Bio, &r.ProfileId)
 
 	if err != nil {
 		dep.logger.Error(err)
@@ -47,10 +47,10 @@ func (dep *staffStore) Save(ctx context.Context, r *staff.Staff) (*staff.Staff, 
 
 func (dep *staffStore) StaffByUUID(ctx context.Context, staffUUID string) (*staff.Staff, error) {
 	var r staff.Staff
-	q := "SELECT * FROM staff WHERE staff_uuid = $1"
+	q := "SELECT * FROM staff WHERE uuid = $1"
 
 	row := dep.db.QueryRowContext(ctx, q, staffUUID)
-	err := row.Scan(&r.StaffId, &r.StaffUUID, &r.Bio, &r.ProfileId)
+	err := row.Scan(&r.StaffId, &r.UUID, &r.Bio, &r.ProfileId)
 	if err != nil {
 		dep.logger.Error(err)
 		return nil, fmt.Errorf("exception retrieving staff with uuid %s", staffUUID)

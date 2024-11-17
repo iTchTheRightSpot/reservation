@@ -55,7 +55,7 @@ func TestTransactionProvider(t *testing.T) {
 		// method to test
 		err := adap.Transaction.RunInTransaction(func(adapters *Adapters) error {
 			ctx := context.Background()
-			save, err := adapters.StaffStore.Save(ctx, &staff.Staff{StaffUUID: uuid.UUID{}})
+			save, err := adapters.StaffStore.Save(ctx, &staff.Staff{UUID: uuid.UUID{}})
 			if err != nil {
 				return err
 			}
@@ -82,7 +82,7 @@ func TestTransactionProvider(t *testing.T) {
 		err := adap.Transaction.RunInTransaction(func(adapters *Adapters) error {
 			ctx := context.Background()
 			uu := uuid.UUID{}
-			save, err := adapters.StaffStore.Save(ctx, &staff.Staff{StaffUUID: uu})
+			save, err := adapters.StaffStore.Save(ctx, &staff.Staff{UUID: uu})
 			if err != nil {
 				return err
 			}

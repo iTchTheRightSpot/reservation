@@ -70,7 +70,7 @@ func (dep *jwtService) GenerateJwt(o *models.JwtObj, expirationInSeconds int) (*
 	claims := jwt.NewWithClaims(
 		jwt.SigningMethodRS256,
 		jwt.MapClaims{
-			"sub": o.UserUUID,
+			"sub": o.UserId,
 			"obj": o,
 			"iss": "Landscape ERP",
 			"exp": exp.Unix(),
@@ -121,11 +121,11 @@ func (dep *jwtService) ValidateJwt(str string) (*models.JwtObj, error) {
 	}
 
 	jwtObj := &models.JwtObj{ExpireAt: &exp.Time}
-	if uuid, ok := obj["user_uuid"].(string); ok {
-		jwtObj.UserUUID = uuid
+	if uuid, ok := obj["user_id"].(string); ok {
+		jwtObj.UserId = uuid
 	} else {
-		dep.logger.Error("missing or invalid UserUUID in token claims")
-		return nil, fmt.Errorf("invalid or missing UserUUID")
+		dep.logger.Error("missing or invalid UserId in token claims")
+		return nil, fmt.Errorf("invalid or missing UserId")
 	}
 
 	if credentials, ok := obj["access_controls"].([]interface{}); ok {

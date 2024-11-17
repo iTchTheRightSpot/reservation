@@ -17,8 +17,8 @@ type Shift struct {
 }
 
 type ShiftDto struct {
-	StaffUUID string          `json:"staff_uuid" validate:"required"`
-	Times     *[]ShiftSegment `json:"shift_segments" validate:"required,min=1,dive,required"`
+	StaffId string          `json:"staff_id" validate:"required"`
+	Times   *[]ShiftSegment `json:"shift_segments" validate:"required,min=1,dive,required"`
 }
 
 type ShiftSegment struct {
