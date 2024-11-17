@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/database"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/model/profile"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/model/staff"
+	"github.com/iTchTheRightSpot/erp-golang/database"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	profileStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"log"
@@ -58,15 +58,20 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 	return tx, rollback
 }
 
-func TestStaff(t *testing.T) {
+func TestStaffStore(t *testing.T) {
+	t.Parallel()
+
 	mockLog := utils.NewMockLogger()
 
-	t.Run("should save staff", func(t *testing.T) {
+	t.Run("should save staff and find by uuid", func(t *testing.T) {
+		t.Parallel()
+
 		con, fn := setupTest(t)
 		defer fn()
 
 		ctx := context.Background()
-		repo := profileStore.NewProfileStore(mockLog, con)
+		staffRepo := NewStaffStore(mockLog, con)
+		profileRepo := profileStore.NewProfileStore(mockLog, con)
 
 		// given
 		p := profile.Profile{
@@ -75,17 +80,17 @@ func TestStaff(t *testing.T) {
 			Email:     "frog@email.com",
 		}
 
-		if _, err := repo.Save(ctx, &p); err != nil {
+		if _, err := profileRepo.Save(ctx, &p); err != nil {
 			t.Errorf("%s", err)
 		}
 
-		// method to test
 		s := staff.Staff{
-			StaffUUID: uuid.New(),
+			UUID:      uuid.New(),
 			ProfileId: &p.ProfileId,
 		}
 
-		save, err := NewStaffStore(mockLog, con).Save(ctx, &s)
+		// method to test
+		save, err := staffRepo.Save(ctx, &s)
 		if err != nil {
 			t.Errorf("%s", err)
 		}
@@ -96,6 +101,20 @@ func TestStaff(t *testing.T) {
 
 		if !reflect.DeepEqual(&s, save) {
 			t.Errorf("staff not saved correctly. expected: %+v, Got: %+v", s, save)
+		}
+
+		// method to test
+		if _, err = staffRepo.StaffByUUID(ctx, uuid.New().String()); err == nil {
+			t.Errorf("should not find staff that does not exist")
+		}
+
+		find, err := staffRepo.StaffByUUID(ctx, s.UUID.String())
+		if err != nil {
+			t.Error(err)
+		}
+
+		if !reflect.DeepEqual(save, find) {
+			t.Errorf("expected: %+v, Got: %+v", save, find)
 		}
 	})
 }

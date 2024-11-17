@@ -1,26 +1,27 @@
-package role
+package profile
 
 import (
 	"context"
 	"fmt"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/model"
+	"github.com/iTchTheRightSpot/erp-golang/pkg"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 )
 
 type IRoleStore interface {
-	Save(ctx context.Context, r *model.Role) (*model.Role, error)
+	Save(ctx context.Context, r *models.Role) (*models.Role, error)
 }
 
 type roleStore struct {
 	logger utils.ILogger
-	db     utils.Db
+	db     pkg.Db
 }
 
-func NewRoleStore(l utils.ILogger, db utils.Db) IRoleStore {
+func NewRoleStore(l utils.ILogger, db pkg.Db) IRoleStore {
 	return &roleStore{logger: l, db: db}
 }
 
-func (dep *roleStore) Save(ctx context.Context, r *model.Role) (*model.Role, error) {
+func (dep *roleStore) Save(ctx context.Context, r *models.Role) (*models.Role, error) {
 	if r == nil {
 		return nil, fmt.Errorf("role object is nil")
 	}

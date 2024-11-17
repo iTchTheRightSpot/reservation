@@ -4,15 +4,16 @@ import (
 	"context"
 	"database/sql"
 	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/database"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/model/profile"
+	"github.com/iTchTheRightSpot/erp-golang/database"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"log"
 	"reflect"
 	"testing"
 )
 
-var dbInstance *sql.DB
+var db *sql.DB
 
 func TestMain(m *testing.M) {
 	secret := config.SecretVariables{}
@@ -21,12 +22,10 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	db, err := database.ConnectToPostgres(env.DbConnectionString)
+	db, err = database.ConnectToPostgres(env.DbConnectionString)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	dbInstance = db
 
 	// close db connection
 	defer func(db *sql.DB) {
@@ -41,21 +40,19 @@ func TestMain(m *testing.M) {
 }
 
 func setupTest(t *testing.T) (*sql.Tx, func()) {
-	tx, err := dbInstance.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		t.Fatalf("failed to start transaction: %v", err)
 	}
 
-	rollback := func() {
+	return tx, func() {
 		if err := tx.Rollback(); err != nil {
 			return
 		}
 	}
-
-	return tx, rollback
 }
 
-func TestProfile(t *testing.T) {
+func TestProfileStore(t *testing.T) {
 	mockLog := utils.NewMockLogger()
 
 	t.Run("should Save profile when image_key is not null", func(t *testing.T) {
@@ -113,6 +110,59 @@ func TestProfile(t *testing.T) {
 
 		if !reflect.DeepEqual(&p, save) {
 			t.Errorf("staff not saved correctly. expected: %+v, Got: %+v", p, save)
+		}
+	})
+
+	t.Run("test saving profile, role & permissions", func(t *testing.T) {
+		con, fn := setupTest(t)
+		defer fn()
+
+		ctx := context.Background()
+		profileRepo := NewProfileStore(mockLog, con)
+		roleRepo := NewRoleStore(mockLog, con)
+		permissionRepo := NewPermissionStore(mockLog, con)
+
+		p := profile.Profile{
+			Firstname: "frog",
+			Lastname:  "lastname",
+			Email:     "frog@email.com",
+		}
+
+		// save profile
+		if _, err := profileRepo.Save(ctx, &p); err != nil {
+			t.Errorf("%s", err)
+		}
+
+		// save role & assert it is saved
+		r := models.Role{Role: models.STAFF, ProfileId: p.ProfileId}
+
+		save, err := roleRepo.Save(ctx, &r)
+		if err != nil {
+			t.Errorf("%s", err)
+		}
+
+		if save.RoleId < 1 {
+			t.Errorf("role not saved. Expected RoleId > 0, got %d", save.RoleId)
+		}
+
+		if !reflect.DeepEqual(&r, save) {
+			t.Errorf("role not saved correctly. expected: %+v, Got: %+v", r, save)
+		}
+
+		// save permission & assert
+		per := models.Permission{Permission: models.WRITE, RoleId: r.RoleId}
+
+		savePer, err := permissionRepo.Save(ctx, &per)
+		if err != nil {
+			t.Errorf("%s", err)
+		}
+
+		if savePer.PermissionId < 1 {
+			t.Errorf("permission not saved. Expected PermissionId > 0, got %d", savePer.PermissionId)
+		}
+
+		if !reflect.DeepEqual(&per, savePer) {
+			t.Errorf("permission not saved correctly. expected: %+v, Got: %+v", r, save)
 		}
 	})
 }
