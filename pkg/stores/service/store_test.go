@@ -86,4 +86,32 @@ func TestServiceStore(t *testing.T) {
 			t.Errorf("expect %v to equal %v", s, &save)
 		}
 	})
+
+	t.Run("reject saving. price is greater than DECIMAL(6, 2)", func(t *testing.T) {
+		t.Parallel()
+
+		tx, fn := setupTest(t)
+		defer fn()
+
+		store := NewServiceStore(logger, tx)
+		ctx := context.Background()
+
+		// given
+		s := service.Service{
+			Name:  "name",
+			Price: 10001.95,
+		}
+
+		// method to test
+		if _, err := store.Save(ctx, &s); err == nil {
+			t.Error(err)
+		}
+
+		// method to test
+		s.Name = "higher"
+		s.Price = 1000.959
+		if _, err := store.Save(ctx, &s); err == nil {
+			t.Error(err)
+		}
+	})
 }

@@ -41,6 +41,7 @@
    - **Services**
      - A client should see all the services offered.
      - n number of services can be for one reservation.
+     - Every service can have a max price of `DECIMAL(6, 2)`.
    - **Reservations**
      - A client can only be shown n valid reservation times for 1 staff.
      - Although business can be in a different timezone, valid reservation times should match out to
