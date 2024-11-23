@@ -39,7 +39,7 @@ jobs:
         run: go test ./...
 
       - name: Race test
-        run: go test ./... --race
+        run: go clean -testcache && go test ./... --race
 
       - name: Docker compose down
         run: docker compose down -v

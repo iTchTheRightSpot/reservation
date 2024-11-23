@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS staff
 (
-    staff_id BIGSERIAL NOT NULL UNIQUE,
+    staff_id BIGSERIAL NOT NULL UNIQUE PRIMARY KEY,
     uuid     UUID      NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     bio      VARCHAR(255),
     profile_id BIGINT,

@@ -8,3 +8,9 @@ type Staff struct {
 	Bio       *string   `json:"bio"`
 	ProfileId *uint64   `json:"profile_id"`
 }
+
+type StaffServiceEntity struct {
+	JunctionId uint64 `json:"junction_id"`
+	StaffId    uint64 `json:"staff_id"`
+	ServiceId  uint64 `json:"service_id"`
+}
