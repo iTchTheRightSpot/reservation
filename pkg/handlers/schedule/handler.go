@@ -28,7 +28,7 @@ func (dep *ScheduleHandler) Register() {
 	m := middleware.RequestBodyMiddleware[model.SchedulePayload]{Logger: dep.logger}
 
 	mux.Handle("POST /", dep.middleware.HasPermission(m.RequestBody(http.HandlerFunc(dep.create)), &permission))
-	mux.Handle("GET /", http.HandlerFunc(dep.shifts))
+	mux.Handle("GET /", http.HandlerFunc(dep.schedules))
 	dep.mux.Handle("/schedule", dep.middleware.Authentication(dep.middleware.HasRole(mux, &role)))
 }
 
@@ -61,7 +61,7 @@ func (dep *ScheduleHandler) create(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (dep *ScheduleHandler) shifts(w http.ResponseWriter, r *http.Request) {
+func (dep *ScheduleHandler) schedules(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte("shift handler GET route hit"))
+	_, _ = w.Write([]byte("schedule handler GET route hit"))
 }

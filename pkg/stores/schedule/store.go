@@ -9,29 +9,29 @@ import (
 	"time"
 )
 
-type IShiftStore interface {
+type IScheduleStore interface {
 	Save(ctx context.Context, s *schedule.Schedule) (*schedule.Schedule, error)
-	CountExistingShiftsForStaff(ctx context.Context, staffId uint64, start, end time.Time) (int, error)
+	CountExistingSchedulesForStaff(ctx context.Context, staffId uint64, start, end time.Time) (int, error)
 }
 
-type profileStore struct {
+type scheduleStore struct {
 	logger utils.ILogger
 	db     pkg.Db
 }
 
-func NewShiftStore(l utils.ILogger, db pkg.Db) IShiftStore {
-	return &profileStore{logger: l, db: db}
+func NewScheduleStore(l utils.ILogger, db pkg.Db) IScheduleStore {
+	return &scheduleStore{logger: l, db: db}
 }
 
-func (dep *profileStore) Save(ctx context.Context, s *schedule.Schedule) (*schedule.Schedule, error) {
+func (dep *scheduleStore) Save(ctx context.Context, s *schedule.Schedule) (*schedule.Schedule, error) {
 	if s == nil {
-		return nil, fmt.Errorf("shift object is nil")
+		return nil, fmt.Errorf("schedule object is nil")
 	}
 
 	q := `
-		INSERT INTO schedule (shift_start, shift_end, is_visible, is_reoccurring, staff_id)
+		INSERT INTO schedule (schedule_start, schedule_end, is_visible, is_reoccurring, staff_id)
 		VALUES ($1, $2, $3, $4, $5)
-		RETURNING schedule_id, shift_start, shift_end, is_visible, is_reoccurring, staff_id
+		RETURNING schedule_id, schedule_start, schedule_end, is_visible, is_reoccurring, staff_id
 	`
 
 	row := dep.db.QueryRowContext(ctx, q, s.Start, s.End, s.IsVisible, s.IsReoccurring, s.StaffId)
@@ -39,19 +39,19 @@ func (dep *profileStore) Save(ctx context.Context, s *schedule.Schedule) (*sched
 
 	if err != nil {
 		dep.logger.Error(err)
-		return nil, fmt.Errorf("exception saving to shift table")
+		return nil, fmt.Errorf("exception saving to schedule table")
 	}
 
 	return s, nil
 }
 
-func (dep *profileStore) CountExistingShiftsForStaff(ctx context.Context, staffId uint64, start, end time.Time) (int, error) {
+func (dep *scheduleStore) CountExistingSchedulesForStaff(ctx context.Context, staffId uint64, start, end time.Time) (int, error) {
 	q := `
 		SELECT COUNT(s.schedule_id) FROM schedule s
 		WHERE s.staff_id = $1
 		AND (
-			(s.shift_start BETWEEN $2 AND $3) OR
-			(s.shift_end BETWEEN $2 AND $3)
+			(s.schedule_start BETWEEN $2 AND $3) OR
+			(s.schedule_end BETWEEN $2 AND $3)
 		)
 	`
 
@@ -62,8 +62,8 @@ func (dep *profileStore) CountExistingShiftsForStaff(ctx context.Context, staffI
 		dep.logger.Error(err)
 		return 0, err
 	} else if count == -1 {
-		dep.logger.Error(fmt.Sprintf("exception counting existing shifts for staff id %v", staffId))
-		return 0, fmt.Errorf("exception counting existing shifts for staff")
+		dep.logger.Error(fmt.Sprintf("exception counting existing schedules for staff id %v", staffId))
+		return 0, fmt.Errorf("exception counting existing schedules for staff")
 	}
 
 	return count, nil

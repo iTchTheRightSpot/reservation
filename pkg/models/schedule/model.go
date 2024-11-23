@@ -10,15 +10,15 @@ import (
 type Schedule struct {
 	ScheduleId    uint64    `json:"schedule_id"`
 	StaffId       uint64    `json:"staff_id"`
-	Start         time.Time `json:"shift_start"`
-	End           time.Time `json:"shift_end"`
+	Start         time.Time `json:"schedule_start"`
+	End           time.Time `json:"schedule_end"`
 	IsVisible     bool      `json:"is_visible"`
 	IsReoccurring bool      `json:"is_reoccurring"`
 }
 
 type SchedulePayload struct {
 	StaffId string                    `json:"staff_id" validate:"required"`
-	Times   *[]ScheduleSegmentPayload `json:"shift_segments" validate:"required,min=1,dive,required"`
+	Times   *[]ScheduleSegmentPayload `json:"schedule_segments" validate:"required,min=1,dive,required"`
 }
 
 type ScheduleSegmentPayload struct {

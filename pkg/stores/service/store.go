@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
@@ -25,7 +26,7 @@ func NewServiceStore(l utils.ILogger, db pkg.Db) IServiceStore {
 
 func (dep *serviceStore) Save(ctx context.Context, s *service.Service) (*service.Service, error) {
 	if s == nil {
-		return nil, fmt.Errorf("shift object is nil")
+		return nil, fmt.Errorf("schedule object is nil")
 	}
 
 	q := `
@@ -66,10 +67,40 @@ func (dep *serviceStore) ServiceByName(ctx context.Context, name string) (*servi
 }
 
 func (dep *serviceStore) ServicesByStaffId(ctx context.Context, staffId uint64) ([]*service.Service, error) {
-	//var q = `
-	//  SELECT s.* FROM service s
-	//  INNER JOIN staff_service ss ON ss.service_id = s.service_id
-	//  WHERE ss.staff_id = $1
-	//`
-	panic("implement me")
+	var arr []*service.Service
+
+	var q = `
+	 SELECT s.* FROM service s
+	 INNER JOIN staff_service ss ON ss.service_id = s.service_id
+	 WHERE ss.staff_id = $1
+	`
+
+	rows, err := dep.db.QueryContext(ctx, q, staffId)
+	if err != nil {
+		dep.logger.Error(err)
+		return nil, fmt.Errorf("exception retrieving services")
+	}
+
+	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
+
+	for rows.Next() {
+		var s service.Service
+
+		err = rows.Scan(&s.ServiceId, &s.Name, &s.Price, &s.IsVisible, &s.IsReoccurring, &s.Duration, &s.CleanUpTime)
+
+		if err != nil {
+			dep.logger.Error(err)
+			return nil, fmt.Errorf("exception scanning service")
+
+		}
+
+		arr = append(arr, &s)
+	}
+
+	if err = rows.Err(); err != nil {
+		dep.logger.Error(err)
+		return nil, fmt.Errorf("error iterating services")
+	}
+
+	return nil, err
 }

@@ -4,6 +4,6 @@ import (
 	"testing"
 )
 
-func TestShiftService(t *testing.T) {
+func TestScheduleService(t *testing.T) {
 	t.Parallel()
 }

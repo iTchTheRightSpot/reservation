@@ -59,12 +59,12 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 	return tx, rollback
 }
 
-func TestShiftStore(t *testing.T) {
+func TestScheduleStore(t *testing.T) {
 	t.Parallel()
 
 	mockLog := utils.NewMockLogger()
 
-	t.Run("should save staff shift", func(t *testing.T) {
+	t.Run("should save staff schedule", func(t *testing.T) {
 		t.Parallel()
 
 		tx, fn := setupTest(t)
@@ -85,14 +85,14 @@ func TestShiftStore(t *testing.T) {
 		}
 
 		// method to test
-		save, err := NewShiftStore(mockLog, tx).Save(ctx, s)
+		save, err := NewScheduleStore(mockLog, tx).Save(ctx, s)
 		if err != nil {
-			t.Errorf("shift not saved")
+			t.Errorf("schedule not saved")
 		}
 
 		// assert
 		if save.ScheduleId < 1 {
-			t.Errorf("shift not save as ScheduleId is less than 1")
+			t.Errorf("schedule not save as ScheduleId is less than 1")
 		}
 
 		if !reflect.DeepEqual(save, s) {
@@ -100,13 +100,13 @@ func TestShiftStore(t *testing.T) {
 		}
 	})
 
-	t.Run("shift count should be greater than zero for staff", func(t *testing.T) {
+	t.Run("schedule count should be greater than zero for staff", func(t *testing.T) {
 		t.Parallel()
 
 		tx, fn := setupTest(t)
 		defer fn()
 
-		store := NewShiftStore(mockLog, tx)
+		store := NewScheduleStore(mockLog, tx)
 		ctx := context.Background()
 
 		// given
@@ -123,11 +123,11 @@ func TestShiftStore(t *testing.T) {
 		}
 
 		if _, err := store.Save(ctx, s); err != nil {
-			t.Errorf("shift not saved")
+			t.Errorf("schedule not saved")
 		}
 
 		// method to test
-		count, err := store.CountExistingShiftsForStaff(ctx, staffObj.StaffId, s.Start, s.End)
+		count, err := store.CountExistingSchedulesForStaff(ctx, staffObj.StaffId, s.Start, s.End)
 		if err != nil {
 			t.Error(err)
 		}
@@ -137,13 +137,13 @@ func TestShiftStore(t *testing.T) {
 		}
 	})
 
-	t.Run("count should be zero for shifts for staff", func(t *testing.T) {
+	t.Run("count should be zero for schedules for staff", func(t *testing.T) {
 		t.Parallel()
 
 		tx, fn := setupTest(t)
 		defer fn()
 
-		store := NewShiftStore(mockLog, tx)
+		store := NewScheduleStore(mockLog, tx)
 		ctx := context.Background()
 
 		staffObj := staff.Staff{UUID: uuid.New()}
@@ -159,13 +159,13 @@ func TestShiftStore(t *testing.T) {
 		}
 
 		if _, err := store.Save(ctx, s); err != nil {
-			t.Errorf("shift not saved")
+			t.Errorf("schedule not saved")
 		}
 
 		// method to test
 		param1 := s.End.Add(time.Duration(1) * time.Second)
 		param2 := s.End.Add(time.Duration(8) * time.Hour)
-		count, err := store.CountExistingShiftsForStaff(ctx, staffObj.StaffId, param1, param2)
+		count, err := store.CountExistingSchedulesForStaff(ctx, staffObj.StaffId, param1, param2)
 		if err != nil {
 			t.Error(err)
 		}

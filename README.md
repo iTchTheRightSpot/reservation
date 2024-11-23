@@ -11,15 +11,15 @@
 
 3. **Staff**
     - Bares minimum to be a staff is to have a role `STAFF`.
-    - **Shifts**
+    - **Schedule**
       - Only staffs with `WRITE` permission can create working hours for other staffs.
-      - Allow bulk creation of shifts with the following constraints:
+      - Allow bulk creation of schedules with the following constraints:
       - No conflicts in working hrs.
       - A schedule can only be deleted if not reservation is attached to it, but it can be as not
       visible.
       - Schedule cannot be created for past date.
       - **Autonomous Weekly Recurring Schedule**
-        - Similar to marking a reoccurring alarm, autonomous schedule that runs weekly, for shifts
+        - Similar to marking a reoccurring alarm, autonomous schedule that runs weekly, for schedules
         that have been marked as reoccurring. Cron would fire once a week.
    - **Services**
       - Only staffs with `WRITE or DELETE` permission can create or delete a service.
@@ -63,3 +63,4 @@
 
 ## Cmd
 1. `migrate create -ext sql -dir ./database/migrations/ -seq create_users_table`.
+2. `go clean -testcache`

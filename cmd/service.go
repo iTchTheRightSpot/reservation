@@ -11,9 +11,9 @@ import (
 )
 
 type serviceRegistry struct {
-	JwtService   auth.IJwtService
-	ShiftService schedule.IScheduleService
-	ServiceImpl  service.IService
+	JwtService      auth.IJwtService
+	ScheduleService schedule.IScheduleService
+	ServiceImpl     service.IService
 }
 
 func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *serviceRegistry {
@@ -21,8 +21,8 @@ func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *
 	security := auth.NewJwtService(l, e)
 
 	return &serviceRegistry{
-		JwtService:   security,
-		ShiftService: schedule.NewScheduleService(l, a),
-		ServiceImpl:  service.NewServiceImpl(l, a),
+		JwtService:      security,
+		ScheduleService: schedule.NewScheduleService(l, a),
+		ServiceImpl:     service.NewServiceImpl(l, a),
 	}
 }

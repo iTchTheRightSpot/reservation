@@ -30,13 +30,13 @@ func (dep *scheduleService) validateSegments(ctx context.Context, staffID uint64
 		wg.Add(1)
 		go func(segment schedule.ScheduledPeriod) {
 			defer wg.Done()
-			count, err := dep.adapters.ShiftStore.CountExistingShiftsForStaff(ctx, staffID, segment.Start, segment.End)
+			count, err := dep.adapters.ScheduleStore.CountExistingSchedulesForStaff(ctx, staffID, segment.Start, segment.End)
 			if err != nil {
-				errChan <- fmt.Errorf("error checking existing shifts: %w", err)
+				errChan <- fmt.Errorf("error checking existing schedules: %w", err)
 				return
 			}
 			if count > 0 {
-				errChan <- fmt.Errorf("duplicate shift detected from %v to %v", segment.Start, segment.End)
+				errChan <- fmt.Errorf("duplicate schedule detected from %v to %v", segment.Start, segment.End)
 			}
 		}(seg)
 	}
@@ -65,7 +65,7 @@ func (dep *scheduleService) Create(ctx context.Context, dto *schedule.SchedulePa
 
 	return dep.adapters.Transaction.RunInTransaction(func(adapters *stores.Adapters) error {
 		for _, segment := range segments {
-			_, err = adapters.ShiftStore.Save(ctx, &schedule.Schedule{
+			_, err = adapters.ScheduleStore.Save(ctx, &schedule.Schedule{
 				StaffId:   staff.StaffId,
 				Start:     segment.Start,
 				End:       segment.End,

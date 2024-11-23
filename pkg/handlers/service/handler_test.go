@@ -102,7 +102,7 @@ func TestServiceHandler(t *testing.T) {
 			CleanUpTime: 1800,
 		})
 		if err != nil {
-			t.Errorf("failed to marshal ShiftPayload: %s", err)
+			t.Errorf("failed to marshal SchedulePayload: %s", err)
 		}
 
 		req := httptest.NewRequest(http.MethodPost, "/service", bytes.NewBuffer(dtoBytes))

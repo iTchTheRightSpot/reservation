@@ -93,12 +93,12 @@ func preSaveStaff(a *stores.Adapters) (*staff.Staff, error) {
 	return &s, nil
 }
 
-func TestShiftHandler(t *testing.T) {
+func TestScheduleHandler(t *testing.T) {
 	t.Parallel()
 
 	logger := utils.NewMockLogger()
 
-	t.Run("should save shift", func(t *testing.T) {
+	t.Run("should save schedule", func(t *testing.T) {
 		t.Parallel()
 
 		tx, fn := setupTest(t)
@@ -107,12 +107,12 @@ func TestShiftHandler(t *testing.T) {
 		// given
 		mux := http.NewServeMux()
 		prov := stores.MockLiveTransactionProvider(logger, tx)
-		adap := stores.NewAdapters(logger, tx, prov)
+		adapters := stores.NewAdapters(logger, tx, prov)
 		jwtSer := auth.NewJwtService(logger, env)
 		m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
-		s := schedule.NewScheduleService(logger, adap)
+		s := schedule.NewScheduleService(logger, adapters)
 
-		save, err := preSaveStaff(adap)
+		save, err := preSaveStaff(adapters)
 		if err != nil {
 			t.Error(err)
 		}

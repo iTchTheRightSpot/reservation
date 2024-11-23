@@ -45,7 +45,7 @@ func (dep *HandlerRegistry) Initialize() http.Handler {
 	v1 := http.NewServeMux()
 
 	// register handlers
-	schedule.NewScheduleHandler(v1, dep.middleware, dep.log, dep.services.ShiftService).Register()
+	schedule.NewScheduleHandler(v1, dep.middleware, dep.log, dep.services.ScheduleService).Register()
 	service.NewServiceHandler(v1, dep.log, dep.services.ServiceImpl, dep.middleware).Register()
 
 	// register v1 with mux

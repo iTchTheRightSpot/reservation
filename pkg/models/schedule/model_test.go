@@ -7,13 +7,13 @@ import (
 	"time"
 )
 
-func TestShift(t *testing.T) {
+func TestScheduleModel(t *testing.T) {
 	t.Parallel()
 
 	logger := utils.NewMockLogger()
 	timezone := logger.Timezone()
 
-	t.Run("return error shift in the past", func(t *testing.T) {
+	t.Run("return error schedule in the past", func(t *testing.T) {
 		t.Parallel()
 
 		// given
