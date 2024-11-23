@@ -1,4 +1,4 @@
-package shift
+package schedule
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/shift"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	staffStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -78,7 +78,7 @@ func TestShiftStore(t *testing.T) {
 			t.Errorf("%s", err)
 		}
 
-		s := &shift.Shift{
+		s := &schedule.Schedule{
 			StaffId: staffObj.StaffId,
 			Start:   mockLog.Date(),
 			End:     mockLog.Date().Add(time.Duration(8) * time.Hour),
@@ -91,8 +91,8 @@ func TestShiftStore(t *testing.T) {
 		}
 
 		// assert
-		if save.ShiftId < 1 {
-			t.Errorf("shift not save as ShiftId is less than 1")
+		if save.ScheduleId < 1 {
+			t.Errorf("shift not save as ScheduleId is less than 1")
 		}
 
 		if !reflect.DeepEqual(save, s) {
@@ -116,7 +116,7 @@ func TestShiftStore(t *testing.T) {
 		}
 
 		date := mockLog.Date()
-		s := &shift.Shift{
+		s := &schedule.Schedule{
 			StaffId: staffObj.StaffId,
 			Start:   date,
 			End:     mockLog.Date().Add(time.Duration(8) * time.Hour),
@@ -152,7 +152,7 @@ func TestShiftStore(t *testing.T) {
 		}
 
 		date := mockLog.Date()
-		s := &shift.Shift{
+		s := &schedule.Schedule{
 			StaffId: staffObj.StaffId,
 			Start:   date,
 			End:     mockLog.Date().Add(time.Duration(8) * time.Hour),

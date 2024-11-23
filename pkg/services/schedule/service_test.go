@@ -1,4 +1,4 @@
-package shift_test
+package schedule_test
 
 import (
 	"testing"

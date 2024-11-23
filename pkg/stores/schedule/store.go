@@ -1,16 +1,16 @@
-package shift
+package schedule
 
 import (
 	"context"
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/shift"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"time"
 )
 
 type IShiftStore interface {
-	Save(ctx context.Context, s *shift.Shift) (*shift.Shift, error)
+	Save(ctx context.Context, s *schedule.Schedule) (*schedule.Schedule, error)
 	CountExistingShiftsForStaff(ctx context.Context, staffId uint64, start, end time.Time) (int, error)
 }
 
@@ -23,19 +23,19 @@ func NewShiftStore(l utils.ILogger, db pkg.Db) IShiftStore {
 	return &profileStore{logger: l, db: db}
 }
 
-func (dep *profileStore) Save(ctx context.Context, s *shift.Shift) (*shift.Shift, error) {
+func (dep *profileStore) Save(ctx context.Context, s *schedule.Schedule) (*schedule.Schedule, error) {
 	if s == nil {
 		return nil, fmt.Errorf("shift object is nil")
 	}
 
 	q := `
-		INSERT INTO shift (shift_start, shift_end, is_visible, is_reoccurring, staff_id)
+		INSERT INTO schedule (shift_start, shift_end, is_visible, is_reoccurring, staff_id)
 		VALUES ($1, $2, $3, $4, $5)
-		RETURNING shift_id, shift_start, shift_end, is_visible, is_reoccurring, staff_id
+		RETURNING schedule_id, shift_start, shift_end, is_visible, is_reoccurring, staff_id
 	`
 
 	row := dep.db.QueryRowContext(ctx, q, s.Start, s.End, s.IsVisible, s.IsReoccurring, s.StaffId)
-	err := row.Scan(&s.ShiftId, &s.Start, &s.End, &s.IsVisible, &s.IsReoccurring, &s.StaffId)
+	err := row.Scan(&s.ScheduleId, &s.Start, &s.End, &s.IsVisible, &s.IsReoccurring, &s.StaffId)
 
 	if err != nil {
 		dep.logger.Error(err)
@@ -47,7 +47,7 @@ func (dep *profileStore) Save(ctx context.Context, s *shift.Shift) (*shift.Shift
 
 func (dep *profileStore) CountExistingShiftsForStaff(ctx context.Context, staffId uint64, start, end time.Time) (int, error) {
 	q := `
-		SELECT COUNT(s.shift_id) FROM shift s
+		SELECT COUNT(s.schedule_id) FROM schedule s
 		WHERE s.staff_id = $1
 		AND (
 			(s.shift_start BETWEEN $2 AND $3) OR

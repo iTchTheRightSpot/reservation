@@ -1,4 +1,4 @@
-package shift
+package schedule
 
 import (
 	"fmt"
@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-type Shift struct {
-	ShiftId       uint64    `json:"shift_id"`
+type Schedule struct {
+	ScheduleId    uint64    `json:"schedule_id"`
 	StaffId       uint64    `json:"staff_id"`
 	Start         time.Time `json:"shift_start"`
 	End           time.Time `json:"shift_end"`
@@ -16,12 +16,12 @@ type Shift struct {
 	IsReoccurring bool      `json:"is_reoccurring"`
 }
 
-type ShiftPayload struct {
-	StaffId string                 `json:"staff_id" validate:"required"`
-	Times   *[]ShiftSegmentPayload `json:"shift_segments" validate:"required,min=1,dive,required"`
+type SchedulePayload struct {
+	StaffId string                    `json:"staff_id" validate:"required"`
+	Times   *[]ScheduleSegmentPayload `json:"shift_segments" validate:"required,min=1,dive,required"`
 }
 
-type ShiftSegmentPayload struct {
+type ScheduleSegmentPayload struct {
 	IsVisible     bool   `json:"is_visible"`
 	IsReoccurring bool   `json:"is_reoccurring"`
 	Start         string `json:"start" validate:"required"` // in ISO 8601 standard
@@ -35,7 +35,7 @@ type ScheduledPeriod struct {
 	End           time.Time
 }
 
-func (dto *ShiftPayload) CheckForOverlappingSegments(now time.Time, timezone *time.Location) ([]ScheduledPeriod, error) {
+func (dto *SchedulePayload) CheckForOverlappingSegments(now time.Time, timezone *time.Location) ([]ScheduledPeriod, error) {
 	if dto.Times == nil {
 		return nil, fmt.Errorf("time_slots cannot be nil")
 	}

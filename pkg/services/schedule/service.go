@@ -1,34 +1,34 @@
-package shift
+package schedule
 
 import (
 	"context"
 	"fmt"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/shift"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"sync"
 )
 
-type IShiftService interface {
-	Create(ctx context.Context, dto *shift.ShiftPayload) error
+type IScheduleService interface {
+	Create(ctx context.Context, dto *schedule.SchedulePayload) error
 }
 
-type shiftService struct {
+type scheduleService struct {
 	logger   utils.ILogger
 	adapters *stores.Adapters
 }
 
-func NewShiftService(l utils.ILogger, a *stores.Adapters) IShiftService {
-	return &shiftService{logger: l, adapters: a}
+func NewScheduleService(l utils.ILogger, a *stores.Adapters) IScheduleService {
+	return &scheduleService{logger: l, adapters: a}
 }
 
-func (dep *shiftService) validateSegments(ctx context.Context, staffID uint64, segments []shift.ScheduledPeriod) error {
+func (dep *scheduleService) validateSegments(ctx context.Context, staffID uint64, segments []schedule.ScheduledPeriod) error {
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(segments))
 
 	for _, seg := range segments {
 		wg.Add(1)
-		go func(segment shift.ScheduledPeriod) {
+		go func(segment schedule.ScheduledPeriod) {
 			defer wg.Done()
 			count, err := dep.adapters.ShiftStore.CountExistingShiftsForStaff(ctx, staffID, segment.Start, segment.End)
 			if err != nil {
@@ -47,7 +47,7 @@ func (dep *shiftService) validateSegments(ctx context.Context, staffID uint64, s
 	return <-errChan
 }
 
-func (dep *shiftService) Create(ctx context.Context, dto *shift.ShiftPayload) error {
+func (dep *scheduleService) Create(ctx context.Context, dto *schedule.SchedulePayload) error {
 	segments, err := dto.CheckForOverlappingSegments(dep.logger.Date(), dep.logger.Timezone())
 	if err != nil {
 		dep.logger.Error(err)
@@ -65,7 +65,7 @@ func (dep *shiftService) Create(ctx context.Context, dto *shift.ShiftPayload) er
 
 	return dep.adapters.Transaction.RunInTransaction(func(adapters *stores.Adapters) error {
 		for _, segment := range segments {
-			_, err = adapters.ShiftStore.Save(ctx, &shift.Shift{
+			_, err = adapters.ShiftStore.Save(ctx, &schedule.Schedule{
 				StaffId:   staff.StaffId,
 				Start:     segment.Start,
 				End:       segment.End,

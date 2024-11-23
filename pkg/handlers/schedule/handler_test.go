@@ -1,4 +1,4 @@
-package shift
+package schedule
 
 import (
 	"bytes"
@@ -11,10 +11,10 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
-	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/shift"
+	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/shift"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/services/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"log"
@@ -110,7 +110,7 @@ func TestShiftHandler(t *testing.T) {
 		adap := stores.NewAdapters(logger, tx, prov)
 		jwtSer := auth.NewJwtService(logger, env)
 		m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
-		s := shift.NewShiftService(logger, adap)
+		s := schedule.NewScheduleService(logger, adap)
 
 		save, err := preSaveStaff(adap)
 		if err != nil {
@@ -132,9 +132,9 @@ func TestShiftHandler(t *testing.T) {
 			utils.TwoDaysInSeconds,
 		)
 
-		dto := model.ShiftPayload{
+		dto := model.SchedulePayload{
 			StaffId: save.UUID.String(),
-			Times: &[]model.ShiftSegmentPayload{
+			Times: &[]model.ScheduleSegmentPayload{
 				{
 					IsVisible:     true,
 					IsReoccurring: false,
@@ -152,17 +152,17 @@ func TestShiftHandler(t *testing.T) {
 
 		dtoBytes, err := json.Marshal(dto)
 		if err != nil {
-			t.Errorf("failed to marshal ShiftPayload: %s", err)
+			t.Errorf("failed to marshal SchedulePayload: %s", err)
 		}
 
-		req := httptest.NewRequest(http.MethodPost, "/shift", bytes.NewBuffer(dtoBytes))
+		req := httptest.NewRequest(http.MethodPost, "/schedule", bytes.NewBuffer(dtoBytes))
 		req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
 		req.Header.Set("Content-Type", "application/json")
 
 		rr := httptest.NewRecorder()
 
 		// handler to test
-		NewShiftHandler(mux, m, logger, s).Register()
+		NewScheduleHandler(mux, m, logger, s).Register()
 
 		mux.ServeHTTP(rr, req)
 
