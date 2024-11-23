@@ -60,7 +60,7 @@ func TestServiceStore(t *testing.T) {
 
 	logger := utils.NewMockLogger()
 
-	t.Run("should save service", func(t *testing.T) {
+	t.Run("should save and return service by name", func(t *testing.T) {
 		t.Parallel()
 
 		tx, fn := setupTest(t)
@@ -71,8 +71,10 @@ func TestServiceStore(t *testing.T) {
 
 		// given
 		s := service.Service{
-			Name:  "name",
-			Price: 1000.95,
+			Name:        "name",
+			Price:       1000.95,
+			Duration:    3600,
+			CleanUpTime: 1800,
 		}
 
 		// method to test
@@ -84,6 +86,16 @@ func TestServiceStore(t *testing.T) {
 		// assert
 		if !reflect.DeepEqual(s, *save) {
 			t.Errorf("expect %v to equal %v", s, &save)
+		}
+
+		find, err := store.ServiceByName(ctx, "name")
+		if err != nil {
+			t.Error(err)
+		}
+
+		// assert
+		if !reflect.DeepEqual(*save, *find) {
+			t.Errorf("expect %v to equal %v", save, find)
 		}
 	})
 

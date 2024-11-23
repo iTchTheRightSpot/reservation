@@ -7,6 +7,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"net/http"
+	"reflect"
 	"slices"
 	"strings"
 	"time"
@@ -186,6 +187,52 @@ func (dep *Middleware) HasRole(next http.Handler, role *models.RoleEnum) http.Ha
 			)
 			return
 		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (dep *Middleware) HasPermission(next http.Handler, permission *models.PermissionEnum) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if permission == nil {
+			dep.Logger.Error("HasPermission: permission cannot be nil")
+			utils.ConstructErrorResponse(
+				w,
+				utils.ErrorResponse{
+					Status:  http.StatusInternalServerError,
+					Message: "internal server error",
+				},
+			)
+			return
+		}
+
+		obj, ok := r.Context().Value(utils.UserContextKey).(*models.JwtObj)
+		if !ok || obj == nil {
+			dep.Logger.Error("HasRoleAndPermissions: invalid user context")
+			utils.ConstructErrorResponse(w, utils.ErrorResponse{
+				Status:  http.StatusUnauthorized,
+				Message: "unauthorized",
+			})
+			return
+		}
+
+		contains := slices.ContainsFunc(obj.AccessControls, func(rp models.RolePermission) bool {
+			return slices.ContainsFunc(rp.Permissions, func(enum models.PermissionEnum) bool {
+				return reflect.DeepEqual(enum, *permission)
+			})
+		})
+
+		if !contains {
+			dep.Logger.Error(fmt.Sprintf("access denied request permission does not match %v", permission))
+			utils.ConstructErrorResponse(
+				w,
+				utils.ErrorResponse{
+					Status:  http.StatusForbidden,
+					Message: "access denied",
+				},
+			)
+			return
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }

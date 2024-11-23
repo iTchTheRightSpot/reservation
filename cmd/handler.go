@@ -3,6 +3,7 @@ package cmd
 import (
 	"database/sql"
 	"github.com/iTchTheRightSpot/erp-golang/config"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers/service"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers/shift"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -45,6 +46,7 @@ func (dep *HandlerRegistry) Initialize() http.Handler {
 
 	// register handlers
 	shift.NewShiftHandler(v1, dep.middleware, dep.log, dep.services.ShiftService).Register()
+	service.NewServiceHandler(v1, dep.log, dep.services.ServiceImpl, dep.middleware).Register()
 
 	// register v1 with mux
 	dep.mux.Handle(dep.env.RoutePrefix, http.StripPrefix(dep.prefix(), v1))

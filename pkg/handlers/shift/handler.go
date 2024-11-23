@@ -4,7 +4,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	shiftModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/shift"
+	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/shift"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/shift"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"net/http"
@@ -22,27 +22,18 @@ func NewShiftHandler(mux *http.ServeMux, w *middleware.Middleware, l utils.ILogg
 }
 
 func (dep *ShiftHandler) Register() {
-	shiftMux := http.NewServeMux()
-	staff := models.STAFF
+	mux := http.NewServeMux()
+	role := models.STAFF
+	permission := models.WRITE
+	m := middleware.RequestBodyMiddleware[model.ShiftPayload]{Logger: dep.logger}
 
-	m := middleware.RequestBodyMiddleware[shiftModel.ShiftPayload]{Logger: dep.logger}
-	shiftMux.Handle(
-		"POST /",
-		dep.middleware.HasRoleAndPermissions(
-			m.RequestBody(http.HandlerFunc(dep.create)),
-			&models.RolePermission{
-				Role:        staff,
-				Permissions: []models.PermissionEnum{models.WRITE},
-			},
-		),
-	)
-	shiftMux.Handle("GET /", http.HandlerFunc(dep.shifts))
-
-	dep.mux.Handle("/shift", dep.middleware.Authentication(dep.middleware.HasRole(shiftMux, &staff)))
+	mux.Handle("POST /", dep.middleware.HasPermission(m.RequestBody(http.HandlerFunc(dep.create)), &permission))
+	mux.Handle("GET /", http.HandlerFunc(dep.shifts))
+	dep.mux.Handle("/shift", dep.middleware.Authentication(dep.middleware.HasRole(mux, &role)))
 }
 
 func (dep *ShiftHandler) create(w http.ResponseWriter, r *http.Request) {
-	dto, err := pkg.ReadBody[shiftModel.ShiftPayload](r)
+	dto, err := pkg.ReadBody[model.ShiftPayload](r)
 	if err != nil {
 		dep.logger.Error(err.Error())
 		utils.ConstructErrorResponse(
