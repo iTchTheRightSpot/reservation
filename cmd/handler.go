@@ -3,6 +3,7 @@ package cmd
 import (
 	"database/sql"
 	"github.com/iTchTheRightSpot/erp-golang/config"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers/service"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers/staff"
@@ -49,6 +50,7 @@ func (dep *HandlerRegistry) Initialize() http.Handler {
 	schedule.NewScheduleHandler(v1, dep.middleware, dep.log, dep.services.ScheduleService).Register()
 	service.NewServiceHandler(v1, dep.log, dep.services.ServiceImpl, dep.middleware).Register()
 	staff.NewStaffHandler(v1, dep.middleware, dep.log, dep.services.StaffService).Register()
+	reservation.NewReservationHandler(v1, dep.log, dep.services.ReservationService).Register()
 
 	// register v1 with mux
 	dep.mux.Handle(dep.env.RoutePrefix, http.StripPrefix(dep.prefix(), v1))
