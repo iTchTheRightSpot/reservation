@@ -7,9 +7,11 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"sync"
+	"time"
 )
 
 type IScheduleService interface {
+	Schedules(ctx context.Context, payload *schedule.AllSchedulesPayload) ([]*schedule.ScheduleResponse, error)
 	Create(ctx context.Context, dto *schedule.SchedulePayload) error
 }
 
@@ -22,6 +24,32 @@ func NewScheduleService(l utils.ILogger, a *stores.Adapters) IScheduleService {
 	return &scheduleService{logger: l, adapters: a}
 }
 
+func (dep *scheduleService) Schedules(ctx context.Context, p *schedule.AllSchedulesPayload) ([]*schedule.ScheduleResponse, error) {
+	s, err := dep.adapters.StaffStore.StaffByUUID(ctx, p.StaffUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	start := time.Date(p.Year, time.Month(p.Month), 1, 0, 0, 0, 0, dep.logger.Timezone())
+	schedules, err := dep.adapters.ScheduleStore.ScheduleInRange(ctx, s.StaffId, start, start.AddDate(0, 1, -1))
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*schedule.ScheduleResponse, len(schedules))
+	for i, ele := range schedules {
+		res[i] = &schedule.ScheduleResponse{
+			ScheduleId:    ele.ScheduleId,
+			IsVisible:     ele.IsVisible,
+			IsReoccurring: ele.IsReoccurring,
+			Start:         fmt.Sprintf("%v", ele.Start.In(p.Timezone).UnixMilli()),
+			End:           fmt.Sprintf("%v", ele.End.In(p.Timezone).UnixMilli()),
+		}
+	}
+
+	return res, nil
+}
+
 func (dep *scheduleService) validateSegments(ctx context.Context, staffID uint64, segments []schedule.ScheduledPeriod) error {
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(segments))
@@ -32,7 +60,7 @@ func (dep *scheduleService) validateSegments(ctx context.Context, staffID uint64
 			defer wg.Done()
 			count, err := dep.adapters.ScheduleStore.CountExistingSchedulesForStaff(ctx, staffID, segment.Start, segment.End)
 			if err != nil {
-				errChan <- fmt.Errorf("error checking existing schedules: %w", err)
+				errChan <- fmt.Errorf("error checking existing schedules: %s", err.Error())
 				return
 			}
 			if count > 0 {
@@ -50,7 +78,7 @@ func (dep *scheduleService) validateSegments(ctx context.Context, staffID uint64
 func (dep *scheduleService) Create(ctx context.Context, dto *schedule.SchedulePayload) error {
 	segments, err := dto.CheckForOverlappingSegments(dep.logger.Date(), dep.logger.Timezone())
 	if err != nil {
-		dep.logger.Error(err)
+		dep.logger.Error(err.Error())
 		return err
 	}
 

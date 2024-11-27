@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
@@ -98,77 +99,179 @@ func TestScheduleHandler(t *testing.T) {
 
 	logger := utils.NewMockLogger()
 
-	t.Run("should save schedule", func(t *testing.T) {
+	t.Run("save & retrieve schedules handlers", func(t *testing.T) {
 		t.Parallel()
 
-		tx, fn := setupTest(t)
-		defer fn()
+		t.Run("reject request duplicate schedule", func(t *testing.T) {
+			t.Parallel()
 
-		// given
-		mux := http.NewServeMux()
-		prov := stores.MockLiveTransactionProvider(logger, tx)
-		adapters := stores.NewAdapters(logger, tx, prov)
-		jwtSer := auth.NewJwtService(logger, env)
-		m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
-		s := schedule.NewScheduleService(logger, adapters)
+			tx, fn := setupTest(t)
+			defer fn()
 
-		save, err := preSaveStaff(adapters)
-		if err != nil {
-			t.Error(err)
-		}
+			// given
+			mux := http.NewServeMux()
+			prov := stores.MockLiveTransactionProvider(logger, tx)
+			adapters := stores.NewAdapters(logger, tx, prov)
+			jwtSer := auth.NewJwtService(logger, env)
+			m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
+			s := schedule.NewScheduleService(logger, adapters)
 
-		cred := []models.RolePermission{
-			{
-				Role:        models.STAFF,
-				Permissions: []models.PermissionEnum{models.WRITE},
-			},
-		}
+			save, err := preSaveStaff(adapters)
+			if err != nil {
+				t.Error(err)
+			}
 
-		obj, err := jwtSer.GenerateJwt(
-			&models.JwtObj{
-				UserId:         save.UUID.String(),
-				AccessControls: cred,
-			},
-			utils.TwoDaysInSeconds,
-		)
-
-		dto := model.SchedulePayload{
-			StaffId: save.UUID.String(),
-			Times: &[]model.ScheduleSegmentPayload{
+			cred := []models.RolePermission{
 				{
-					IsVisible:     true,
-					IsReoccurring: false,
-					Start:         logger.Date().Add(time.Duration(1) * time.Hour).Format(utils.TimeFormat),
-					Duration:      3600,
+					Role:        models.STAFF,
+					Permissions: []models.PermissionEnum{models.WRITE},
 				},
+			}
+
+			obj, err := jwtSer.GenerateJwt(
+				&models.JwtObj{
+					UserId:         save.UUID.String(),
+					AccessControls: cred,
+				},
+				utils.TwoDaysInSeconds,
+			)
+
+			dto := model.SchedulePayload{
+				StaffId: save.UUID.String(),
+				Times: &[]model.ScheduleSegmentPayload{
+					{
+						IsVisible:     true,
+						IsReoccurring: false,
+						Start:         logger.Date().Add(time.Duration(1) * time.Hour).Format(utils.TimeFormat),
+						Duration:      3600,
+					},
+					{
+						IsVisible:     false,
+						IsReoccurring: true,
+						Start:         logger.Date().Add(time.Duration(2) * time.Hour).Format(utils.TimeFormat),
+						Duration:      3600,
+					},
+				},
+			}
+
+			dtoBytes, err := json.Marshal(dto)
+			if err != nil {
+				t.Errorf("failed to marshal SchedulePayload: %s", err)
+			}
+
+			// handler to test
+			NewScheduleHandler(mux, m, logger, s).Register()
+
+			for i := 0; i < 2; i++ {
+				req := httptest.NewRequest(http.MethodPost, "/schedule", bytes.NewBuffer(dtoBytes))
+				req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+				req.Header.Set("Content-Type", "application/json")
+
+				rr := httptest.NewRecorder()
+
+				mux.ServeHTTP(rr, req)
+
+				// assert
+				if i == 0 {
+					if rr.Code != http.StatusCreated {
+						t.Errorf("index %v expected status code %d, got %d", i, http.StatusCreated, rr.Code)
+					}
+				} else {
+					if rr.Code != http.StatusBadRequest {
+						t.Errorf("index %v expected status code %d, got %d", i, http.StatusBadRequest, rr.Code)
+					}
+				}
+			}
+		})
+
+		t.Run("success saving schedule & retrieving schedules", func(t *testing.T) {
+			t.Parallel()
+
+			tx, fn := setupTest(t)
+			defer fn()
+
+			// given
+			mux := http.NewServeMux()
+			prov := stores.MockLiveTransactionProvider(logger, tx)
+			adapters := stores.NewAdapters(logger, tx, prov)
+			jwtSer := auth.NewJwtService(logger, env)
+			m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
+			s := schedule.NewScheduleService(logger, adapters)
+
+			save, err := preSaveStaff(adapters)
+			if err != nil {
+				t.Error(err)
+			}
+
+			cred := []models.RolePermission{
 				{
-					IsVisible:     false,
-					IsReoccurring: true,
-					Start:         logger.Date().Add(time.Duration(2) * time.Hour).Format(utils.TimeFormat),
-					Duration:      3600,
+					Role:        models.STAFF,
+					Permissions: []models.PermissionEnum{models.WRITE},
 				},
-			},
-		}
+			}
 
-		dtoBytes, err := json.Marshal(dto)
-		if err != nil {
-			t.Errorf("failed to marshal SchedulePayload: %s", err)
-		}
+			obj, err := jwtSer.GenerateJwt(
+				&models.JwtObj{
+					UserId:         save.UUID.String(),
+					AccessControls: cred,
+				},
+				utils.TwoDaysInSeconds,
+			)
 
-		req := httptest.NewRequest(http.MethodPost, "/schedule", bytes.NewBuffer(dtoBytes))
-		req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
-		req.Header.Set("Content-Type", "application/json")
+			dto := model.SchedulePayload{
+				StaffId: save.UUID.String(),
+				Times: &[]model.ScheduleSegmentPayload{
+					{
+						IsVisible:     true,
+						IsReoccurring: false,
+						Start:         logger.Date().Add(time.Duration(1) * time.Hour).Format(utils.TimeFormat),
+						Duration:      3600,
+					},
+					{
+						IsVisible:     false,
+						IsReoccurring: true,
+						Start:         logger.Date().Add(time.Duration(2) * time.Hour).Format(utils.TimeFormat),
+						Duration:      3600,
+					},
+				},
+			}
 
-		rr := httptest.NewRecorder()
+			dtoBytes, err := json.Marshal(dto)
+			if err != nil {
+				t.Errorf("failed to marshal SchedulePayload: %s", err)
+			}
 
-		// handler to test
-		NewScheduleHandler(mux, m, logger, s).Register()
+			// handler to test
+			NewScheduleHandler(mux, m, logger, s).Register()
 
-		mux.ServeHTTP(rr, req)
+			// route to test
+			req := httptest.NewRequest(http.MethodPost, "/schedule", bytes.NewBuffer(dtoBytes))
+			req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+			req.Header.Set("Content-Type", "application/json")
 
-		// assert
-		if rr.Code != http.StatusCreated {
-			t.Errorf("expected status code %d, got %d", http.StatusCreated, rr.Code)
-		}
+			rr := httptest.NewRecorder()
+
+			mux.ServeHTTP(rr, req)
+
+			// assert
+			if rr.Code != http.StatusCreated {
+				t.Errorf("expected status code %d, got %d", http.StatusCreated, rr.Code)
+			}
+
+			// route to test
+			url := fmt.Sprintf("/schedule?month=%v&year=%v&timezone=%s", int(logger.Date().Month()), logger.Date().Year(), logger.Timezone().String())
+			req = httptest.NewRequest(http.MethodGet, url, nil)
+			req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+			req.Header.Set("Content-Type", "application/json")
+
+			rr = httptest.NewRecorder()
+
+			mux.ServeHTTP(rr, req)
+
+			// assert
+			if rr.Code != http.StatusOK {
+				t.Errorf("expected status code %d, got %d", http.StatusOK, rr.Code)
+			}
+		})
 	})
 }

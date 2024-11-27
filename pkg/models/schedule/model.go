@@ -16,6 +16,21 @@ type Schedule struct {
 	IsReoccurring bool      `json:"is_reoccurring"`
 }
 
+type ScheduleResponse struct {
+	ScheduleId    uint64 `json:"schedule_id"`
+	IsVisible     bool   `json:"is_visible"`
+	IsReoccurring bool   `json:"is_reoccurring"`
+	Start         string `json:"start"`
+	End           string `json:"end"`
+}
+
+type AllSchedulesPayload struct {
+	StaffUUID string         `json:"staff_uuid" validate:"required,min=36,max=37"`
+	Month     int            `validate:"required,min=1,max=12"`
+	Year      int            `validate:"required"`
+	Timezone  *time.Location `validate:"required"`
+}
+
 type SchedulePayload struct {
 	StaffId string                    `json:"staff_id" validate:"required"`
 	Times   *[]ScheduleSegmentPayload `json:"schedule_segments" validate:"required,min=1,dive,required"`

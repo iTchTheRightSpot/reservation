@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-var validate = validator.New()
+var ValidatorInstance = validator.New()
 
 type RequestBodyMiddleware[T any] struct {
 	Logger utils.ILogger
@@ -43,7 +43,7 @@ func (dep *RequestBodyMiddleware[T]) RequestBody(next http.Handler) http.Handler
 			return
 		}
 
-		if err := validate.Struct(payload); err != nil {
+		if err := ValidatorInstance.Struct(payload); err != nil {
 			dep.Logger.Error(err)
 			utils.ConstructErrorResponse(
 				w,

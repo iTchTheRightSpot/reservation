@@ -1,11 +1,11 @@
 CREATE TABLE IF NOT EXISTS schedule
 (
-    schedule_id     BIGSERIAL NOT NULL UNIQUE PRIMARY KEY,
-    schedule_start     TIMESTAMP NOT NULL,
-    schedule_end       TIMESTAMP NOT NULL,
-    is_visible      BOOLEAN   NOT NULL DEFAULT FALSE,
-    is_reoccurring  BOOLEAN   NOT NULL DEFAULT FALSE,
-    staff_id        BIGINT    NOT NULL,
+    schedule_id    BIGSERIAL NOT NULL UNIQUE PRIMARY KEY,
+    schedule_start TIMESTAMP NOT NULL,
+    schedule_end   TIMESTAMP NOT NULL,
+    is_visible     BOOLEAN   NOT NULL DEFAULT FALSE,
+    is_reoccurring BOOLEAN   NOT NULL DEFAULT FALSE,
+    staff_id       BIGINT    NOT NULL,
     CONSTRAINT FK_schedule_to_staff_staff_id
         FOREIGN KEY (staff_id)
             REFERENCES staff (staff_id)

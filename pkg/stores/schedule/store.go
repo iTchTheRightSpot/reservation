@@ -2,6 +2,7 @@ package schedule
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
@@ -12,6 +13,7 @@ import (
 type IScheduleStore interface {
 	Save(ctx context.Context, s *schedule.Schedule) (*schedule.Schedule, error)
 	CountExistingSchedulesForStaff(ctx context.Context, staffId uint64, start, end time.Time) (int, error)
+	ScheduleInRange(ctx context.Context, staffId uint64, start time.Time, end time.Time) ([]*schedule.Schedule, error)
 }
 
 type scheduleStore struct {
@@ -21,6 +23,41 @@ type scheduleStore struct {
 
 func NewScheduleStore(l utils.ILogger, db pkg.Db) IScheduleStore {
 	return &scheduleStore{logger: l, db: db}
+}
+
+func (dep *scheduleStore) ScheduleInRange(ctx context.Context, staffId uint64, start time.Time, end time.Time) ([]*schedule.Schedule, error) {
+	var arr []*schedule.Schedule
+
+	q := `
+		SELECT * FROM schedule s
+		WHERE s.staff_id = $1
+		AND (
+			(s.schedule_start BETWEEN $2 AND $3) OR
+			(s.schedule_end BETWEEN $2 AND $3)
+		)
+	`
+
+	rows, err := dep.db.QueryContext(ctx, q, staffId, start, end)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return nil, fmt.Errorf("error retrieve schedules in range")
+	}
+
+	defer func(rs *sql.Rows) { err = rs.Close() }(rows)
+
+	for rows.Next() {
+		var s schedule.Schedule
+
+		err = rows.Scan(&s.ScheduleId, &s.Start, &s.End, &s.IsVisible, &s.IsReoccurring, &s.StaffId)
+		if err != nil {
+			dep.logger.Error(err.Error())
+			return nil, fmt.Errorf("error scanning schedules")
+		}
+
+		arr = append(arr, &s)
+	}
+
+	return arr, err
 }
 
 func (dep *scheduleStore) Save(ctx context.Context, s *schedule.Schedule) (*schedule.Schedule, error) {

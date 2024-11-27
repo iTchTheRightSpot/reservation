@@ -174,4 +174,45 @@ func TestScheduleStore(t *testing.T) {
 			t.Errorf("expect 0 given %v", count)
 		}
 	})
+
+	t.Run("should return schedules in range", func(t *testing.T) {
+		t.Parallel()
+
+		tx, fn := setupTest(t)
+		defer fn()
+
+		store := NewScheduleStore(mockLog, tx)
+
+		ctx := context.Background()
+
+		// given
+		staffObj := staff.Staff{UUID: uuid.New()}
+		if _, err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
+			t.Errorf("%s", err)
+		}
+
+		start := mockLog.Date()
+		save, err := store.Save(ctx, &schedule.Schedule{
+			StaffId: staffObj.StaffId,
+			Start:   start,
+			End:     start.Add(time.Duration(8) * time.Hour),
+		})
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		// method to test
+		start = time.Date(mockLog.Date().Year(), mockLog.Date().Month(), 1, 0, 0, 0, 0, mockLog.Timezone())
+		end := start.AddDate(0, 1, -1)
+		schs, err := store.ScheduleInRange(ctx, staffObj.StaffId, start, end)
+
+		// assert
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		if !reflect.DeepEqual(save, schs[0]) {
+			t.Errorf("expect %v to equal given %v", save, schs[0])
+		}
+	})
 }
