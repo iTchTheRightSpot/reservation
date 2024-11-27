@@ -14,6 +14,7 @@ type IScheduleStore interface {
 	Save(ctx context.Context, s *schedule.Schedule) (*schedule.Schedule, error)
 	CountExistingSchedulesForStaff(ctx context.Context, staffId uint64, start, end time.Time) (int, error)
 	ScheduleInRange(ctx context.Context, staffId uint64, start time.Time, end time.Time) ([]*schedule.Schedule, error)
+	CountSchedulesInRangeAndVisibility(ctx context.Context, staffId uint64, start *time.Time, end time.Time, isVisible bool) (int, error)
 }
 
 type scheduleStore struct {
@@ -104,4 +105,8 @@ func (dep *scheduleStore) CountExistingSchedulesForStaff(ctx context.Context, st
 	}
 
 	return count, nil
+}
+
+func (dep *scheduleStore) CountSchedulesInRangeAndVisibility(ctx context.Context, staffId uint64, start *time.Time, end time.Time, isVisible bool) (int, error) {
+	return 0, fmt.Errorf("yet to implement CountSchedulesInRangeAndVisibility")
 }

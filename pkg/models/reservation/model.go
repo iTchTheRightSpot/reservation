@@ -39,6 +39,6 @@ type ReservationPayload struct {
 	Address     string    `json:"address" validate:"required,max=255"`
 	Phone       string    `json:"phone" validate:"required,max=20"`
 	Services    []*string `json:"services" validate:"required,min=1,dive,required"`
-	Timezone    string    `json:"timezone""`
+	Timezone    string    `json:"timezone"`
 	Time        string    `json:"time" validate:"required"`
 }

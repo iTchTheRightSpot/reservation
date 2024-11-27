@@ -8,7 +8,9 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"slices"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type IReservationService interface {
@@ -46,6 +48,34 @@ func (dep *reservationService) matchStaffServices(requestedServices []*string, a
 	return arr, nil
 }
 
+func (dep *reservationService) dateInTimezone(p *reservation.ReservationPayload, t *time.Location) (*time.Time, error) {
+	num, err := strconv.ParseInt(p.Time, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(p.Timezone) < 1 {
+		in := time.UnixMilli(num).In(t)
+		return &in, nil
+	}
+
+	l, err := time.LoadLocation(p.Timezone)
+	if err != nil {
+		return nil, err
+	}
+
+	in := time.UnixMilli(num).In(l).In(t)
+	return &in, nil
+}
+
+func (dep *reservationService) sumUpServiceDuration(s []*service.ServiceEntity) int {
+	count := 0
+	for _, entity := range s {
+		count += entity.Duration + entity.CleanUpTime
+	}
+	return count
+}
+
 func (dep *reservationService) Create(ctx context.Context, p *reservation.ReservationPayload) error {
 	s, err := dep.adapters.StaffStore.StaffByUUID(ctx, strings.TrimSpace(p.StaffId))
 	if err != nil {
@@ -57,10 +87,28 @@ func (dep *reservationService) Create(ctx context.Context, p *reservation.Reserv
 		return err
 	}
 
-	//matchedServices, err := dep.matchStaffServices(p.Services, ser)
-	_, err = dep.matchStaffServices(p.Services, ser)
+	matchedServices, err := dep.matchStaffServices(p.Services, ser)
 	if err != nil {
+		dep.logger.Error(err.Error())
 		return err
+	}
+
+	start, err := dep.dateInTimezone(p, dep.logger.Timezone())
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return err
+	}
+
+	if start.Before(dep.logger.Date()) {
+		dep.logger.Error("cannot make a reservation for a past day")
+		return fmt.Errorf("cannot make a reservation for a past day")
+	}
+
+	end := start.Add(time.Second * time.Duration(dep.sumUpServiceDuration(matchedServices)))
+
+	count, err := dep.adapters.ScheduleStore.CountSchedulesInRangeAndVisibility(ctx, s.StaffId, start, end, true)
+	if count <= 0 {
+		return fmt.Errorf("invalid reservation time")
 	}
 
 	return fmt.Errorf("yet to implement reservation service")
