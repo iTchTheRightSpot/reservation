@@ -184,6 +184,75 @@ func TestScheduleHandler(t *testing.T) {
 			}
 		})
 
+		t.Run("reject creation schedule bleeds into the next day", func(t *testing.T) {
+			t.Parallel()
+
+			tx, fn := setupTest(t)
+			defer fn()
+
+			// given
+			mux := http.NewServeMux()
+			prov := stores.MockLiveTransactionProvider(logger, tx)
+			adapters := stores.NewAdapters(logger, tx, prov)
+			jwtSer := auth.NewJwtService(logger, env)
+			m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
+			s := schedule.NewScheduleService(logger, adapters)
+
+			save, err := preSaveStaff(adapters)
+			if err != nil {
+				t.Error(err)
+			}
+
+			cred := []models.RolePermission{
+				{
+					Role:        models.STAFF,
+					Permissions: []models.PermissionEnum{models.WRITE},
+				},
+			}
+
+			obj, err := jwtSer.GenerateJwt(
+				&models.JwtObj{
+					UserId:         save.UUID.String(),
+					AccessControls: cred,
+				},
+				utils.TwoDaysInSeconds,
+			)
+
+			d := logger.Date()
+			date := time.Date(d.Year(), d.Month(), d.Day(), 23, 0, 0, d.Nanosecond(), logger.Timezone())
+			dto := model.SchedulePayload{
+				StaffId: save.UUID.String(),
+				Times: &[]model.ScheduleSegmentPayload{
+					{
+						IsVisible:     true,
+						IsReoccurring: false,
+						Start:         date.Format(utils.TimeFormat),
+						Duration:      2 * 60 * 60,
+					},
+				},
+			}
+
+			dtoBytes, err := json.Marshal(dto)
+			if err != nil {
+				t.Errorf("failed to marshal SchedulePayload: %s", err)
+			}
+
+			// handler to test
+			NewScheduleHandler(mux, m, logger, s).Register()
+
+			req := httptest.NewRequest(http.MethodPost, "/schedule", bytes.NewBuffer(dtoBytes))
+			req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+			req.Header.Set("Content-Type", "application/json")
+
+			rr := httptest.NewRecorder()
+
+			mux.ServeHTTP(rr, req)
+
+			if rr.Code != http.StatusBadRequest {
+				t.Errorf("expected status code %d, got %d", http.StatusBadRequest, rr.Code)
+			}
+		})
+
 		t.Run("success saving schedule & retrieving schedules", func(t *testing.T) {
 			t.Parallel()
 

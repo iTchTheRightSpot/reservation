@@ -73,6 +73,12 @@ func (dto *SchedulePayload) CheckForOverlappingSegments(now time.Time, timezone 
 
 		end := start.Add(time.Duration(slot.Duration) * time.Second)
 
+		// validate start and end are within the same dat
+		if start.Day() != end.Day() || start.Month() != end.Month() || start.Year() != end.Year() {
+			t := *dto.Times
+			return nil, fmt.Errorf("%s plus duration cannot include the next day", t[idx].Start)
+		}
+
 		// validate no conflicts
 		conflict := slices.ContainsFunc(arr, func(obj ScheduledPeriod) bool {
 			return start.Before(obj.End) && end.After(obj.Start)
