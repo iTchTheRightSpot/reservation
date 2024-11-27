@@ -30,12 +30,12 @@ func (dep *staffServiceStore) Save(ctx context.Context, s *staff.StaffServiceEnt
     `
 
 	row := dep.db.QueryRowContext(ctx, q, s.StaffId, s.ServiceId)
-
 	if err := row.Scan(&s.JunctionId, &s.StaffId, &s.ServiceId); err != nil {
-		dep.logger.Error(err)
-		return nil, fmt.Errorf("exception saving staff service")
+		dep.logger.Error(err.Error())
+		return nil, fmt.Errorf("exception linking service to staff")
 	}
 
+	dep.logger.Log("saved to staff_service table")
 	return s, nil
 }
 
@@ -45,9 +45,8 @@ func (dep *staffServiceStore) CountByStaffIdAndServiceId(ctx context.Context, st
 	q := "SELECT COUNT(*) FROM staff_service WHERE staff_id = $1 AND service_id = $2"
 
 	row := dep.db.QueryRowContext(ctx, q, staffId, serviceId)
-
 	if err := row.Scan(&count); err != nil {
-		dep.logger.Error(err)
+		dep.logger.Error(err.Error())
 		return 0, fmt.Errorf("error count staff service")
 	}
 

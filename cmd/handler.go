@@ -5,6 +5,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"net/http"
@@ -47,6 +48,7 @@ func (dep *HandlerRegistry) Initialize() http.Handler {
 	// register handlers
 	schedule.NewScheduleHandler(v1, dep.middleware, dep.log, dep.services.ScheduleService).Register()
 	service.NewServiceHandler(v1, dep.log, dep.services.ServiceImpl, dep.middleware).Register()
+	staff.NewStaffHandler(v1, dep.middleware, dep.log, dep.services.StaffService).Register()
 
 	// register v1 with mux
 	dep.mux.Handle(dep.env.RoutePrefix, http.StripPrefix(dep.prefix(), v1))

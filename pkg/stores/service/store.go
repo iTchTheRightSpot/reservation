@@ -10,9 +10,9 @@ import (
 )
 
 type IServiceStore interface {
-	Save(ctx context.Context, s *service.Service) (*service.Service, error)
-	ServiceByName(ctx context.Context, name string) (*service.Service, error)
-	ServicesByStaffId(ctx context.Context, staffId uint64) ([]*service.Service, error)
+	Save(ctx context.Context, s *service.ServiceEntity) (*service.ServiceEntity, error)
+	ServiceByName(ctx context.Context, name string) (*service.ServiceEntity, error)
+	ServicesByStaffId(ctx context.Context, staffId uint64) ([]*service.ServiceEntity, error)
 }
 
 type serviceStore struct {
@@ -24,7 +24,7 @@ func NewServiceStore(l utils.ILogger, db pkg.Db) IServiceStore {
 	return &serviceStore{logger: l, db: db}
 }
 
-func (dep *serviceStore) Save(ctx context.Context, s *service.Service) (*service.Service, error) {
+func (dep *serviceStore) Save(ctx context.Context, s *service.ServiceEntity) (*service.ServiceEntity, error) {
 	if s == nil {
 		return nil, fmt.Errorf("schedule object is nil")
 	}
@@ -46,8 +46,8 @@ func (dep *serviceStore) Save(ctx context.Context, s *service.Service) (*service
 	return s, nil
 }
 
-func (dep *serviceStore) ServiceByName(ctx context.Context, name string) (*service.Service, error) {
-	var s service.Service
+func (dep *serviceStore) ServiceByName(ctx context.Context, name string) (*service.ServiceEntity, error) {
+	var s service.ServiceEntity
 
 	var q = `
 		SELECT
@@ -66,8 +66,8 @@ func (dep *serviceStore) ServiceByName(ctx context.Context, name string) (*servi
 	return &s, nil
 }
 
-func (dep *serviceStore) ServicesByStaffId(ctx context.Context, staffId uint64) ([]*service.Service, error) {
-	var arr []*service.Service
+func (dep *serviceStore) ServicesByStaffId(ctx context.Context, staffId uint64) ([]*service.ServiceEntity, error) {
+	var arr []*service.ServiceEntity
 
 	var q = `
 	 SELECT s.* FROM service s
@@ -84,7 +84,7 @@ func (dep *serviceStore) ServicesByStaffId(ctx context.Context, staffId uint64) 
 	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
 
 	for rows.Next() {
-		var s service.Service
+		var s service.ServiceEntity
 
 		err = rows.Scan(&s.ServiceId, &s.Name, &s.Price, &s.IsVisible, &s.IsReoccurring, &s.Duration, &s.CleanUpTime)
 

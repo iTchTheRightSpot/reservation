@@ -1,6 +1,6 @@
 package service
 
-type Service struct {
+type ServiceEntity struct {
 	ServiceId     uint64  `json:"service_id"`
 	Name          string  `json:"name"`
 	Price         float64 `json:"price"`

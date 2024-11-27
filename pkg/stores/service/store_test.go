@@ -70,7 +70,7 @@ func TestServiceStore(t *testing.T) {
 		ctx := context.Background()
 
 		// given
-		s := service.Service{
+		s := service.ServiceEntity{
 			Name:        "name",
 			Price:       1000.95,
 			Duration:    3600,
@@ -109,7 +109,7 @@ func TestServiceStore(t *testing.T) {
 		ctx := context.Background()
 
 		// given
-		s := service.Service{
+		s := service.ServiceEntity{
 			Name:  "name",
 			Price: 10001.95,
 		}

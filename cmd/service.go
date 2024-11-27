@@ -6,6 +6,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/services/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 )
@@ -14,6 +15,7 @@ type serviceRegistry struct {
 	JwtService      auth.IJwtService
 	ScheduleService schedule.IScheduleService
 	ServiceImpl     service.IService
+	StaffService    staff.IStaffService
 }
 
 func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *serviceRegistry {
@@ -24,5 +26,6 @@ func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *
 		JwtService:      security,
 		ScheduleService: schedule.NewScheduleService(l, a),
 		ServiceImpl:     service.NewServiceImpl(l, a),
+		StaffService:    staff.NewStaffService(l, a),
 	}
 }

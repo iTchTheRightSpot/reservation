@@ -22,7 +22,7 @@ func NewServiceImpl(l utils.ILogger, a *stores.Adapters) IService {
 }
 
 func (dep *serviceImpl) Create(ctx context.Context, p *service.ServicePayload) error {
-	s := service.Service{
+	s := service.ServiceEntity{
 		Name:          strings.TrimSpace(p.Name),
 		Price:         p.Price,
 		IsVisible:     p.IsVisible,

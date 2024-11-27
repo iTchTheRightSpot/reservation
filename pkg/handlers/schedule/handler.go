@@ -11,14 +11,14 @@ import (
 )
 
 type ScheduleHandler struct {
-	mux        *http.ServeMux
-	middleware *middleware.Middleware
-	logger     utils.ILogger
-	service    schedule.IScheduleService
+	mux     *http.ServeMux
+	ware    *middleware.Middleware
+	logger  utils.ILogger
+	service schedule.IScheduleService
 }
 
 func NewScheduleHandler(mux *http.ServeMux, w *middleware.Middleware, l utils.ILogger, s schedule.IScheduleService) *ScheduleHandler {
-	return &ScheduleHandler{mux: mux, middleware: w, logger: l, service: s}
+	return &ScheduleHandler{mux: mux, ware: w, logger: l, service: s}
 }
 
 func (dep *ScheduleHandler) Register() {
@@ -27,9 +27,9 @@ func (dep *ScheduleHandler) Register() {
 	permission := models.WRITE
 	m := middleware.RequestBodyMiddleware[model.SchedulePayload]{Logger: dep.logger}
 
-	mux.Handle("POST /", dep.middleware.HasPermission(m.RequestBody(http.HandlerFunc(dep.create)), &permission))
+	mux.Handle("POST /", dep.ware.HasPermission(m.RequestBody(http.HandlerFunc(dep.create)), &permission))
 	mux.Handle("GET /", http.HandlerFunc(dep.schedules))
-	dep.mux.Handle("/schedule", dep.middleware.Authentication(dep.middleware.HasRole(mux, &role)))
+	dep.mux.Handle("/schedule", dep.ware.Authentication(dep.ware.HasRole(mux, &role)))
 }
 
 func (dep *ScheduleHandler) create(w http.ResponseWriter, r *http.Request) {
