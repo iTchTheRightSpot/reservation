@@ -1,4 +1,4 @@
-# Landscape ERP application powered by Go & PostgresSQL
+# Enterprise Resource Planning application powered by Go & PostgreSQL
 
 ## Core Requirements
 

@@ -13,7 +13,7 @@ import (
 type IScheduleStore interface {
 	Save(ctx context.Context, s *schedule.Schedule) (*schedule.Schedule, error)
 	CountExistingSchedulesForStaff(ctx context.Context, staffId uint64, start, end time.Time) (int, error)
-	ScheduleInRange(ctx context.Context, staffId uint64, start time.Time, end time.Time) ([]*schedule.Schedule, error)
+	SchedulesInRange(ctx context.Context, staffId uint64, start time.Time, end time.Time) ([]*schedule.Schedule, error)
 	CountSchedulesInRangeAndVisibility(ctx context.Context, staffId uint64, start *time.Time, end time.Time, isVisible bool) (int, error)
 }
 
@@ -26,7 +26,7 @@ func NewScheduleStore(l utils.ILogger, db pkg.Db) IScheduleStore {
 	return &scheduleStore{logger: l, db: db}
 }
 
-func (dep *scheduleStore) ScheduleInRange(ctx context.Context, staffId uint64, start time.Time, end time.Time) ([]*schedule.Schedule, error) {
+func (dep *scheduleStore) SchedulesInRange(ctx context.Context, staffId uint64, start time.Time, end time.Time) ([]*schedule.Schedule, error) {
 	var arr []*schedule.Schedule
 
 	q := `

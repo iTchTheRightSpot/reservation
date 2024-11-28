@@ -31,7 +31,7 @@ func (dep *scheduleService) Schedules(ctx context.Context, p *schedule.AllSchedu
 	}
 
 	start := time.Date(p.Year, time.Month(p.Month), 1, 0, 0, 0, 0, dep.logger.Timezone())
-	schedules, err := dep.adapters.ScheduleStore.ScheduleInRange(ctx, s.StaffId, start, start.AddDate(0, 1, -1))
+	schedules, err := dep.adapters.ScheduleStore.SchedulesInRange(ctx, s.StaffId, start, start.AddDate(0, 1, -1))
 	if err != nil {
 		return nil, err
 	}

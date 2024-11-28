@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"slices"
@@ -26,11 +27,16 @@ func NewReservationService(l utils.ILogger, a *stores.Adapters) IReservationServ
 	return &reservationService{logger: l, adapters: a}
 }
 
-func (dep *reservationService) matchStaffServices(requestedServices []*string, availableServices []*service.ServiceEntity) ([]*service.ServiceEntity, error) {
+func (dep *reservationService) services(ctx context.Context, p *reservation.ReservationPayload, err error, staffObj *staff.Staff) ([]*service.ServiceEntity, error) {
+	serviceEntities, err := dep.adapters.ServiceStore.ServicesByStaffId(ctx, staffObj.StaffId)
+	if err != nil {
+		return nil, err
+	}
+
 	arr := make([]*service.ServiceEntity, 0)
 
-	for _, entity := range availableServices {
-		match := slices.ContainsFunc(requestedServices, func(s *string) bool {
+	for _, entity := range serviceEntities {
+		match := slices.ContainsFunc(p.Services, func(s *string) bool {
 			lc := strings.ToUpper(strings.TrimSpace(*s))
 			up := strings.ToUpper(strings.TrimSpace(entity.Name))
 			return lc == up
@@ -41,8 +47,10 @@ func (dep *reservationService) matchStaffServices(requestedServices []*string, a
 		}
 	}
 
-	if len(arr) != len(requestedServices) {
-		return nil, fmt.Errorf("1 or more services were not found for selected staff")
+	if len(arr) != len(p.Services) {
+		mess := "1 or more services were not found for selected staff"
+		dep.logger.Error(mess)
+		return nil, fmt.Errorf(mess)
 	}
 
 	return arr, nil
@@ -76,20 +84,60 @@ func (dep *reservationService) sumUpServiceDuration(s []*service.ServiceEntity) 
 	return count
 }
 
+func (dep *reservationService) sumUpServicePrice(s []*service.ServiceEntity) float64 {
+	var count float64
+	for _, entity := range s {
+		count += entity.Price
+	}
+	return count
+}
+
+func (dep *reservationService) createReservation(ctx context.Context, p *reservation.ReservationPayload, matchedServices []*service.ServiceEntity, s *staff.Staff, start *time.Time, end time.Time, err error) error {
+	return dep.adapters.Transaction.RunInTransaction(func(adapters *stores.Adapters) error {
+		priceSum := dep.sumUpServicePrice(matchedServices)
+
+		reserv := &reservation.Reservation{
+			StaffId:      s.StaffId,
+			Name:         strings.TrimSpace(p.Name),
+			Email:        strings.TrimSpace(p.Email),
+			Description:  p.Description,
+			Address:      p.Address,
+			Phone:        p.Phone,
+			ImageKey:     nil,
+			Price:        priceSum,
+			Status:       reservation.CONFIRMED,
+			CreatedAt:    dep.logger.Date(),
+			ScheduledFor: *start,
+			ExpireAt:     end,
+		}
+
+		if err = adapters.ReservationStore.SelectForUpdateSave(ctx, reserv); err != nil {
+			dep.logger.Error(err.Error())
+			return fmt.Errorf("error creating reservation")
+		}
+
+		for _, entity := range matchedServices {
+			err = adapters.ReservationServiceStore.Save(ctx, &reservation.ReservationServiceEntity{
+				ReservationId: reserv.ReservationId,
+				ServiceId:     entity.ServiceId,
+			})
+			if err != nil {
+				dep.logger.Error(err.Error())
+				return fmt.Errorf("error creating reservation")
+			}
+		}
+		return nil
+	})
+}
+
 func (dep *reservationService) Create(ctx context.Context, p *reservation.ReservationPayload) error {
-	s, err := dep.adapters.StaffStore.StaffByUUID(ctx, strings.TrimSpace(p.StaffId))
+	staffObj, err := dep.adapters.StaffStore.StaffByUUID(ctx, strings.TrimSpace(p.StaffId))
 	if err != nil {
 		return err
 	}
 
-	ser, err := dep.adapters.ServiceStore.ServicesByStaffId(ctx, s.StaffId)
+	services, err := dep.services(ctx, p, err, staffObj)
 	if err != nil {
-		return err
-	}
-
-	matchedServices, err := dep.matchStaffServices(p.Services, ser)
-	if err != nil {
-		dep.logger.Error(err.Error())
 		return err
 	}
 
@@ -104,12 +152,30 @@ func (dep *reservationService) Create(ctx context.Context, p *reservation.Reserv
 		return fmt.Errorf("cannot make a reservation for a past day")
 	}
 
-	end := start.Add(time.Second * time.Duration(dep.sumUpServiceDuration(matchedServices)))
+	end := start.Add(time.Second * time.Duration(dep.sumUpServiceDuration(services)))
 
-	count, err := dep.adapters.ScheduleStore.CountSchedulesInRangeAndVisibility(ctx, s.StaffId, start, end, true)
-	if count <= 0 {
-		return fmt.Errorf("invalid reservation time")
+	count, err := dep.adapters.ScheduleStore.CountSchedulesInRangeAndVisibility(ctx, staffObj.StaffId, start, end, true)
+	if err != nil {
+		return err
+	}
+	if count < 1 {
+		mess := "invalid reservation time"
+		dep.logger.Error(mess)
+		return fmt.Errorf(mess)
 	}
 
-	return fmt.Errorf("yet to implement reservation service")
+	count, err = dep.adapters.ReservationStore.CountReservationsInRangeByStaffTimeAndStatuses(
+		ctx, staffObj.StaffId, *start, end, reservation.CONFIRMED)
+
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		mess := "reservation creation failed. conflict"
+		dep.logger.Error(mess)
+		return fmt.Errorf(mess)
+	}
+
+	// TODO call mail service and clear cache
+	return dep.createReservation(ctx, p, services, staffObj, start, end, err)
 }

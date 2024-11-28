@@ -204,7 +204,7 @@ func TestScheduleStore(t *testing.T) {
 		// method to test
 		start = time.Date(mockLog.Date().Year(), mockLog.Date().Month(), 1, 0, 0, 0, 0, mockLog.Timezone())
 		end := start.AddDate(0, 1, -1)
-		schs, err := store.ScheduleInRange(ctx, staffObj.StaffId, start, end)
+		schs, err := store.SchedulesInRange(ctx, staffObj.StaffId, start, end)
 
 		// assert
 		if err != nil {
