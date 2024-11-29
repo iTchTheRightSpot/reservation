@@ -25,22 +25,19 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	db, err := database.ConnectToPostgres(env.DbConnectionString)
+	db, err := database.ConnectToPostgre(env.DbConnectionString)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	dbInstance = db
 
-	// close db connection
 	defer func(db *sql.DB) {
 		if err := db.Close(); err != nil {
 			log.Printf("db connection did not close after tests")
-			return
 		}
 	}(db)
 
-	// run tests
 	m.Run()
 }
 
@@ -213,6 +210,59 @@ func TestScheduleStore(t *testing.T) {
 
 		if !reflect.DeepEqual(save, schs[0]) {
 			t.Errorf("expect %v to equal given %v", save, schs[0])
+		}
+	})
+
+	t.Run("should count schedules in range and visibility", func(t *testing.T) {
+		t.Parallel()
+
+		tx, fn := setupTest(t)
+		defer fn()
+
+		store := NewScheduleStore(mockLog, tx)
+
+		ctx := context.Background()
+
+		// given
+		staffObj := staff.Staff{UUID: uuid.New()}
+		if _, err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
+			t.Errorf("%s", err)
+		}
+
+		start := mockLog.Date()
+		_, err := store.Save(ctx, &schedule.Schedule{
+			StaffId: staffObj.StaffId,
+			Start:   start,
+			End:     start.Add(time.Duration(8) * time.Hour),
+		})
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		firstDayOfMonth := time.Date(mockLog.Date().Year(), mockLog.Date().Month(), 1, 0, 0, 0, 0, mockLog.Timezone())
+		lastDayOfMonth := firstDayOfMonth.AddDate(0, 1, -1)
+
+		// method to test
+		count, err := store.CountSchedulesInRangeAndVisibility(ctx, staffObj.StaffId, firstDayOfMonth, lastDayOfMonth, false)
+
+		// assert
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		if count != 0 {
+			t.Errorf("expect 1 given %v", count)
+		}
+
+		count, err = store.CountSchedulesInRangeAndVisibility(ctx, staffObj.StaffId, start, start.Add(1*time.Hour), false)
+
+		// assert
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		if count != 1 {
+			t.Errorf("expect 1 given %v", count)
 		}
 	})
 }

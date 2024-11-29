@@ -44,7 +44,7 @@ func ReadBody[T any](r *http.Request) (*T, error) {
 	}
 
 	var payload T
-	if err := json.Unmarshal(bodyBytes, &payload); err != nil {
+	if err = json.Unmarshal(bodyBytes, &payload); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal request body: %w", err)
 	}
 

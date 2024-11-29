@@ -14,7 +14,7 @@ type IScheduleStore interface {
 	Save(ctx context.Context, s *schedule.Schedule) (*schedule.Schedule, error)
 	CountExistingSchedulesForStaff(ctx context.Context, staffId uint64, start, end time.Time) (int, error)
 	SchedulesInRange(ctx context.Context, staffId uint64, start time.Time, end time.Time) ([]*schedule.Schedule, error)
-	CountSchedulesInRangeAndVisibility(ctx context.Context, staffId uint64, start *time.Time, end time.Time, isVisible bool) (int, error)
+	CountSchedulesInRangeAndVisibility(ctx context.Context, staffId uint64, start time.Time, end time.Time, isVisible bool) (int, error)
 }
 
 type scheduleStore struct {
@@ -107,6 +107,24 @@ func (dep *scheduleStore) CountExistingSchedulesForStaff(ctx context.Context, st
 	return count, nil
 }
 
-func (dep *scheduleStore) CountSchedulesInRangeAndVisibility(ctx context.Context, staffId uint64, start *time.Time, end time.Time, isVisible bool) (int, error) {
-	return 0, fmt.Errorf("yet to implement CountSchedulesInRangeAndVisibility")
+func (dep *scheduleStore) CountSchedulesInRangeAndVisibility(ctx context.Context, staffId uint64, start time.Time, end time.Time, isVisible bool) (int, error) {
+	var count int
+
+	q := `
+      SELECT COUNT(*) FROM schedule s
+      WHERE s.staff_id = $1
+      AND (
+          ($2 BETWEEN s.schedule_start AND s.schedule_end) AND
+          ($3 BETWEEN s.schedule_start AND s.schedule_end)
+      )
+      AND is_visible = $4
+    `
+
+	row := dep.db.QueryRowContext(ctx, q, staffId, start, end, isVisible)
+	if err := row.Scan(&count); err != nil {
+		dep.logger.Error(err.Error())
+		return 0, fmt.Errorf("exception counting schedules in range & visibility")
+	}
+
+	return count, nil
 }

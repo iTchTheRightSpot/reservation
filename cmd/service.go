@@ -22,10 +22,8 @@ type serviceRegistry struct {
 
 func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *serviceRegistry {
 	a := stores.NewAdapters(l, s, stores.NewTransactionProvider(l, s))
-	security := auth.NewJwtService(l, e)
-
 	return &serviceRegistry{
-		JwtService:         security,
+		JwtService:         auth.NewJwtService(l, e),
 		ScheduleService:    schedule.NewScheduleService(l, a),
 		ServiceImpl:        service.NewServiceImpl(l, a),
 		StaffService:       staff.NewStaffService(l, a),

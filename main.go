@@ -23,7 +23,7 @@ func main() {
 	}
 
 	// connect to database
-	db, err := database.ConnectToPostgres(env.DbConnectionString)
+	db, err := database.ConnectToPostgre(env.DbConnectionString)
 	if err != nil {
 		log.Fatal(err)
 		return

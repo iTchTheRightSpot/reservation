@@ -100,9 +100,9 @@ func (dep *reservationService) createReservation(ctx context.Context, p *reserva
 			StaffId:      s.StaffId,
 			Name:         strings.TrimSpace(p.Name),
 			Email:        strings.TrimSpace(p.Email),
-			Description:  p.Description,
-			Address:      p.Address,
-			Phone:        p.Phone,
+			Description:  &p.Description,
+			Address:      &p.Address,
+			Phone:        &p.Phone,
 			ImageKey:     nil,
 			Price:        priceSum,
 			Status:       reservation.CONFIRMED,
@@ -154,7 +154,7 @@ func (dep *reservationService) Create(ctx context.Context, p *reservation.Reserv
 
 	end := start.Add(time.Second * time.Duration(dep.sumUpServiceDuration(services)))
 
-	count, err := dep.adapters.ScheduleStore.CountSchedulesInRangeAndVisibility(ctx, staffObj.StaffId, start, end, true)
+	count, err := dep.adapters.ScheduleStore.CountSchedulesInRangeAndVisibility(ctx, staffObj.StaffId, *start, end, true)
 	if err != nil {
 		return err
 	}
@@ -177,5 +177,5 @@ func (dep *reservationService) Create(ctx context.Context, p *reservation.Reserv
 	}
 
 	// TODO call mail service and clear cache
-	return dep.createReservation(ctx, p, services, staffObj, start, end, err)
+	return dep.createReservation(ctx, p, services, staffObj, start, end)
 }

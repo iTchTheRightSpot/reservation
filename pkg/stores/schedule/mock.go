@@ -36,7 +36,7 @@ func (dep *MockScheduleStore) CountExistingSchedulesForStaff(context.Context, ui
 	return dep.CountExistingSchedulesForStaffReturn, dep.CountExistingSchedulesForStaffError
 }
 
-func (dep *MockScheduleStore) CountSchedulesInRangeAndVisibility(context.Context, uint64, *time.Time, time.Time, bool) (int, error) {
+func (dep *MockScheduleStore) CountSchedulesInRangeAndVisibility(context.Context, uint64, time.Time, time.Time, bool) (int, error) {
 	dep.CountSchedulesInRangeAndVisibilityCalled = true
 	return dep.CountSchedulesInRangeAndVisibilityReturn, dep.CountSchedulesInRangeAndVisibilityError
 }

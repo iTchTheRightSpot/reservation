@@ -35,7 +35,7 @@ func TestMain(m *testing.M) {
 	}
 	env = e
 
-	db, err = database.ConnectToPostgres(e.DbConnectionString)
+	db, err = database.ConnectToPostgre(e.DbConnectionString)
 	if err != nil {
 		log.Fatal(err)
 	}

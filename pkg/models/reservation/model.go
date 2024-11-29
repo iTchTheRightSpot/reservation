@@ -35,10 +35,15 @@ type ReservationPayload struct {
 	StaffId     string    `json:"staff_id" validate:"required,min=36,max=37"`
 	Name        string    `json:"name" validate:"required"`
 	Email       string    `json:"email" validate:"required,max=320"`
-	Description *string   `json:"description" validate:"max=255"`
-	Address     *string   `json:"address" validate:"required,max=255"`
-	Phone       *string   `json:"phone" validate:"required,max=20"`
+	Description string    `json:"description" validate:"max=255"`
+	Address     string    `json:"address" validate:"required,max=255"`
+	Phone       string    `json:"phone" validate:"required,max=20"`
 	Services    []*string `json:"services" validate:"required,min=1,dive,required"`
 	Timezone    string    `json:"timezone"`
 	Time        string    `json:"time" validate:"required"`
+}
+
+type ReservationTimeSlots struct {
+	Date  string   `json:"date"`
+	Times []string `json:"times"`
 }
