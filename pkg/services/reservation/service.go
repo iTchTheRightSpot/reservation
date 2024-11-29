@@ -92,7 +92,7 @@ func (dep *reservationService) sumUpServicePrice(s []*service.ServiceEntity) flo
 	return count
 }
 
-func (dep *reservationService) createReservation(ctx context.Context, p *reservation.ReservationPayload, matchedServices []*service.ServiceEntity, s *staff.Staff, start *time.Time, end time.Time, err error) error {
+func (dep *reservationService) createReservation(ctx context.Context, p *reservation.ReservationPayload, matchedServices []*service.ServiceEntity, s *staff.Staff, start *time.Time, end time.Time) error {
 	return dep.adapters.Transaction.RunInTransaction(func(adapters *stores.Adapters) error {
 		priceSum := dep.sumUpServicePrice(matchedServices)
 
@@ -111,18 +111,18 @@ func (dep *reservationService) createReservation(ctx context.Context, p *reserva
 			ExpireAt:     end,
 		}
 
-		if err = adapters.ReservationStore.SelectForUpdateSave(ctx, reserv); err != nil {
+		if err := adapters.ReservationStore.SelectForUpdateSave(ctx, reserv); err != nil {
 			dep.logger.Error(err.Error())
 			return fmt.Errorf("error creating reservation")
 		}
 
 		for _, entity := range matchedServices {
-			err = adapters.ReservationServiceStore.Save(ctx, &reservation.ReservationServiceEntity{
+			err := adapters.ReservationServiceStore.Save(ctx, &reservation.ReservationServiceEntity{
 				ReservationId: reserv.ReservationId,
 				ServiceId:     entity.ServiceId,
 			})
 			if err != nil {
-				dep.logger.Error(err.Error())
+				dep.logger.Error(err)
 				return fmt.Errorf("error creating reservation")
 			}
 		}
