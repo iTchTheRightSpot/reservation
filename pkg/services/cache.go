@@ -50,7 +50,7 @@ func (dep *inMemoryCache[K, V]) leastUser() K {
 	now := dep.logger.Date()
 	lastAccess := &now
 	dep.cache.Range(func(key, value any) bool {
-		v := value.(*customValue[V])
+		v := value.(customValue[V])
 		if v.LastAccess.Before(*lastAccess) {
 			k = key.(K)
 			lastAccess = &v.LastAccess
@@ -72,7 +72,7 @@ func (dep *inMemoryCache[K, V]) Put(key K, value V) {
 	}
 
 	timeout := time.AfterFunc(dep.duration, func() { dep.cache.Delete(key) })
-	dep.cache.Store(key, &customValue[V]{timer: timeout, value: value})
+	dep.cache.Store(key, customValue[V]{timer: timeout, value: value})
 }
 
 func (dep *inMemoryCache[K, V]) Get(key K) *V {
@@ -80,7 +80,7 @@ func (dep *inMemoryCache[K, V]) Get(key K) *V {
 	if !ok {
 		return nil
 	}
-	v := value.(*customValue[V])
+	v := value.(customValue[V])
 	v.LastAccess = dep.logger.Date()
 	return &v.value
 }

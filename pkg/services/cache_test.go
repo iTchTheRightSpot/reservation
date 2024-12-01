@@ -39,8 +39,8 @@ func TestInMemoryCache(t *testing.T) {
 			t.Errorf("expect %s given nil", val)
 		}
 
-		if reflect.DeepEqual(val, obj) {
-			t.Errorf("expect %s to equal given %s", obj, val)
+		if !reflect.DeepEqual(obj, *val) {
+			t.Errorf("expect %s to equal given %v", obj, *val)
 		}
 	})
 
@@ -109,7 +109,7 @@ func TestInMemoryCache(t *testing.T) {
 		if size > cache.size {
 			t.Errorf("expect %v given %v", cache.size, size)
 		}
-		
+
 		if size != cache.size {
 			t.Errorf("expect %v given %v", cache.size, size)
 		}
