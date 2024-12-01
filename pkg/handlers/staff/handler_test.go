@@ -161,7 +161,7 @@ func TestStaffHandler(t *testing.T) {
 					t.Errorf("index %v expected status code %d, got %d", i, http.StatusCreated, rr.Code)
 				}
 			} else {
-				if rr.Code != http.StatusBadRequest {
+				if rr.Code != http.StatusConflict {
 					t.Errorf("index %v expected status code %d, got %d", i, http.StatusBadRequest, rr.Code)
 				}
 			}

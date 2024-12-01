@@ -32,8 +32,8 @@ func (dep *serviceImpl) Create(ctx context.Context, p *service.ServicePayload) e
 	}
 
 	if _, err := dep.adapters.ServiceStore.Save(ctx, &s); err != nil {
-		dep.logger.Error(err)
-		return err
+		dep.logger.Error(err.Error())
+		return &utils.InsertionError{Message: err.Error()}
 	}
 	return nil
 }

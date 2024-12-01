@@ -2,6 +2,7 @@ package schedule
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
@@ -27,13 +28,13 @@ func NewScheduleService(l utils.ILogger, a *stores.Adapters) IScheduleService {
 func (dep *scheduleService) Schedules(ctx context.Context, p *schedule.AllSchedulesPayload) ([]*schedule.ScheduleResponse, error) {
 	s, err := dep.adapters.StaffStore.StaffByUUID(ctx, p.StaffUUID)
 	if err != nil {
-		return nil, err
+		return nil, &utils.NotFoundError{Message: "invalid staff id"}
 	}
 
 	start := time.Date(p.Year, time.Month(p.Month), 1, 0, 0, 0, 0, dep.logger.Timezone())
 	schedules, err := dep.adapters.ScheduleStore.SchedulesInRange(ctx, s.StaffId, start, start.AddDate(0, 1, -1))
 	if err != nil {
-		return nil, err
+		return nil, &utils.BadRequestError{Message: err.Error()}
 	}
 
 	res := make([]*schedule.ScheduleResponse, len(schedules))
@@ -60,7 +61,7 @@ func (dep *scheduleService) validateSegments(ctx context.Context, staffID uint64
 			defer wg.Done()
 			count, err := dep.adapters.ScheduleStore.CountExistingSchedulesForStaff(ctx, staffID, segment.Start, segment.End)
 			if err != nil {
-				errChan <- fmt.Errorf("error checking existing schedules: %s", err.Error())
+				errChan <- errors.New(err.Error())
 				return
 			}
 			if count > 0 {
@@ -79,16 +80,16 @@ func (dep *scheduleService) Create(ctx context.Context, dto *schedule.SchedulePa
 	segments, err := dto.CheckForOverlappingSegments(dep.logger.Date(), dep.logger.Timezone())
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return err
+		return &utils.BadRequestError{Message: err.Error()}
 	}
 
 	staff, err := dep.adapters.StaffStore.StaffByUUID(ctx, dto.StaffId)
 	if err != nil {
-		return err
+		return &utils.BadRequestError{Message: "invalid staff id"}
 	}
 
 	if err = dep.validateSegments(ctx, staff.StaffId, segments); err != nil {
-		return err
+		return &utils.BadRequestError{Message: err.Error()}
 	}
 
 	return dep.adapters.Transaction.RunInTransaction(func(adapters *stores.Adapters) error {
@@ -100,7 +101,7 @@ func (dep *scheduleService) Create(ctx context.Context, dto *schedule.SchedulePa
 				IsVisible: segment.IsVisible,
 			})
 			if err != nil {
-				return err
+				return &utils.InsertionError{Message: err.Error()}
 			}
 		}
 		return nil

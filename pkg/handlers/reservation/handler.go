@@ -1,12 +1,16 @@
 package reservation
 
 import (
+	"encoding/json"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"net/http"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type ReservationHandler struct {
@@ -33,25 +37,13 @@ func (dep *ReservationHandler) create(w http.ResponseWriter, r *http.Request) {
 	dto, err := pkg.ReadBody[model.ReservationPayload](r)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		utils.ConstructErrorResponse(
-			w,
-			utils.ErrorResponse{
-				Status:  http.StatusInternalServerError,
-				Message: err.Error(),
-			},
-		)
+		utils.ConstructErrorResponse(w, err)
 		return
 	}
 
 	if err = dep.service.Create(r.Context(), dto); err != nil {
 		dep.logger.Error(err.Error())
-		utils.ConstructErrorResponse(
-			w,
-			utils.ErrorResponse{
-				Status:  http.StatusBadRequest,
-				Message: err.Error(),
-			},
-		)
+		utils.ConstructErrorResponse(w, err)
 		return
 	}
 
@@ -60,6 +52,68 @@ func (dep *ReservationHandler) create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (dep *ReservationHandler) availableDates(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	day, err := strconv.Atoi(query.Get("day"))
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		return
+	}
+
+	month, err := strconv.Atoi(query.Get("month"))
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		return
+	}
+
+	year, err := strconv.Atoi(query.Get("year"))
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		return
+	}
+
+	p := model.AvailableTimesPayload{
+		StaffId:  strings.TrimSpace(query.Get("staff_id")),
+		Services: query["service"],
+		Day:      day,
+		Month:    month,
+		Year:     year,
+	}
+
+	if err = middleware.ValidatorInstance.Struct(p); err != nil {
+		dep.logger.Error(err.Error())
+		utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		return
+	}
+
+	timezone := query.Get("timezone")
+	location := dep.logger.Timezone()
+
+	if timezone != "" {
+		location, err = time.LoadLocation(timezone)
+		if err != nil {
+			dep.logger.Error(err.Error())
+			utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+			return
+		}
+	}
+
+	p.StartDateTime = time.Date(p.Year, time.Month(p.Month), day, 0, 0, 0, 0, location)
+	p.EndDateTime = p.StartDateTime.AddDate(0, 1, -1)
+
+	arr, err := dep.service.AvailableDates(r.Context(), &p)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ConstructErrorResponse(w, err)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	response, _ := json.Marshal(arr)
+	if _, err = w.Write(response); err != nil {
+		dep.logger.Error(err.Error())
+	}
 }

@@ -2,7 +2,6 @@ package staff
 
 import (
 	"context"
-	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -24,26 +23,30 @@ func NewStaffService(l utils.ILogger, a *stores.Adapters) IStaffService {
 func (dep *staffService) LinkServiceToStaff(ctx context.Context, staffUUID, serviceName string) error {
 	s, err := dep.adapters.StaffStore.StaffByUUID(ctx, staffUUID)
 	if err != nil {
-		return err
+		return &utils.NotFoundError{Message: "invalid staff id"}
 	}
 
 	service, err := dep.adapters.ServiceStore.ServiceByName(ctx, serviceName)
 	if err != nil {
-		return err
+		return &utils.NotFoundError{Message: "invalid service name"}
 	}
 
 	count, err := dep.adapters.StaffServiceStore.CountByStaffIdAndServiceId(ctx, s.StaffId, service.ServiceId)
 	if err != nil {
-		return err
+		return &utils.InsertionError{Message: err.Error()}
 	}
 
 	if count > 0 {
-		return fmt.Errorf("service already linked to staff")
+		return &utils.InsertionError{Message: "service already linked to staff"}
 	}
 
 	_, err = dep.adapters.StaffServiceStore.Save(ctx, &staff.StaffServiceEntity{
 		StaffId: s.StaffId, ServiceId: service.ServiceId,
 	})
 
-	return err
+	if err != nil {
+		return &utils.InsertionError{Message: err.Error()}
+	}
+
+	return nil
 }

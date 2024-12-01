@@ -42,7 +42,7 @@ func TestReservationService(t *testing.T) {
 				t.Errorf("expect error but given nil")
 			}
 
-			if err.Error() != "staff not found" {
+			if err.Error() != "invalid staff id" {
 				t.Errorf("expect %s given %s", "staff not found", err.Error())
 			}
 

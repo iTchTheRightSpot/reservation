@@ -23,9 +23,12 @@ func NewStaffHandler(mux *http.ServeMux, w *middleware.Middleware, l utils.ILogg
 func (dep *StaffHandler) Register() {
 	mux := http.NewServeMux()
 	role := models.STAFF
-	permission := models.WRITE
+	rp := &models.RolePermission{
+		Role:        role,
+		Permissions: []models.PermissionEnum{models.WRITE},
+	}
 
-	mux.Handle("POST /service", dep.ware.HasPermission(http.HandlerFunc(dep.linkServiceToStaff), &permission))
+	mux.Handle("POST /service", dep.ware.HasRoleAndPermissions(http.HandlerFunc(dep.linkServiceToStaff), rp))
 
 	dep.mux.Handle("/staff/", http.StripPrefix("/staff", dep.ware.Authentication(dep.ware.HasRole(mux, &role))))
 }
@@ -33,28 +36,17 @@ func (dep *StaffHandler) Register() {
 func (dep *StaffHandler) linkServiceToStaff(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Query().Get("service_name")
 	if len(name) < 1 {
-		utils.ConstructErrorResponse(
-			w,
-			utils.ErrorResponse{
-				Status:  http.StatusBadRequest,
-				Message: "service_name is missing",
-			},
-		)
+		utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: "service_name is missing"})
 		return
 	}
 
 	staffUUID := r.URL.Query().Get("staff_id")
+
 	if len(staffUUID) < 1 {
 		obj, ok := r.Context().Value(utils.UserContextKey).(*models.JwtObj)
 		if !ok || obj == nil {
 			dep.logger.Error("linkServiceToStaff invalid staff_id")
-			utils.ConstructErrorResponse(
-				w,
-				utils.ErrorResponse{
-					Status:  http.StatusUnauthorized,
-					Message: "full authentication is required to access this resource",
-				},
-			)
+			utils.ConstructErrorResponse(w, &utils.AuthenticationError{})
 			return
 		}
 		staffUUID = obj.UserId
@@ -63,13 +55,7 @@ func (dep *StaffHandler) linkServiceToStaff(w http.ResponseWriter, r *http.Reque
 	err := dep.service.LinkServiceToStaff(r.Context(), strings.TrimSpace(staffUUID), strings.TrimSpace(name))
 	if err != nil {
 		dep.logger.Error(err.Error())
-		utils.ConstructErrorResponse(
-			w,
-			utils.ErrorResponse{
-				Status:  http.StatusBadRequest,
-				Message: err.Error(),
-			},
-		)
+		utils.ConstructErrorResponse(w, err)
 		return
 	}
 

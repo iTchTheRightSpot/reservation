@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
@@ -272,7 +273,8 @@ func TestReservationHandler(t *testing.T) {
 			// retrieve valid reservation times
 			NewReservationHandler(mux, logger, reservationService).Register()
 
-			req = httptest.NewRequest(http.MethodGet, "/reservation", nil)
+			url := fmt.Sprintf("/reservation?day=%v&month=%v&year=%v&staff_id=%s&service=%s", 1, int(newTime.Month()), newTime.Year(), savedStaff.UUID.String(), saveService.Name)
+			req = httptest.NewRequest(http.MethodGet, url, nil)
 			req.Header.Set("Content-Type", "application/json")
 			rr = httptest.NewRecorder()
 			mux.ServeHTTP(rr, req)
@@ -302,7 +304,7 @@ func TestReservationHandler(t *testing.T) {
 				t.Fatalf("failed to marshal SchedulePayload: %s", err)
 			}
 
-			req = httptest.NewRequest(http.MethodGet, "/reservation", bytes.NewBuffer(createBodyBytes))
+			req = httptest.NewRequest(http.MethodPost, "/reservation", bytes.NewBuffer(createBodyBytes))
 			req.Header.Set("Content-Type", "application/json")
 			rr = httptest.NewRecorder()
 			mux.ServeHTTP(rr, req)

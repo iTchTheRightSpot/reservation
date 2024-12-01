@@ -49,11 +49,11 @@ type ReservationTimeSlots struct {
 }
 
 type AvailableTimesPayload struct {
-	Services      []*string `json:"services" validate:"required,min=1,dive,required"`
+	Services      []string  `json:"services" validate:"required,min=1,dive,required"`
 	StaffId       string    `json:"staff_id" validate:"required,min=36,max=37"`
-	Timezone      string    `json:"timezone"`
-	Start         string    `json:"start" validate:"required"`
-	End           string    `json:"end" validate:"required"`
+	Day           int       `json:"day" validate:"required,min=1,max=31"`
+	Month         int       `json:"month" validate:"required,min=1,max=12"`
+	Year          int       `json:"end" validate:"required"`
 	StartDateTime time.Time `json:"start_date_time"`
 	EndDateTime   time.Time `json:"end_date_time"`
 }

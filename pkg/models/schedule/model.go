@@ -1,6 +1,7 @@
 package schedule
 
 import (
+	"errors"
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"slices"
@@ -52,7 +53,7 @@ type ScheduledPeriod struct {
 
 func (dto *SchedulePayload) CheckForOverlappingSegments(now time.Time, timezone *time.Location) ([]ScheduledPeriod, error) {
 	if dto.Times == nil {
-		return nil, fmt.Errorf("time_slots cannot be nil")
+		return nil, errors.New("time_slots cannot be nil")
 	}
 
 	arr := make([]ScheduledPeriod, len(*dto.Times))

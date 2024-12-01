@@ -2,6 +2,7 @@ package auth
 
 import (
 	"crypto/rsa"
+	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/iTchTheRightSpot/erp-golang/config"
@@ -72,7 +73,7 @@ func (dep *jwtService) GenerateJwt(o *models.JwtObj, expirationInSeconds int) (*
 		jwt.MapClaims{
 			"sub": o.UserId,
 			"obj": o,
-			"iss": "Landscape ERP",
+			"iss": "Enterprise Resource Planning powered by S.EJ.U development",
 			"exp": exp.Unix(),
 			"iat": dep.logger.Date().Unix(),
 		},
@@ -80,8 +81,8 @@ func (dep *jwtService) GenerateJwt(o *models.JwtObj, expirationInSeconds int) (*
 
 	token, err := claims.SignedString(dep.privKey)
 	if err != nil {
-		dep.logger.Error(fmt.Sprintf("Error signing token: %v", err))
-		return nil, err
+		dep.logger.Error(err.Error())
+		return nil, errors.New(err.Error())
 	}
 
 	return &models.JwtResponse{Token: token, ExpireAt: exp}, nil
@@ -92,7 +93,7 @@ func (dep *jwtService) ValidateJwt(str string) (*models.JwtObj, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			errMsg := fmt.Sprintf("unexpected signing method: %v", token.Header["alg"])
 			dep.logger.Error(errMsg)
-			return nil, fmt.Errorf(errMsg)
+			return nil, &utils.AuthenticationError{Message: errMsg}
 		}
 		return dep.pubKey, nil
 	})

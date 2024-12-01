@@ -29,10 +29,13 @@ func NewServiceHandler(mux *http.ServeMux, l utils.ILogger, s service.IService, 
 func (dep *ServiceHandler) Register() {
 	mux := http.NewServeMux()
 	staff := models.STAFF
-	permission := models.WRITE
+	rp := &models.RolePermission{
+		Role:        staff,
+		Permissions: []models.PermissionEnum{models.WRITE},
+	}
 	m := middleware.RequestBodyMiddleware[model.ServicePayload]{Logger: dep.logger}
 
-	mux.Handle("POST /", dep.ware.HasPermission(m.RequestBody(http.HandlerFunc(dep.create)), &permission))
+	mux.Handle("POST /", dep.ware.HasRoleAndPermissions(m.RequestBody(http.HandlerFunc(dep.create)), rp))
 	dep.mux.Handle("/service", dep.ware.Authentication(dep.ware.HasRole(mux, &staff)))
 }
 
@@ -40,25 +43,13 @@ func (dep *ServiceHandler) create(w http.ResponseWriter, r *http.Request) {
 	dto, err := pkg.ReadBody[model.ServicePayload](r)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		utils.ConstructErrorResponse(
-			w,
-			utils.ErrorResponse{
-				Status:  http.StatusInternalServerError,
-				Message: err.Error(),
-			},
-		)
+		utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	if err = dep.service.Create(r.Context(), dto); err != nil {
 		dep.logger.Error(err.Error())
-		utils.ConstructErrorResponse(
-			w,
-			utils.ErrorResponse{
-				Status:  http.StatusBadRequest,
-				Message: err.Error(),
-			},
-		)
+		utils.ConstructErrorResponse(w, err)
 		return
 	}
 

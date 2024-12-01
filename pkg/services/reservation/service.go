@@ -18,6 +18,7 @@ import (
 
 type IReservationService interface {
 	Create(ctx context.Context, p *reservation.ReservationPayload) error
+	AvailableDates(ctx context.Context, o *reservation.AvailableTimesPayload) ([]reservation.ReservationTimeSlots, error)
 }
 
 type reservationService struct {
@@ -36,15 +37,26 @@ func NewReservationService(
 	return &reservationService{logger: l, adapters: a, cache: c, mail: m}
 }
 
-func (dep *reservationService) AvailableDates(o *reservation.AvailableTimesPayload) ([]reservation.ReservationTimeSlots, error) {
+func (dep *reservationService) AvailableDates(ctx context.Context, o *reservation.AvailableTimesPayload) ([]reservation.ReservationTimeSlots, error) {
+	_, err := dep.adapters.StaffStore.StaffByUUID(ctx, o.StaffId)
+	if err != nil {
+		return nil, &utils.NotFoundError{Message: "invalid staff Id"}
+	}
 
-	return nil, fmt.Errorf("yet to implement")
+	return []reservation.ReservationTimeSlots{
+		{
+			Date: fmt.Sprintf("%v", dep.logger.Date().UnixMilli()),
+			Times: []string{
+				fmt.Sprintf("%v", dep.logger.Date().Add(time.Duration(1)*time.Hour).UnixMilli()),
+			},
+		},
+	}, nil
 }
 
 func (dep *reservationService) services(ctx context.Context, p *reservation.ReservationPayload, err error, staffObj *staff.Staff) ([]*service.ServiceEntity, error) {
 	serviceEntities, err := dep.adapters.ServiceStore.ServicesByStaffId(ctx, staffObj.StaffId)
 	if err != nil {
-		return nil, err
+		return nil, &utils.NotFoundError{Message: "invalid service for staff"}
 	}
 
 	arr := make([]*service.ServiceEntity, 0)
@@ -64,7 +76,7 @@ func (dep *reservationService) services(ctx context.Context, p *reservation.Rese
 	if len(arr) != len(p.Services) {
 		mess := "1 or more services were not found for selected staff"
 		dep.logger.Error(mess)
-		return nil, fmt.Errorf(mess)
+		return nil, &utils.BadRequestError{Message: mess}
 	}
 
 	return arr, nil
@@ -73,7 +85,7 @@ func (dep *reservationService) services(ctx context.Context, p *reservation.Rese
 func (dep *reservationService) dateInTimezone(p *reservation.ReservationPayload, t *time.Location) (*time.Time, error) {
 	num, err := strconv.ParseInt(p.Time, 10, 64)
 	if err != nil {
-		return nil, err
+		return nil, &utils.BadRequestError{Message: err.Error()}
 	}
 
 	if len(p.Timezone) < 1 {
@@ -83,7 +95,7 @@ func (dep *reservationService) dateInTimezone(p *reservation.ReservationPayload,
 
 	l, err := time.LoadLocation(p.Timezone)
 	if err != nil {
-		return nil, err
+		return nil, &utils.BadRequestError{Message: err.Error()}
 	}
 
 	in := time.UnixMilli(num).In(l).In(t)
@@ -127,7 +139,7 @@ func (dep *reservationService) createReservation(ctx context.Context, p *reserva
 
 		if err := adapters.ReservationStore.SelectForUpdateSave(ctx, reserv); err != nil {
 			dep.logger.Error(err.Error())
-			return fmt.Errorf("error creating reservation")
+			return &utils.InsertionError{Message: "error creating reservation"}
 		}
 
 		for _, entity := range matchedServices {
@@ -137,7 +149,7 @@ func (dep *reservationService) createReservation(ctx context.Context, p *reserva
 			})
 			if err != nil {
 				dep.logger.Error(err)
-				return fmt.Errorf("error creating reservation")
+				return &utils.InsertionError{Message: "error creating reservation"}
 			}
 		}
 		return nil
@@ -147,7 +159,7 @@ func (dep *reservationService) createReservation(ctx context.Context, p *reserva
 func (dep *reservationService) Create(ctx context.Context, p *reservation.ReservationPayload) error {
 	staffObj, err := dep.adapters.StaffStore.StaffByUUID(ctx, strings.TrimSpace(p.StaffId))
 	if err != nil {
-		return err
+		return &utils.NotFoundError{Message: "invalid staff id"}
 	}
 
 	services, err := dep.services(ctx, p, err, staffObj)
@@ -162,8 +174,9 @@ func (dep *reservationService) Create(ctx context.Context, p *reservation.Reserv
 	}
 
 	if start.Before(dep.logger.Date()) {
-		dep.logger.Error("cannot make a reservation for a past day")
-		return fmt.Errorf("cannot make a reservation for a past day")
+		mess := "cannot make a reservation for a past day"
+		dep.logger.Error(mess)
+		return &utils.BadRequestError{Message: mess}
 	}
 
 	end := start.Add(time.Second * time.Duration(dep.sumUpServiceDuration(services)))
@@ -175,7 +188,7 @@ func (dep *reservationService) Create(ctx context.Context, p *reservation.Reserv
 	if count < 1 {
 		mess := "invalid reservation time"
 		dep.logger.Error(mess)
-		return fmt.Errorf(mess)
+		return &utils.BadRequestError{Message: mess}
 	}
 
 	count, err = dep.adapters.ReservationStore.CountReservationsInRangeByStaffTimeAndStatuses(
@@ -185,15 +198,16 @@ func (dep *reservationService) Create(ctx context.Context, p *reservation.Reserv
 		return err
 	}
 	if count > 0 {
-		mess := "reservation creation failed. conflict"
+		mess := "reservation time is not available failed"
 		dep.logger.Error(mess)
-		return fmt.Errorf(mess)
+		return &utils.BadRequestError{Message: mess}
 	}
 
 	err = dep.createReservation(ctx, p, services, staffObj, start, end)
 	if err != nil {
 		return err
 	}
+
 	dep.cache.Clear()
 	return dep.mail.SendReservationConfirmation()
 }
