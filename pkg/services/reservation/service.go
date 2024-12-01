@@ -6,6 +6,8 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
+	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/services/mail"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"slices"
@@ -21,10 +23,22 @@ type IReservationService interface {
 type reservationService struct {
 	logger   utils.ILogger
 	adapters *stores.Adapters
+	cache    pkg.ICache[string, []reservation.ReservationTimeSlots]
+	mail     mail.IMailService
 }
 
-func NewReservationService(l utils.ILogger, a *stores.Adapters) IReservationService {
-	return &reservationService{logger: l, adapters: a}
+func NewReservationService(
+	l utils.ILogger,
+	a *stores.Adapters,
+	c pkg.ICache[string, []reservation.ReservationTimeSlots],
+	m mail.IMailService,
+) IReservationService {
+	return &reservationService{logger: l, adapters: a, cache: c, mail: m}
+}
+
+func (dep *reservationService) AvailableDates(o *reservation.AvailableTimesPayload) ([]reservation.ReservationTimeSlots, error) {
+
+	return nil, fmt.Errorf("yet to implement")
 }
 
 func (dep *reservationService) services(ctx context.Context, p *reservation.ReservationPayload, err error, staffObj *staff.Staff) ([]*service.ServiceEntity, error) {
@@ -176,6 +190,10 @@ func (dep *reservationService) Create(ctx context.Context, p *reservation.Reserv
 		return fmt.Errorf(mess)
 	}
 
-	// TODO call mail service and clear cache
-	return dep.createReservation(ctx, p, services, staffObj, start, end)
+	err = dep.createReservation(ctx, p, services, staffObj, start, end)
+	if err != nil {
+		return err
+	}
+	dep.cache.Clear()
+	return dep.mail.SendReservationConfirmation()
 }

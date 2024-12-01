@@ -16,7 +16,9 @@ import (
 	scheduleModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
+	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/services/mail"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
@@ -136,7 +138,8 @@ func TestReservationHandler(t *testing.T) {
 			mux := http.NewServeMux()
 			prov := stores.MockLiveTransactionProvider(logger, tx)
 			adapters := stores.NewAdapters(logger, tx, prov)
-			s := reservation.NewReservationService(logger, adapters)
+			cache := pkg.NewInMemoryCache[string, []model.ReservationTimeSlots](logger, 30, 30)
+			s := reservation.NewReservationService(logger, adapters, cache, nil)
 
 			savedStaff, err := preSaveStaff(adapters)
 			if err != nil {
@@ -202,7 +205,9 @@ func TestReservationHandler(t *testing.T) {
 			jwtService := auth.NewJwtService(logger, env)
 			ware := &middleware.Middleware{Logger: logger, Auth: jwtService, Param: env.CookieParam}
 			scheduleService := schedule.NewScheduleService(logger, adapters)
-			reservationService := reservation.NewReservationService(logger, adapters)
+			cache := pkg.NewInMemoryCache[string, []model.ReservationTimeSlots](logger, 30, 30)
+			mailService := &mail.MockMailService{}
+			reservationService := reservation.NewReservationService(logger, adapters, cache, mailService)
 
 			savedStaff, err := preSaveStaff(adapters)
 			if err != nil {

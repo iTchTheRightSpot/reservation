@@ -7,7 +7,7 @@ import (
 	serviceModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
 	staffModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
-	reservation "github.com/iTchTheRightSpot/erp-golang/pkg/stores/reservation"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/service"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"
@@ -32,7 +32,7 @@ func TestReservationService(t *testing.T) {
 				StaffStore:   &staff.MockStaffStore{StaffByUUIDError: fmt.Errorf("staff not found")},
 				ServiceStore: serviceStore,
 			}
-			s := NewReservationService(mockLog, adapters)
+			s := NewReservationService(mockLog, adapters, nil, nil)
 
 			// method to test
 			err := s.Create(context.Background(), &reservationModel.ReservationPayload{})
@@ -60,7 +60,7 @@ func TestReservationService(t *testing.T) {
 				ServiceStore:  &service.MockServiceStore{ServicesByStaffIdError: fmt.Errorf("no services")},
 				ScheduleStore: scheduleStore,
 			}
-			s := NewReservationService(mockLog, adapters)
+			s := NewReservationService(mockLog, adapters, nil, nil)
 
 			// method to test
 			err := s.Create(context.Background(), &reservationModel.ReservationPayload{})
@@ -90,7 +90,7 @@ func TestReservationService(t *testing.T) {
 				ServiceStore:  &service.MockServiceStore{ServicesByStaffIdReturn: []*serviceModel.ServiceEntity{}},
 				ScheduleStore: scheduleStore,
 			}
-			s := NewReservationService(mockLog, adapters)
+			s := NewReservationService(mockLog, adapters, nil, nil)
 
 			// method to test
 			err := s.Create(context.Background(), &reservationModel.ReservationPayload{Services: []*string{&erp}})
@@ -126,7 +126,7 @@ func TestReservationService(t *testing.T) {
 					ServicesByStaffIdReturn: []*serviceModel.ServiceEntity{{Name: "erp"}}},
 				ScheduleStore: scheduleStore,
 			}
-			s := NewReservationService(mockLog, adapters)
+			s := NewReservationService(mockLog, adapters, nil, nil)
 
 			// method to test
 			err := s.Create(context.Background(), payload)
@@ -162,7 +162,7 @@ func TestReservationService(t *testing.T) {
 					ServicesByStaffIdReturn: []*serviceModel.ServiceEntity{{Name: erp}}},
 				ScheduleStore: scheduleStore,
 			}
-			s := NewReservationService(mockLog, adapters)
+			s := NewReservationService(mockLog, adapters, nil, nil)
 
 			// method to test
 			err := s.Create(context.Background(), payload)
@@ -195,7 +195,7 @@ func TestReservationService(t *testing.T) {
 				ScheduleStore:    &schedule.MockScheduleStore{CountSchedulesInRangeAndVisibilityReturn: 0},
 				ReservationStore: reservationStore,
 			}
-			s := NewReservationService(mockLog, adapters)
+			s := NewReservationService(mockLog, adapters, nil, nil)
 
 			// method to test
 			err := s.Create(context.Background(), payload)
