@@ -19,7 +19,7 @@ func (dep *MockReservationStore) CountReservationsInRange(context.Context, uint6
 	return dep.CountReservationsInRangeByStaffTimeAndStatusesReturn, dep.CountReservationsInRangeByStaffTimeAndStatusesError
 }
 
-func (dep *MockReservationStore) SelectForUpdateSave(context.Context, *reservation.Reservation, ...reservation.ReservationEnum) error {
+func (dep *MockReservationStore) Save(context.Context, *reservation.Reservation) error {
 	dep.SelectForUpdateSaveCalled = true
 	return dep.SelectForUpdateSaveError
 }

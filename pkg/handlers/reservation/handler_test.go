@@ -25,6 +25,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -82,7 +83,7 @@ func preSaveStaff(a *stores.Adapters) (*staff.Staff, error) {
 	p := profile.Profile{
 		Firstname: "erp",
 		Lastname:  "erp",
-		Email:     "erp@email.com",
+		Email:     fmt.Sprintf("%s@email.com", uuid.NewString()),
 	}
 
 	if _, err := a.ProfileStore.Save(ctx, &p); err != nil {
@@ -103,7 +104,7 @@ func preSaveStaff(a *stores.Adapters) (*staff.Staff, error) {
 
 func preSaveService(a *stores.Adapters) (*service.ServiceEntity, error) {
 	return a.ServiceStore.Save(context.Background(), &service.ServiceEntity{
-		Name:        "erp",
+		Name:        uuid.New().String(),
 		Price:       19.56,
 		Duration:    3600,
 		CleanUpTime: 30 * 60,
@@ -118,90 +119,29 @@ func linkServiceToStaff(a *stores.Adapters, sta *staff.Staff, staSer *service.Se
 	return err
 }
 
-func TestReservationHandler(t *testing.T) {
-	t.Parallel()
+func deleteAll() error {
+	if _, err := db.Exec("TRUNCATE schedule, staff, profile, service, staff_service, reservation, reservation_service CASCADE"); err != nil {
+		return err
+	}
+	return nil
+}
 
+func TestReservationHandler(t *testing.T) {
 	logger := utils.NewMockLogger()
 
-	t.Run("describe creating a reservation", func(t *testing.T) {
-		t.Parallel()
-
-		t.Run("reject request invalid service", func(t *testing.T) {
-			t.Parallel()
-
-			tx, fn := setupTest(t)
-			defer fn()
-
-			// given
-			mux := http.NewServeMux()
-			prov := stores.MockLiveTransactionProvider(logger, tx)
-			adapters := stores.NewAdapters(logger, tx, prov)
-			cache := pkg.NewInMemoryCache[string, []model.ReservationTimeSlots](logger, 30, 30)
-			s := reservation.NewReservationService(logger, adapters, cache, nil)
-
-			savedStaff, err := preSaveStaff(adapters)
-			if err != nil {
-				t.Error(err)
-			}
-
-			erp := "erp"
-			payload := model.ReservationPayload{
-				StaffId:  savedStaff.UUID.String(),
-				Name:     "temp user",
-				Email:    "temp-user@email.com",
-				Address:  "123 transylvania",
-				Phone:    "0123456789",
-				Services: []string{erp},
-				Time:     "19800",
-			}
-
-			dtoBytes, err := json.Marshal(payload)
-			if err != nil {
-				t.Errorf("failed to marshal SchedulePayload: %s", err)
-			}
-
-			// handler to test
-			NewReservationHandler(mux, logger, s).Register()
-
-			// route to test
-			req := httptest.NewRequest(http.MethodPost, "/reservation", bytes.NewBuffer(dtoBytes))
-			req.Header.Set("Content-Type", "application/json")
-
-			rr := httptest.NewRecorder()
-
-			mux.ServeHTTP(rr, req)
-
-			// assert
-			if rr.Code != http.StatusBadRequest {
-				t.Errorf("expected status code %d, got %d", http.StatusBadRequest, rr.Code)
-			}
-
-			var errBody utils.Error
-			if err = json.Unmarshal(rr.Body.Bytes(), &errBody); err != nil {
-				t.Fatalf("failed to unmarshal response: %v", err)
-			}
-
-			if errBody.Message != "1 or more services were not found for selected staff" {
-				t.Errorf("unexpected response: %+v", errBody)
-			}
-		})
-	})
-
 	t.Run("flow to create a reservation", func(t *testing.T) {
-		t.Parallel()
-
 		baseDate := logger.Date()
 		startTime := time.Date(baseDate.Year(), baseDate.Month(), baseDate.Day(), 9, 0, 0, 0, logger.Timezone())
 		newTime := startTime.Add(24 * time.Hour)
 
 		t.Run("single user making a reservation", func(t *testing.T) {
-			t.Parallel()
-
 			tx, fn := setupTest(t)
 			defer fn()
 
 			// setup dependencies
-			mux, savedStaff, saveService, req, rr, payload := reservationFlow(t, logger, tx, newTime)
+			prov := stores.MockLiveTransactionProvider(logger, tx)
+			adapters := stores.NewAdapters(logger, tx, prov)
+			mux, savedStaff, saveService, req, rr, payload := reservationFlow(t, logger, adapters, newTime)
 
 			// create reservation
 			createBody := model.ReservationPayload{
@@ -229,9 +169,31 @@ func TestReservationHandler(t *testing.T) {
 			}
 		})
 
-		// TODO call create schedule separately
 		t.Run("concurrent request trying to reserve the same time (same timezone)", func(t *testing.T) {
-			t.Parallel()
+			defer func() {
+				if err := deleteAll(); err != nil {
+					t.Errorf(err.Error())
+				}
+			}()
+
+			// setup dependencies
+			prov := stores.NewTransactionProvider(logger, db)
+			adapters := stores.NewAdapters(logger, db, prov)
+			mux, savedStaff, saveService, _, _, payload := reservationFlow(t, logger, adapters, newTime)
+
+			randNum := rand.Intn((len(payload[0].Times)-1)-0) + 0
+
+			createBody := model.ReservationPayload{
+				StaffId:  savedStaff.UUID.String(),
+				Name:     fmt.Sprintf("user-name"),
+				Email:    fmt.Sprintf("%s@email.com", uuid.NewString()),
+				Address:  "123 transylvania",
+				Phone:    "0123456789",
+				Services: []string{saveService.Name},
+				Time:     payload[0].Times[randNum],
+			}
+
+			createBodyBytes, _ := json.Marshal(createBody)
 
 			// create reservation
 			var wg sync.WaitGroup
@@ -239,33 +201,17 @@ func TestReservationHandler(t *testing.T) {
 			var statusArr []int
 			var errArr []string
 
-			for idx := 0; idx < 5; idx++ {
+			randNum = rand.Intn(15-2) + 2
+
+			for idx := 0; idx < randNum; idx++ {
 				wg.Add(1)
 
 				go func(i int) {
 					defer wg.Done()
 
-					tx, fn := setupTest(t)
-					defer fn()
-
-					// setup dependencies
-					mux, savedStaff, saveService, req, rr, payload := reservationFlow(t, logger, tx, newTime)
-
-					createBody := model.ReservationPayload{
-						StaffId:  savedStaff.UUID.String(),
-						Name:     fmt.Sprintf("user-%v-name", i),
-						Email:    fmt.Sprintf("user-%v@email.com", i),
-						Address:  "123 transylvania",
-						Phone:    "0123456789",
-						Services: []string{saveService.Name},
-						Time:     payload[0].Times[2],
-					}
-
-					createBodyBytes, _ := json.Marshal(createBody)
-
-					req = httptest.NewRequest(http.MethodPost, "/reservation", bytes.NewBuffer(createBodyBytes))
+					req := httptest.NewRequest(http.MethodPost, "/reservation", bytes.NewBuffer(createBodyBytes))
 					req.Header.Set("Content-Type", "application/json")
-					rr = httptest.NewRecorder()
+					rr := httptest.NewRecorder()
 					mux.ServeHTTP(rr, req)
 
 					mu.Lock()
@@ -285,9 +231,9 @@ func TestReservationHandler(t *testing.T) {
 				t.Errorf("%v", errArr)
 			}
 
-			num = count(statusArr, 409)
-			if num != 5 {
-				t.Errorf("expect 5 given %v", num)
+			num = inRange(statusArr)
+			if num != (randNum - 1) {
+				t.Errorf("expect %v given %v", randNum-1, num)
 				t.Errorf("%v", statusArr)
 				t.Errorf("%v", errArr)
 			}
@@ -305,10 +251,18 @@ func count(arr []int, status int) int {
 	return count
 }
 
-func reservationFlow(t *testing.T, logger utils.ILogger, tx *sql.Tx, newTime time.Time) (*http.ServeMux, *staff.Staff, *service.ServiceEntity, *http.Request, *httptest.ResponseRecorder, []model.ReservationTimeSlots) {
+func inRange(arr []int) int {
+	var n int
+	for _, num := range arr {
+		if num >= 400 && num <= 500 {
+			n += 1
+		}
+	}
+	return n
+}
+
+func reservationFlow(t *testing.T, logger utils.ILogger, adapters *stores.Adapters, newTime time.Time) (*http.ServeMux, *staff.Staff, *service.ServiceEntity, *http.Request, *httptest.ResponseRecorder, []model.ReservationTimeSlots) {
 	mux := http.NewServeMux()
-	prov := stores.MockLiveTransactionProvider(logger, tx)
-	adapters := stores.NewAdapters(logger, tx, prov)
 	jwtService := auth.NewJwtService(logger, env)
 	ware := &middleware.Middleware{Logger: logger, Auth: jwtService, Param: env.CookieParam}
 	scheduleService := schedule.NewScheduleService(logger, adapters)

@@ -19,6 +19,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -76,7 +77,7 @@ func preSaveStaff(a *stores.Adapters) (*staff.Staff, error) {
 	p := profile.Profile{
 		Firstname: "erp",
 		Lastname:  "erp",
-		Email:     "erp@email.com",
+		Email:     fmt.Sprintf("%s@email.com", uuid.New()),
 	}
 
 	if _, err := a.ProfileStore.Save(ctx, &p); err != nil {
@@ -95,93 +96,109 @@ func preSaveStaff(a *stores.Adapters) (*staff.Staff, error) {
 	return &s, nil
 }
 
+func deleteAll() error {
+	if _, err := db.Exec("TRUNCATE schedule, staff, profile CASCADE"); err != nil {
+		return err
+	}
+	return nil
+}
+
 func count(arr []int, status int) int {
-	var count int
+	var n int
 	for _, num := range arr {
 		if num == status {
-			count += 1
+			n += 1
 		}
 	}
-	return count
+	return n
+}
+
+func inRange(arr []int) int {
+	var n int
+	for _, num := range arr {
+		if num >= 400 && num <= 500 {
+			n += 1
+		}
+	}
+	return n
 }
 
 func TestScheduleHandler(t *testing.T) {
-	t.Parallel()
-
 	logger := utils.NewMockLogger()
 
 	t.Run("save & retrieve schedules handlers", func(t *testing.T) {
-		t.Parallel()
-
 		t.Run("reject request duplicate schedule", func(t *testing.T) {
-			t.Parallel()
-
 			var wg sync.WaitGroup
 			var mu sync.Mutex
 			var statusArr []int
 			var errArr []string
 
-			for i := 0; i < 2; i++ {
+			mux := http.NewServeMux()
+			prov := stores.NewTransactionProvider(logger, db)
+			adapters := stores.NewAdapters(logger, db, prov)
+			jwtSer := auth.NewJwtService(logger, env)
+			ware := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
+			s := schedule.NewScheduleService(logger, adapters)
+
+			defer func() {
+				if err := deleteAll(); err != nil {
+					t.Errorf(err.Error())
+				}
+			}()
+
+			// setup dependencies
+			save, err := preSaveStaff(adapters)
+			if err != nil {
+				t.Errorf("preSaveStaff failed: %v", err)
+				return
+			}
+
+			cred := []models.RolePermission{
+				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
+			}
+
+			obj, err := jwtSer.GenerateJwt(
+				&models.JwtObj{
+					UserId:         save.UUID.String(),
+					AccessControls: cred,
+				},
+				utils.TwoDaysInSeconds,
+			)
+
+			dto := model.SchedulePayload{
+				StaffId: save.UUID.String(),
+				Times: &[]model.ScheduleSegmentPayload{
+					{
+						IsVisible:     true,
+						IsReoccurring: false,
+						Start:         logger.Date().Add(time.Hour).Format(utils.TimeFormat),
+						Duration:      3600,
+					},
+					{
+						IsVisible:     false,
+						IsReoccurring: true,
+						Start:         logger.Date().Add(2 * time.Hour).Format(utils.TimeFormat),
+						Duration:      3600,
+					},
+				},
+			}
+
+			dtoBytes, err := json.Marshal(dto)
+			if err != nil {
+				t.Errorf("failed to marshal SchedulePayload: %s", err)
+				return
+			}
+
+			// initialize routes
+			NewScheduleHandler(mux, ware, logger, s).Register()
+
+			randNum := rand.Intn(15-2) + 2
+
+			for i := 0; i < randNum; i++ {
 				wg.Add(1)
 
 				go func() {
 					defer wg.Done()
-
-					tx, fn := setupTest(t)
-					defer fn()
-
-					// setup dependencies
-					mux := http.NewServeMux()
-					prov := stores.MockLiveTransactionProvider(logger, tx)
-					adapters := stores.NewAdapters(logger, tx, prov)
-					jwtSer := auth.NewJwtService(logger, env)
-					ware := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
-					s := schedule.NewScheduleService(logger, adapters)
-
-					save, err := preSaveStaff(adapters)
-					if err != nil {
-						t.Errorf("preSaveStaff failed: %v", err)
-						return
-					}
-
-					cred := []models.RolePermission{
-						{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
-					}
-
-					obj, err := jwtSer.GenerateJwt(
-						&models.JwtObj{
-							UserId:         save.UUID.String(),
-							AccessControls: cred,
-						},
-						utils.TwoDaysInSeconds,
-					)
-
-					dto := model.SchedulePayload{
-						StaffId: save.UUID.String(),
-						Times: &[]model.ScheduleSegmentPayload{
-							{
-								IsVisible:     true,
-								IsReoccurring: false,
-								Start:         logger.Date().Add(time.Hour).Format(utils.TimeFormat),
-								Duration:      3600,
-							},
-							{
-								IsVisible:     false,
-								IsReoccurring: true,
-								Start:         logger.Date().Add(3 * time.Hour).Format(utils.TimeFormat),
-								Duration:      3600,
-							},
-						},
-					}
-
-					dtoBytes, err := json.Marshal(dto)
-					if err != nil {
-						t.Errorf("failed to marshal SchedulePayload: %s", err)
-						return
-					}
-
-					// initialize routes
-					NewScheduleHandler(mux, ware, logger, s).Register()
 
 					sendRequest := func() *httptest.ResponseRecorder {
 						req := httptest.NewRequest(http.MethodPost, "/schedule", bytes.NewBuffer(dtoBytes))
@@ -212,17 +229,15 @@ func TestScheduleHandler(t *testing.T) {
 				t.Errorf("%v", errArr)
 			}
 
-			num = count(statusArr, 409)
-			if num != 1 {
-				t.Errorf("expect 1 given %v", num)
+			num = inRange(statusArr)
+			if num != (randNum - 1) {
+				t.Errorf("expect %v given %v", randNum-1, num)
 				t.Errorf("%v", statusArr)
 				t.Errorf("%v", errArr)
 			}
 		})
 
 		t.Run("reject creation schedule bleeds into the next day", func(t *testing.T) {
-			t.Parallel()
-
 			tx, fn := setupTest(t)
 			defer fn()
 
@@ -290,8 +305,6 @@ func TestScheduleHandler(t *testing.T) {
 		})
 
 		t.Run("success saving schedule & retrieving schedules", func(t *testing.T) {
-			t.Parallel()
-
 			tx, fn := setupTest(t)
 			defer fn()
 

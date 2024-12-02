@@ -41,13 +41,14 @@ func (dep *ReservationHandler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = dep.service.Create(r.Context(), dto); err != nil {
+	err = dep.service.Create(r.Context(), dto)
+	if err != nil {
 		dep.logger.Error(err.Error())
 		utils.ErrorResponse(w, err)
 		return
 	}
 
-	dep.logger.Log("new reservation")
+	dep.logger.Log("created a new reservation")
 	w.WriteHeader(http.StatusCreated)
 }
 

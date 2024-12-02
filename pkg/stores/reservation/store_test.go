@@ -132,10 +132,10 @@ func TestReservationStore(t *testing.T) {
 		}
 
 		// method to test & assert
-		if err = store.SelectForUpdateSave(ctx, r1, reservation.CONFIRMED); err != nil {
+		if err = store.Save(ctx, r1); err != nil {
 			t.Errorf(err.Error())
 		}
-		_ = store.SelectForUpdateSave(ctx, r2, reservation.CONFIRMED)
+		_ = store.Save(ctx, r2)
 
 		// method to test
 		count, err := store.CountReservationsInRange(ctx, staf.StaffId, start, start.Add(1*time.Minute), reservation.CONFIRMED)
@@ -192,7 +192,7 @@ func TestReservationStore(t *testing.T) {
 		}
 
 		// method to test & assert
-		if err = store.SelectForUpdateSave(ctx, r, reservation.CONFIRMED); err != nil {
+		if err = store.Save(ctx, r); err != nil {
 			t.Errorf(err.Error())
 		}
 
@@ -242,16 +242,16 @@ func TestReservationStore(t *testing.T) {
 		}
 
 		// method to test & assert
-		if err = store.SelectForUpdateSave(ctx, r, reservation.CONFIRMED); err != nil {
+		if err = store.Save(ctx, r); err != nil {
 			t.Errorf(err.Error())
 		}
 
-		if err = store.SelectForUpdateSave(ctx, r, reservation.CONFIRMED); err == nil {
+		if err = store.Save(ctx, r); err == nil {
 			t.Errorf("expect %v given nil", err.Error())
 		}
 
 		r.ScheduledFor = start.Add(10 * time.Minute)
-		if err = store.SelectForUpdateSave(ctx, r, reservation.CONFIRMED); err == nil {
+		if err = store.Save(ctx, r); err == nil {
 			t.Errorf("expect %v given nil", err.Error())
 		}
 	})

@@ -19,7 +19,13 @@ CREATE TABLE IF NOT EXISTS reservation
         FOREIGN KEY (staff_id)
             REFERENCES staff(staff_id)
             ON DELETE RESTRICT
-            ON UPDATE RESTRICT
+            ON UPDATE RESTRICT,
+    CONSTRAINT EX_reservation_overlap_constraint
+        EXCLUDE USING gist (
+            staff_id WITH =,
+            tsrange(scheduled_for, expire_at) WITH &&,
+            (CASE WHEN status = 'CONFIRMED' THEN TRUE END) WITH =
+        )
 );
 
 CREATE INDEX IX_reservation_email ON reservation (email);

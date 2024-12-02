@@ -64,23 +64,8 @@ func (dep *scheduleStore) SchedulesInRange(ctx context.Context, staffId uint64, 
 
 func (dep *scheduleStore) Save(ctx context.Context, s *schedule.Schedule) (*schedule.Schedule, error) {
 	if s == nil {
-		return nil, fmt.Errorf("schedule object is nil")
+		return nil, errors.New("schedule object is nil")
 	}
-
-	//q := `
-	//	WITH conflicting_schedule AS (
-	//       SELECT schedule_id FROM schedule
-	//       WHERE staff_id = $5 AND (
-	//			(schedule_start BETWEEN $1 AND $2) OR
-	//			(schedule_end BETWEEN $1 AND $2)
-	//		)
-	//       FOR UPDATE
-	//   )
-	//	INSERT INTO schedule (schedule_start, schedule_end, is_visible, is_reoccurring, staff_id)
-	//	SELECT $1, $2, $3, $4, $5
-	//	WHERE NOT EXISTS (SELECT 1 FROM conflicting_schedule)
-	//	RETURNING schedule_id, schedule_start, schedule_end, is_visible, is_reoccurring, staff_id
-	//`
 
 	q := `
 		INSERT INTO schedule (schedule_start, schedule_end, is_visible, is_reoccurring, staff_id)
@@ -93,7 +78,7 @@ func (dep *scheduleStore) Save(ctx context.Context, s *schedule.Schedule) (*sche
 
 	if err != nil {
 		dep.logger.Error(err)
-		return nil, fmt.Errorf("exception saving to schedule table")
+		return nil, errors.New("exception saving to schedule table")
 	}
 
 	return s, nil

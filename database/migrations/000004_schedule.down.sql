@@ -9,3 +9,5 @@ DROP INDEX IF EXISTS IX_schedule_composite2;
 DROP INDEX IF EXISTS IX_schedule_composite3;
 
 DROP TABLE IF EXISTS schedule;
+
+DROP EXTENSION IF EXISTS btree_gist;

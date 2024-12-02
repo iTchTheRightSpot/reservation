@@ -211,7 +211,7 @@ func TestReservationService(t *testing.T) {
 			}
 
 			if reservationStore.SelectForUpdateSaveCalled {
-				t.Errorf("SelectForUpdateSave expect false given true")
+				t.Errorf("Save expect false given true")
 			}
 		})
 	})

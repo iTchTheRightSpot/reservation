@@ -236,7 +236,7 @@ func (dep *reservationService) createReservation(ctx context.Context, p *reserva
 			ExpireAt:     end,
 		}
 
-		if err := adapters.ReservationStore.SelectForUpdateSave(ctx, reserv, reservation.CONFIRMED); err != nil {
+		if err := adapters.ReservationStore.Save(ctx, reserv); err != nil {
 			dep.logger.Error(err.Error())
 			return &utils.InsertionError{Message: "error creating reservation"}
 		}
@@ -302,8 +302,7 @@ func (dep *reservationService) Create(ctx context.Context, p *reservation.Reserv
 		return &utils.BadRequestError{Message: mess}
 	}
 
-	err = dep.createReservation(ctx, p, services, staffObj, start, end)
-	if err != nil {
+	if err = dep.createReservation(ctx, p, services, staffObj, start, end); err != nil {
 		return err
 	}
 

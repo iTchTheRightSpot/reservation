@@ -93,7 +93,6 @@ func (dep *scheduleService) Create(ctx context.Context, dto *schedule.SchedulePa
 		return &utils.BadRequestError{Message: err.Error()}
 	}
 
-	// TODO look into exclusion constraint
 	return dep.adapters.Transaction.RunInTransaction(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable}, func(adapters *stores.Adapters) error {
 		for _, segment := range segments {
 			_, err = adapters.ScheduleStore.Save(ctx, &schedule.Schedule{

@@ -1,4 +1,4 @@
--- CREATE EXTENSION IF NOT EXISTS btree_gist;
+CREATE EXTENSION IF NOT EXISTS btree_gist;
 
 CREATE TABLE IF NOT EXISTS schedule
 (
@@ -14,9 +14,7 @@ CREATE TABLE IF NOT EXISTS schedule
             ON DELETE RESTRICT
             ON UPDATE RESTRICT,
     CONSTRAINT EX_schedule_overlap_constraint
-        EXCLUDE USING gist (
-            staff_id WITH =, tstzrange(schedule_start, schedule_end) WITH &&
-        )
+        EXCLUDE USING gist (staff_id WITH =, tsrange(schedule_start, schedule_end) WITH &&)
 );
 
 CREATE INDEX IX_schedule_composite1 ON schedule (staff_id, schedule_start, schedule_end);
