@@ -77,7 +77,7 @@ func preSaveStaff(a *stores.Adapters) (*staff.Staff, error) {
 	p := profile.Profile{
 		Firstname: "erp",
 		Lastname:  "erp",
-		Email:     fmt.Sprintf("%s@email.com", uuid.New()),
+		Email:     fmt.Sprintf("%s@email.com", uuid.NewString()),
 	}
 
 	if _, err := a.ProfileStore.Save(ctx, &p); err != nil {
@@ -147,7 +147,7 @@ func TestScheduleHandler(t *testing.T) {
 			}()
 
 			// setup dependencies
-			save, err := preSaveStaff(adapters)
+			staf, err := preSaveStaff(adapters)
 			if err != nil {
 				t.Errorf("preSaveStaff failed: %v", err)
 				return
@@ -159,14 +159,14 @@ func TestScheduleHandler(t *testing.T) {
 
 			obj, err := jwtSer.GenerateJwt(
 				&models.JwtObj{
-					UserId:         save.UUID.String(),
+					UserId:         staf.UUID.String(),
 					AccessControls: cred,
 				},
 				utils.TwoDaysInSeconds,
 			)
 
 			dto := model.SchedulePayload{
-				StaffId: save.UUID.String(),
+				StaffId: staf.UUID.String(),
 				Times: &[]model.ScheduleSegmentPayload{
 					{
 						IsVisible:     true,
@@ -177,7 +177,7 @@ func TestScheduleHandler(t *testing.T) {
 					{
 						IsVisible:     false,
 						IsReoccurring: true,
-						Start:         logger.Date().Add(2 * time.Hour).Format(utils.TimeFormat),
+						Start:         logger.Date().Add(3 * time.Hour).Format(utils.TimeFormat),
 						Duration:      3600,
 					},
 				},
