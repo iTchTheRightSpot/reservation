@@ -3,6 +3,7 @@ package schedule
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
@@ -15,6 +16,7 @@ type IScheduleStore interface {
 	CountExistingSchedulesForStaff(ctx context.Context, staffId uint64, start, end time.Time) (int, error)
 	SchedulesInRange(ctx context.Context, staffId uint64, start time.Time, end time.Time) ([]*schedule.Schedule, error)
 	CountSchedulesInRangeAndVisibility(ctx context.Context, staffId uint64, start time.Time, end time.Time, isVisible bool) (int, error)
+	SchedulesInRangeAndVisibilityAndDifference(ctx context.Context, staffId uint64, start time.Time, end time.Time, isVisible bool, duration int) ([]*schedule.Schedule, error)
 }
 
 type scheduleStore struct {
@@ -27,8 +29,6 @@ func NewScheduleStore(l utils.ILogger, db pkg.Db) IScheduleStore {
 }
 
 func (dep *scheduleStore) SchedulesInRange(ctx context.Context, staffId uint64, start time.Time, end time.Time) ([]*schedule.Schedule, error) {
-	var arr []*schedule.Schedule
-
 	q := `
 		SELECT * FROM schedule s
 		WHERE s.staff_id = $1
@@ -41,18 +41,19 @@ func (dep *scheduleStore) SchedulesInRange(ctx context.Context, staffId uint64, 
 	rows, err := dep.db.QueryContext(ctx, q, staffId, start, end)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, fmt.Errorf("error retrieve schedules in range")
+		return nil, errors.New("error retrieve schedules in range")
 	}
 
 	defer func(rs *sql.Rows) { err = rs.Close() }(rows)
 
+	var arr []*schedule.Schedule
 	for rows.Next() {
 		var s schedule.Schedule
 
 		err = rows.Scan(&s.ScheduleId, &s.Start, &s.End, &s.IsVisible, &s.IsReoccurring, &s.StaffId)
 		if err != nil {
 			dep.logger.Error(err.Error())
-			return nil, fmt.Errorf("error scanning schedules")
+			return nil, errors.New("error scanning schedules")
 		}
 
 		arr = append(arr, &s)
@@ -127,4 +128,40 @@ func (dep *scheduleStore) CountSchedulesInRangeAndVisibility(ctx context.Context
 	}
 
 	return count, nil
+}
+
+func (dep *scheduleStore) SchedulesInRangeAndVisibilityAndDifference(ctx context.Context, staffId uint64, start time.Time, end time.Time, isVisible bool, duration int) ([]*schedule.Schedule, error) {
+	q := `
+        SELECT * FROM schedule s
+        WHERE s.staff_id = $1
+        AND (
+            (s.schedule_start BETWEEN $2 AND $3) OR
+            (s.schedule_end BETWEEN $2 AND $3)
+        )
+        AND is_visible = $4
+        AND EXTRACT(EPOCH FROM (s.schedule_end - s.schedule_start)) >= $5
+    `
+
+	rows, err := dep.db.QueryContext(ctx, q, staffId, start, end, isVisible, duration)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return nil, errors.New("error retrieving available schedules in range")
+	}
+
+	defer func(rs *sql.Rows) { err = rs.Close() }(rows)
+
+	var arr []*schedule.Schedule
+	for rows.Next() {
+		var s schedule.Schedule
+
+		err = rows.Scan(&s.ScheduleId, &s.Start, &s.End, &s.IsVisible, &s.IsReoccurring, &s.StaffId)
+		if err != nil {
+			dep.logger.Error(err.Error())
+			return nil, errors.New("error scanning schedules")
+		}
+
+		arr = append(arr, &s)
+	}
+
+	return arr, err
 }

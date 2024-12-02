@@ -44,13 +44,13 @@ func (dep *ScheduleHandler) create(w http.ResponseWriter, r *http.Request) {
 	dto, err := pkg.ReadBody[model.SchedulePayload](r)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	if err = dep.service.Create(r.Context(), dto); err != nil {
 		dep.logger.Error(err.Error())
-		utils.ConstructErrorResponse(w, err)
+		utils.ErrorResponse(w, err)
 		return
 	}
 
@@ -62,13 +62,13 @@ func (dep *ScheduleHandler) schedules(w http.ResponseWriter, r *http.Request) {
 
 	month, err := strconv.Atoi(query.Get("month"))
 	if err != nil {
-		utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	year, err := strconv.Atoi(query.Get("year"))
 	if err != nil {
-		utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
 		return
 	}
 
@@ -77,7 +77,7 @@ func (dep *ScheduleHandler) schedules(w http.ResponseWriter, r *http.Request) {
 	if query.Get("timezone") != "" {
 		location, err = time.LoadLocation(query.Get("timezone"))
 		if err != nil {
-			utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+			utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
 			return
 		}
 	}
@@ -87,7 +87,7 @@ func (dep *ScheduleHandler) schedules(w http.ResponseWriter, r *http.Request) {
 		obj, ok := r.Context().Value(utils.UserContextKey).(*models.JwtObj)
 		if !ok || obj == nil {
 			dep.logger.Error("jwt object not present in request")
-			utils.ConstructErrorResponse(w, &utils.AuthenticationError{})
+			utils.ErrorResponse(w, &utils.AuthenticationError{})
 			return
 		}
 		staffId = obj.UserId
@@ -102,14 +102,14 @@ func (dep *ScheduleHandler) schedules(w http.ResponseWriter, r *http.Request) {
 
 	if err = middleware.ValidatorInstance.Struct(payload); err != nil {
 		dep.logger.Error(err.Error())
-		utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	schedules, err := dep.service.Schedules(r.Context(), &payload)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		utils.ConstructErrorResponse(w, err)
+		utils.ErrorResponse(w, err)
 		return
 	}
 

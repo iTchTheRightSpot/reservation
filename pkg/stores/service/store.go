@@ -66,7 +66,6 @@ func (dep *serviceStore) ServiceByName(ctx context.Context, name string) (*servi
 	return &s, nil
 }
 
-// ServicesByStaffId TODO test
 func (dep *serviceStore) ServicesByStaffId(ctx context.Context, staffId uint64) ([]*service.ServiceEntity, error) {
 	var arr []*service.ServiceEntity
 

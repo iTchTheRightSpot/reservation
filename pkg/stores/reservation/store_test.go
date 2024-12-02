@@ -93,7 +93,70 @@ func preSaveService(a serviceStore.IServiceStore) (*service.ServiceEntity, error
 }
 
 func TestReservationStore(t *testing.T) {
-	mockLogger := utils.NewMockLogger()
+	mockLog := utils.NewMockLogger()
+
+	t.Run("should save reservation & count reservations in range", func(t *testing.T) {
+		tx, fn := setupTest(t)
+		defer fn()
+
+		// given
+		ctx := context.Background()
+
+		store := NewReservationStore(mockLog, tx)
+		staf, err := preSaveStaff(profileStore.NewProfileStore(mockLog, tx), staffStore.NewStaffStore(mockLog, tx))
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+
+		start := time.Date(mockLog.Date().Year(), mockLog.Date().Month(), 1, 9, 0, 0, 0, mockLog.Timezone())
+		r1 := &reservation.Reservation{
+			StaffId:      staf.StaffId,
+			Name:         "user",
+			Email:        "email@example.com",
+			Price:        25.65,
+			Status:       reservation.CONFIRMED,
+			CreatedAt:    mockLog.Date(),
+			ScheduledFor: start,
+			ExpireAt:     start.Add(1 * time.Hour),
+		}
+
+		r2 := &reservation.Reservation{
+			StaffId:      staf.StaffId,
+			Name:         "user",
+			Email:        "email@example.com",
+			Price:        25.65,
+			Status:       reservation.CONFIRMED,
+			CreatedAt:    mockLog.Date(),
+			ScheduledFor: start.Add(2 * time.Hour),
+			ExpireAt:     start.Add(3 * time.Hour),
+		}
+
+		// method to test & assert
+		if err = store.SelectForUpdateSave(ctx, r1, reservation.CONFIRMED); err != nil {
+			t.Errorf(err.Error())
+		}
+		_ = store.SelectForUpdateSave(ctx, r2, reservation.CONFIRMED)
+
+		// method to test
+		count, err := store.CountReservationsInRange(ctx, staf.StaffId, start, start.Add(1*time.Minute), reservation.CONFIRMED)
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		if count != 1 {
+			t.Errorf("expect 1 given %v", count)
+		}
+
+		count, _ = store.CountReservationsInRange(ctx, staf.StaffId, start, start.Add(2*time.Hour), reservation.CONFIRMED)
+		if count != 2 {
+			t.Errorf("expect 2 given %v", count)
+		}
+
+		count, _ = store.CountReservationsInRange(ctx, staf.StaffId, start.Add(4*time.Hour), start.Add(6*time.Hour), reservation.CONFIRMED)
+		if count != 0 {
+			t.Errorf("expect 0 given %v", count)
+		}
+	})
 
 	t.Run("should save reservation && service_reservation && count reservations for staff by time & statuses", func(t *testing.T) {
 		tx, fn := setupTest(t)
@@ -102,19 +165,19 @@ func TestReservationStore(t *testing.T) {
 		// given
 		ctx := context.Background()
 
-		store := NewReservationStore(mockLogger, tx)
-		reservationServStore := NewReservationServiceStore(mockLogger, tx)
-		erpStaff, err := preSaveStaff(profileStore.NewProfileStore(mockLogger, tx), staffStore.NewStaffStore(mockLogger, tx))
+		store := NewReservationStore(mockLog, tx)
+		reservationServStore := NewReservationServiceStore(mockLog, tx)
+		erpStaff, err := preSaveStaff(profileStore.NewProfileStore(mockLog, tx), staffStore.NewStaffStore(mockLog, tx))
 		if err != nil {
 			t.Errorf(err.Error())
 		}
 
-		erp, err := preSaveService(serviceStore.NewServiceStore(mockLogger, tx))
+		erp, err := preSaveService(serviceStore.NewServiceStore(mockLog, tx))
 		if err != nil {
 			t.Errorf(err.Error())
 		}
 
-		start := mockLogger.Date().Add(1 * time.Hour)
+		start := mockLog.Date().Add(1 * time.Hour)
 		end := start.Add(1 * time.Hour)
 
 		r := &reservation.Reservation{
@@ -123,7 +186,7 @@ func TestReservationStore(t *testing.T) {
 			Email:        "email@example.com",
 			Price:        25.65,
 			Status:       reservation.CONFIRMED,
-			CreatedAt:    mockLogger.Date(),
+			CreatedAt:    mockLog.Date(),
 			ScheduledFor: start,
 			ExpireAt:     end,
 		}

@@ -51,13 +51,13 @@ func TestReservationService(t *testing.T) {
 			}
 		})
 
-		t.Run("reject creation services not found", func(t *testing.T) {
+		t.Run("reject creation matchStaffServices not found", func(t *testing.T) {
 			t.Parallel()
 
 			scheduleStore := &schedule.MockScheduleStore{}
 			adapters := &stores.Adapters{
 				StaffStore:    &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.Staff{}},
-				ServiceStore:  &service.MockServiceStore{ServicesByStaffIdError: fmt.Errorf("no services")},
+				ServiceStore:  &service.MockServiceStore{ServicesByStaffIdError: fmt.Errorf("no matchStaffServices")},
 				ScheduleStore: scheduleStore,
 			}
 			s := NewReservationService(mockLog, adapters, nil, nil)
@@ -70,8 +70,8 @@ func TestReservationService(t *testing.T) {
 				t.Errorf("expect error but given nil")
 			}
 
-			if err.Error() != "no services" {
-				t.Errorf("expect %s given %s", "no services", err.Error())
+			if err.Error() != "no matchStaffServices" {
+				t.Errorf("expect %s given %s", "no matchStaffServices", err.Error())
 			}
 
 			if scheduleStore.CountSchedulesInRangeAndVisibilityCalled {
@@ -93,14 +93,14 @@ func TestReservationService(t *testing.T) {
 			s := NewReservationService(mockLog, adapters, nil, nil)
 
 			// method to test
-			err := s.Create(context.Background(), &reservationModel.ReservationPayload{Services: []*string{&erp}})
+			err := s.Create(context.Background(), &reservationModel.ReservationPayload{Services: []string{erp}})
 
 			// assert
 			if err == nil {
 				t.Errorf("expect error but given nil")
 			}
 
-			errMess := "1 or more services were not found for selected staff"
+			errMess := "1 or more matchStaffServices were not found for selected staff"
 			if err.Error() != errMess {
 				t.Errorf("expect %s given %s", errMess, err.Error())
 			}
@@ -117,7 +117,7 @@ func TestReservationService(t *testing.T) {
 			erp := "erp"
 			accounting := "accounting"
 			payload := &reservationModel.ReservationPayload{
-				Services: []*string{&erp, &accounting},
+				Services: []string{erp, accounting},
 			}
 			scheduleStore := &schedule.MockScheduleStore{}
 			adapters := &stores.Adapters{
@@ -136,7 +136,7 @@ func TestReservationService(t *testing.T) {
 				t.Errorf("expect error but given nil")
 			}
 
-			errMess := "1 or more services were not found for selected staff"
+			errMess := "1 or more matchStaffServices were not found for selected staff"
 			if err.Error() != errMess {
 				t.Errorf("expect %s given %s", errMess, err.Error())
 			}
@@ -152,7 +152,7 @@ func TestReservationService(t *testing.T) {
 			// given
 			erp := "erp"
 			payload := &reservationModel.ReservationPayload{
-				Services: []*string{&erp},
+				Services: []string{erp},
 				Time:     fmt.Sprintf("%v", time.Now().Add(-1*time.Hour).UnixMilli()),
 			}
 			scheduleStore := &schedule.MockScheduleStore{CountSchedulesInRangeAndVisibilityError: fmt.Errorf("err")}
@@ -184,7 +184,7 @@ func TestReservationService(t *testing.T) {
 			// given
 			erp := "erp"
 			payload := &reservationModel.ReservationPayload{
-				Services: []*string{&erp},
+				Services: []string{erp},
 				Time:     fmt.Sprintf("%v", time.Now().Add(24*time.Hour).UnixMilli()),
 			}
 			reservationStore := &reservation.MockReservationStore{}

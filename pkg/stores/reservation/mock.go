@@ -14,7 +14,7 @@ type MockReservationStore struct {
 	SelectForUpdateSaveCalled                            bool
 }
 
-func (dep *MockReservationStore) CountReservationsInRangeByStaffTimeAndStatuses(context.Context, uint64, time.Time, time.Time, ...reservation.ReservationEnum) (int, error) {
+func (dep *MockReservationStore) CountReservationsInRange(context.Context, uint64, time.Time, time.Time, ...reservation.ReservationEnum) (int, error) {
 	dep.CountReservationsInRangeByStaffTimeAndStatusesCalled = true
 	return dep.CountReservationsInRangeByStaffTimeAndStatusesReturn, dep.CountReservationsInRangeByStaffTimeAndStatusesError
 }

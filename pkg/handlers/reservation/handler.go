@@ -37,13 +37,13 @@ func (dep *ReservationHandler) create(w http.ResponseWriter, r *http.Request) {
 	dto, err := pkg.ReadBody[model.ReservationPayload](r)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		utils.ConstructErrorResponse(w, err)
+		utils.ErrorResponse(w, err)
 		return
 	}
 
 	if err = dep.service.Create(r.Context(), dto); err != nil {
 		dep.logger.Error(err.Error())
-		utils.ConstructErrorResponse(w, err)
+		utils.ErrorResponse(w, err)
 		return
 	}
 
@@ -56,21 +56,21 @@ func (dep *ReservationHandler) availableDates(w http.ResponseWriter, r *http.Req
 	day, err := strconv.Atoi(query.Get("day"))
 	if err != nil {
 		dep.logger.Error(err.Error())
-		utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	month, err := strconv.Atoi(query.Get("month"))
 	if err != nil {
 		dep.logger.Error(err.Error())
-		utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	year, err := strconv.Atoi(query.Get("year"))
 	if err != nil {
 		dep.logger.Error(err.Error())
-		utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
 		return
 	}
 
@@ -84,7 +84,7 @@ func (dep *ReservationHandler) availableDates(w http.ResponseWriter, r *http.Req
 
 	if err = middleware.ValidatorInstance.Struct(p); err != nil {
 		dep.logger.Error(err.Error())
-		utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
 		return
 	}
 
@@ -95,7 +95,7 @@ func (dep *ReservationHandler) availableDates(w http.ResponseWriter, r *http.Req
 		location, err = time.LoadLocation(timezone)
 		if err != nil {
 			dep.logger.Error(err.Error())
-			utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+			utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
 			return
 		}
 	}
@@ -106,7 +106,7 @@ func (dep *ReservationHandler) availableDates(w http.ResponseWriter, r *http.Req
 	arr, err := dep.service.AvailableDates(r.Context(), &p)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		utils.ConstructErrorResponse(w, err)
+		utils.ErrorResponse(w, err)
 		return
 	}
 

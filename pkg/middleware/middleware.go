@@ -87,21 +87,21 @@ func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Cookies() == nil || len(r.Cookies()) == 0 {
 			dep.Logger.Error("no cookie present")
-			utils.ConstructErrorResponse(w, &utils.AuthenticationError{})
+			utils.ErrorResponse(w, &utils.AuthenticationError{})
 			return
 		}
 
 		cookie, err := r.Cookie(dep.Param.CookieName)
 		if err != nil || cookie == nil {
 			dep.Logger.Error(err)
-			utils.ConstructErrorResponse(w, &utils.AuthenticationError{})
+			utils.ErrorResponse(w, &utils.AuthenticationError{})
 			return
 		}
 
 		obj, err := dep.Auth.ValidateJwt(cookie.Value)
 		if err != nil {
 			dep.Logger.Error(err)
-			utils.ConstructErrorResponse(w, &utils.AuthenticationError{})
+			utils.ErrorResponse(w, &utils.AuthenticationError{})
 			return
 		}
 
@@ -136,14 +136,14 @@ func (dep *Middleware) HasRole(next http.Handler, role *models.RoleEnum) http.Ha
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if role == nil {
 			dep.Logger.Error("HasRole: role cannot be nil")
-			utils.ConstructErrorResponse(w, errors.New("internal server error"))
+			utils.ErrorResponse(w, errors.New("internal server error"))
 			return
 		}
 
 		obj, ok := r.Context().Value(utils.UserContextKey).(*models.JwtObj)
 		if !ok || obj == nil {
 			dep.Logger.Error("HasRoleAndPermissions: invalid user context")
-			utils.ConstructErrorResponse(w, &utils.AuthenticationError{})
+			utils.ErrorResponse(w, &utils.AuthenticationError{})
 			return
 		}
 
@@ -152,7 +152,7 @@ func (dep *Middleware) HasRole(next http.Handler, role *models.RoleEnum) http.Ha
 		})
 		if !contains {
 			dep.Logger.Error(fmt.Sprintf("access denied request role does not match %v", role))
-			utils.ConstructErrorResponse(w, &utils.AccessDeniedError{})
+			utils.ErrorResponse(w, &utils.AccessDeniedError{})
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -163,14 +163,14 @@ func (dep *Middleware) HasPermission(next http.Handler, permission *models.Permi
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if permission == nil {
 			dep.Logger.Error("HasPermission: permission cannot be nil")
-			utils.ConstructErrorResponse(w, errors.New("internal server error"))
+			utils.ErrorResponse(w, errors.New("internal server error"))
 			return
 		}
 
 		obj, ok := r.Context().Value(utils.UserContextKey).(*models.JwtObj)
 		if !ok || obj == nil {
 			dep.Logger.Error("HasRoleAndPermissions: invalid user context")
-			utils.ConstructErrorResponse(w, &utils.AuthenticationError{})
+			utils.ErrorResponse(w, &utils.AuthenticationError{})
 			return
 		}
 
@@ -182,7 +182,7 @@ func (dep *Middleware) HasPermission(next http.Handler, permission *models.Permi
 
 		if !contains {
 			dep.Logger.Error(fmt.Sprintf("access denied request permission does not match %v", permission))
-			utils.ConstructErrorResponse(w, &utils.AccessDeniedError{})
+			utils.ErrorResponse(w, &utils.AccessDeniedError{})
 			return
 		}
 
@@ -194,20 +194,20 @@ func (dep *Middleware) HasRoleAndPermissions(next http.Handler, cred *models.Rol
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if cred == nil {
 			dep.Logger.Error("HasRoleAndPermissions: cred cannot be nil")
-			utils.ConstructErrorResponse(w, errors.New("internal server error"))
+			utils.ErrorResponse(w, errors.New("internal server error"))
 			return
 		}
 
 		obj, ok := r.Context().Value(utils.UserContextKey).(*models.JwtObj)
 		if !ok || obj == nil {
 			dep.Logger.Error("HasRoleAndPermissions: invalid user context")
-			utils.ConstructErrorResponse(w, &utils.AuthenticationError{})
+			utils.ErrorResponse(w, &utils.AuthenticationError{})
 			return
 		}
 
 		if !dep.validateRoleAndPermissions(obj.AccessControls, cred) {
 			dep.Logger.Error("HasRoleAndPermissions: insufficient roles or permissions")
-			utils.ConstructErrorResponse(w, &utils.AccessDeniedError{})
+			utils.ErrorResponse(w, &utils.AccessDeniedError{})
 			return
 		}
 

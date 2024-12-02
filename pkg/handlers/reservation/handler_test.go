@@ -154,7 +154,7 @@ func TestReservationHandler(t *testing.T) {
 				Email:    "temp-user@email.com",
 				Address:  "123 transylvania",
 				Phone:    "0123456789",
-				Services: []*string{&erp},
+				Services: []string{erp},
 				Time:     "19800",
 			}
 
@@ -179,7 +179,7 @@ func TestReservationHandler(t *testing.T) {
 				t.Errorf("expected status code %d, got %d", http.StatusBadRequest, rr.Code)
 			}
 
-			var errBody utils.ErrorResponse
+			var errBody utils.Error
 			if err = json.Unmarshal(rr.Body.Bytes(), &errBody); err != nil {
 				t.Fatalf("failed to unmarshal response: %v", err)
 			}
@@ -295,7 +295,7 @@ func TestReservationHandler(t *testing.T) {
 				Email:    "user@email.com",
 				Address:  "123 transylvania",
 				Phone:    "0123456789",
-				Services: []*string{&saveService.Name},
+				Services: []string{saveService.Name},
 				Time:     payload[0].Times[0],
 			}
 

@@ -36,7 +36,7 @@ func (dep *StaffHandler) Register() {
 func (dep *StaffHandler) linkServiceToStaff(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Query().Get("service_name")
 	if len(name) < 1 {
-		utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: "service_name is missing"})
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: "service_name is missing"})
 		return
 	}
 
@@ -46,7 +46,7 @@ func (dep *StaffHandler) linkServiceToStaff(w http.ResponseWriter, r *http.Reque
 		obj, ok := r.Context().Value(utils.UserContextKey).(*models.JwtObj)
 		if !ok || obj == nil {
 			dep.logger.Error("linkServiceToStaff invalid staff_id")
-			utils.ConstructErrorResponse(w, &utils.AuthenticationError{})
+			utils.ErrorResponse(w, &utils.AuthenticationError{})
 			return
 		}
 		staffUUID = obj.UserId
@@ -55,7 +55,7 @@ func (dep *StaffHandler) linkServiceToStaff(w http.ResponseWriter, r *http.Reque
 	err := dep.service.LinkServiceToStaff(r.Context(), strings.TrimSpace(staffUUID), strings.TrimSpace(name))
 	if err != nil {
 		dep.logger.Error(err.Error())
-		utils.ConstructErrorResponse(w, err)
+		utils.ErrorResponse(w, err)
 		return
 	}
 

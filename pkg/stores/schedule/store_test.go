@@ -265,4 +265,51 @@ func TestScheduleStore(t *testing.T) {
 			t.Errorf("expect 1 given %v", count)
 		}
 	})
+
+	t.Run("should count schedules in range, visibility and difference", func(t *testing.T) {
+		t.Parallel()
+
+		tx, fn := setupTest(t)
+		defer fn()
+
+		store := NewScheduleStore(mockLog, tx)
+
+		ctx := context.Background()
+
+		// given
+		staffObj := staff.Staff{UUID: uuid.New()}
+		if _, err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
+			t.Errorf("%s", err)
+		}
+
+		for i := 0; i < 5; i++ {
+			start := time.Date(mockLog.Date().Year(), mockLog.Date().Month(), i+1, 0, 0, 0, 0, mockLog.Timezone())
+			_, err := store.Save(ctx, &schedule.Schedule{
+				StaffId:   staffObj.StaffId,
+				Start:     start,
+				End:       start.Add(time.Duration(8) * time.Hour),
+				IsVisible: true,
+			})
+			if err != nil {
+				t.Error(err.Error())
+				break
+			}
+		}
+
+		firstDayOfMonth := time.Date(mockLog.Date().Year(), mockLog.Date().Month(), 1, 0, 0, 0, 0, mockLog.Timezone())
+		lastDayOfMonth := firstDayOfMonth.AddDate(0, 1, -1)
+
+		// method to test
+		schs, err := store.SchedulesInRangeAndVisibilityAndDifference(ctx, staffObj.StaffId, firstDayOfMonth, lastDayOfMonth, true, 5*60*60)
+
+		// assert
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		if len(schs) != 5 {
+			t.Errorf("expect 5 given %v", len(schs))
+			t.Errorf("%v", schs)
+		}
+	})
 }

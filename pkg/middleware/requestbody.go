@@ -20,7 +20,7 @@ func (dep *RequestBodyMiddleware[T]) RequestBody(next http.Handler) http.Handler
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Body == nil {
 			dep.Logger.Error("request body is nil")
-			utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: "invalid request body"})
+			utils.ErrorResponse(w, &utils.BadRequestError{Message: "invalid request body"})
 			return
 		}
 
@@ -28,20 +28,20 @@ func (dep *RequestBodyMiddleware[T]) RequestBody(next http.Handler) http.Handler
 
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 			dep.Logger.Error(err.Error())
-			utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: "invalid request body"})
+			utils.ErrorResponse(w, &utils.BadRequestError{Message: "invalid request body"})
 			return
 		}
 
 		if err := ValidatorInstance.Struct(payload); err != nil {
 			dep.Logger.Error(err)
-			utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: "invalid request body"})
+			utils.ErrorResponse(w, &utils.BadRequestError{Message: "invalid request body"})
 			return
 		}
 
 		by, err := json.Marshal(payload)
 		if err != nil {
 			dep.Logger.Error(err.Error())
-			utils.ConstructErrorResponse(w, errors.New("internal server error"))
+			utils.ErrorResponse(w, errors.New("internal server error"))
 			return
 		}
 		r.Body = io.NopCloser(bytes.NewBuffer(by))

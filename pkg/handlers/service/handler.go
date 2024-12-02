@@ -43,13 +43,13 @@ func (dep *ServiceHandler) create(w http.ResponseWriter, r *http.Request) {
 	dto, err := pkg.ReadBody[model.ServicePayload](r)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		utils.ConstructErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	if err = dep.service.Create(r.Context(), dto); err != nil {
 		dep.logger.Error(err.Error())
-		utils.ConstructErrorResponse(w, err)
+		utils.ErrorResponse(w, err)
 		return
 	}
 
