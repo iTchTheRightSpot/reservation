@@ -28,7 +28,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	db, err = database.ConnectToPostgre(env.DbConnectionString)
+	db, err = database.ConnectToPostgres(env.DbConnectionString)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -213,6 +213,46 @@ func TestReservationStore(t *testing.T) {
 
 		if re.JunctionId < 1 {
 			t.Errorf("expect junction id to be greater than 1. given %v", r.ReservationId)
+		}
+	})
+
+	t.Run("reject saving reservation conflict", func(t *testing.T) {
+		tx, fn := setupTest(t)
+		defer fn()
+
+		// given
+		ctx := context.Background()
+
+		store := NewReservationStore(mockLog, tx)
+		erpStaff, err := preSaveStaff(profileStore.NewProfileStore(mockLog, tx), staffStore.NewStaffStore(mockLog, tx))
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+
+		start := mockLog.Date().Add(1 * time.Hour)
+		r := &reservation.Reservation{
+			StaffId:      erpStaff.StaffId,
+			Name:         "user",
+			Email:        "email@example.com",
+			Price:        25.65,
+			Status:       reservation.CONFIRMED,
+			CreatedAt:    mockLog.Date(),
+			ScheduledFor: start,
+			ExpireAt:     start.Add(1 * time.Hour),
+		}
+
+		// method to test & assert
+		if err = store.SelectForUpdateSave(ctx, r, reservation.CONFIRMED); err != nil {
+			t.Errorf(err.Error())
+		}
+
+		if err = store.SelectForUpdateSave(ctx, r, reservation.CONFIRMED); err == nil {
+			t.Errorf("expect %v given nil", err.Error())
+		}
+
+		r.ScheduledFor = start.Add(10 * time.Minute)
+		if err = store.SelectForUpdateSave(ctx, r, reservation.CONFIRMED); err == nil {
+			t.Errorf("expect %v given nil", err.Error())
 		}
 	})
 }

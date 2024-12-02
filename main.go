@@ -10,7 +10,7 @@ import (
 
 func main() {
 	// logger
-	logger, err := utils.NewLogger("")
+	logger, err := utils.NewLogger("UTC")
 	if err != nil {
 		return
 	}
@@ -23,7 +23,7 @@ func main() {
 	}
 
 	// connect to database
-	db, err := database.ConnectToPostgre(env.DbConnectionString)
+	db, err := database.ConnectToPostgres(env.DbConnectionString)
 	if err != nil {
 		log.Fatal(err)
 		return

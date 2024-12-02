@@ -2,6 +2,7 @@ package reservation
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
@@ -74,7 +75,7 @@ func (dep *reservationService) generateChunks(schedules []*schedule.Schedule, du
 	return arr
 }
 
-func (dep *reservationService) filterChunks(ctx context.Context, staffId uint64, duration int, chunks []*reservation.Chunks) (*[]reservation.ReservationTimeSlots, error) {
+func (dep *reservationService) filterChunks(ctx context.Context, staffId uint64, duration int, chunks []*reservation.Chunks, location *time.Location) (*[]reservation.ReservationTimeSlots, error) {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var results []reservation.ReservationTimeSlots
@@ -98,14 +99,14 @@ func (dep *reservationService) filterChunks(ctx context.Context, staffId uint64,
 				}
 
 				if count == 0 {
-					validTimes = append(validTimes, fmt.Sprintf("%v", timeSlot.UnixMilli()))
+					validTimes = append(validTimes, fmt.Sprintf("%v", timeSlot.In(location).UnixMilli()))
 				}
 			}
 
 			if len(validTimes) > 0 {
 				mu.Lock()
 				results = append(results, reservation.ReservationTimeSlots{
-					Date:  fmt.Sprintf("%v", chunk.Start.UnixMilli()),
+					Date:  fmt.Sprintf("%v", chunk.Start.In(location).UnixMilli()),
 					Times: validTimes,
 				})
 				mu.Unlock()
@@ -143,7 +144,7 @@ func (dep *reservationService) AvailableDates(ctx context.Context, o *reservatio
 
 	chunks := dep.generateChunks(schedules, duration)
 
-	filter, err := dep.filterChunks(ctx, staf.StaffId, duration, chunks)
+	filter, err := dep.filterChunks(ctx, staf.StaffId, duration, chunks, o.StartDateTime.Location())
 	if err != nil {
 		return nil, err
 	}
@@ -182,24 +183,22 @@ func (dep *reservationService) matchStaffServices(ctx context.Context, requested
 	return arr, nil
 }
 
-func (dep *reservationService) dateInTimezone(p *reservation.ReservationPayload, t *time.Location) (*time.Time, error) {
+func (dep *reservationService) dateInTimezone(p *reservation.ReservationPayload) (time.Time, error) {
 	num, err := strconv.ParseInt(p.Time, 10, 64)
 	if err != nil {
-		return nil, &utils.BadRequestError{Message: err.Error()}
+		return time.Time{}, &utils.BadRequestError{Message: err.Error()}
 	}
 
-	if len(p.Timezone) < 1 {
-		in := time.UnixMilli(num).In(t)
-		return &in, nil
+	if p.Timezone == "" {
+		return time.UnixMilli(num).In(dep.logger.Timezone()), nil
 	}
 
 	l, err := time.LoadLocation(p.Timezone)
 	if err != nil {
-		return nil, &utils.BadRequestError{Message: err.Error()}
+		return time.Time{}, &utils.BadRequestError{Message: err.Error()}
 	}
 
-	in := time.UnixMilli(num).In(l).In(t)
-	return &in, nil
+	return time.UnixMilli(num).In(l).In(dep.logger.Timezone()), nil
 }
 
 func (dep *reservationService) sumUpServiceDuration(s []*service.ServiceEntity) int {
@@ -218,8 +217,8 @@ func (dep *reservationService) sumUpServicePrice(s []*service.ServiceEntity) flo
 	return count
 }
 
-func (dep *reservationService) createReservation(ctx context.Context, p *reservation.ReservationPayload, matchedServices []*service.ServiceEntity, s *staff.Staff, start *time.Time, end time.Time) error {
-	return dep.adapters.Transaction.RunInTransaction(func(adapters *stores.Adapters) error {
+func (dep *reservationService) createReservation(ctx context.Context, p *reservation.ReservationPayload, matchedServices []*service.ServiceEntity, s *staff.Staff, start time.Time, end time.Time) error {
+	return dep.adapters.Transaction.RunInTransaction(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable}, func(adapters *stores.Adapters) error {
 		priceSum := dep.sumUpServicePrice(matchedServices)
 
 		reserv := &reservation.Reservation{
@@ -233,11 +232,11 @@ func (dep *reservationService) createReservation(ctx context.Context, p *reserva
 			Price:        priceSum,
 			Status:       reservation.CONFIRMED,
 			CreatedAt:    dep.logger.Date(),
-			ScheduledFor: *start,
+			ScheduledFor: start,
 			ExpireAt:     end,
 		}
 
-		if err := adapters.ReservationStore.SelectForUpdateSave(ctx, reserv); err != nil {
+		if err := adapters.ReservationStore.SelectForUpdateSave(ctx, reserv, reservation.CONFIRMED); err != nil {
 			dep.logger.Error(err.Error())
 			return &utils.InsertionError{Message: "error creating reservation"}
 		}
@@ -267,7 +266,7 @@ func (dep *reservationService) Create(ctx context.Context, p *reservation.Reserv
 		return err
 	}
 
-	start, err := dep.dateInTimezone(p, dep.logger.Timezone())
+	start, err := dep.dateInTimezone(p)
 	if err != nil {
 		dep.logger.Error(err.Error())
 		return err
@@ -281,7 +280,7 @@ func (dep *reservationService) Create(ctx context.Context, p *reservation.Reserv
 
 	end := start.Add(time.Second * time.Duration(dep.sumUpServiceDuration(services)))
 
-	count, err := dep.adapters.ScheduleStore.CountSchedulesInRangeAndVisibility(ctx, staffObj.StaffId, *start, end, true)
+	count, err := dep.adapters.ScheduleStore.CountSchedulesInRangeAndVisibility(ctx, staffObj.StaffId, start, end, true)
 	if err != nil {
 		return err
 	}
@@ -292,7 +291,7 @@ func (dep *reservationService) Create(ctx context.Context, p *reservation.Reserv
 	}
 
 	count, err = dep.adapters.ReservationStore.CountReservationsInRange(
-		ctx, staffObj.StaffId, *start, end, reservation.CONFIRMED)
+		ctx, staffObj.StaffId, start, end, reservation.CONFIRMED)
 
 	if err != nil {
 		return err

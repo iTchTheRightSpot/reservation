@@ -16,7 +16,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db, err := database.ConnectToPostgre(env.DbConnectionString)
+	db, err := database.ConnectToPostgres(env.DbConnectionString)
 	if err != nil {
 		log.Fatal(err)
 	}

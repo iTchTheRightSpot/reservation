@@ -2,6 +2,7 @@ package schedule
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
@@ -92,7 +93,8 @@ func (dep *scheduleService) Create(ctx context.Context, dto *schedule.SchedulePa
 		return &utils.BadRequestError{Message: err.Error()}
 	}
 
-	return dep.adapters.Transaction.RunInTransaction(func(adapters *stores.Adapters) error {
+	// TODO look into exclusion constraint
+	return dep.adapters.Transaction.RunInTransaction(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable}, func(adapters *stores.Adapters) error {
 		for _, segment := range segments {
 			_, err = adapters.ScheduleStore.Save(ctx, &schedule.Schedule{
 				StaffId:   staff.StaffId,
@@ -101,7 +103,7 @@ func (dep *scheduleService) Create(ctx context.Context, dto *schedule.SchedulePa
 				IsVisible: segment.IsVisible,
 			})
 			if err != nil {
-				return &utils.InsertionError{Message: err.Error()}
+				return &utils.InsertionError{Message: "duplicate schedule"}
 			}
 		}
 		return nil

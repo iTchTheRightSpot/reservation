@@ -1,6 +1,7 @@
 package stores
 
 import (
+	"context"
 	"database/sql"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/reservation"
@@ -19,7 +20,7 @@ func MockLiveTransactionProvider(l utils.ILogger, tx *sql.Tx) ITransactionProvid
 	return &mockLiveTransactionProvider{logger: l, tx: tx}
 }
 
-func (p *mockLiveTransactionProvider) RunInTransaction(txFunc func(adapters *Adapters) error) error {
+func (p *mockLiveTransactionProvider) RunInTransaction(_ context.Context, _ *sql.TxOptions, txFunc func(adapters *Adapters) error) error {
 	return txFunc(NewAdapters(p.logger, p.tx, nil))
 }
 

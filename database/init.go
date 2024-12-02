@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// ConnectToPostgre https://go.dev/doc/tutorial/database-access
-func ConnectToPostgre(conn string) (*sql.DB, error) {
+// ConnectToPostgres https://go.dev/doc/tutorial/database-access
+func ConnectToPostgres(conn string) (*sql.DB, error) {
 	db, err := sql.Open("postgres", conn)
 	if err != nil {
 		log.Fatal(err)
@@ -29,7 +29,7 @@ func ConnectToPostgre(conn string) (*sql.DB, error) {
 	return db, nil
 }
 
-//func ConnectToPostgre(conn string) (*pgxpool.Pool, error) {
+//func ConnectToPostgres(conn string) (*pgxpool.Pool, error) {
 //	config, err := pgxpool.ParseConfig(conn)
 //	if err != nil {
 //		log.Fatalf("unable to parse connection string: %v", err)

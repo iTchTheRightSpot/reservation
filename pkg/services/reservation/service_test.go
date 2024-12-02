@@ -70,8 +70,8 @@ func TestReservationService(t *testing.T) {
 				t.Errorf("expect error but given nil")
 			}
 
-			if err.Error() != "no matchStaffServices" {
-				t.Errorf("expect %s given %s", "no matchStaffServices", err.Error())
+			if err.Error() != "invalid service for staff" {
+				t.Errorf("expect %s given %s", "invalid service for staff", err.Error())
 			}
 
 			if scheduleStore.CountSchedulesInRangeAndVisibilityCalled {
@@ -100,7 +100,7 @@ func TestReservationService(t *testing.T) {
 				t.Errorf("expect error but given nil")
 			}
 
-			errMess := "1 or more matchStaffServices were not found for selected staff"
+			errMess := "1 or more services were not found for selected staff"
 			if err.Error() != errMess {
 				t.Errorf("expect %s given %s", errMess, err.Error())
 			}
@@ -136,7 +136,7 @@ func TestReservationService(t *testing.T) {
 				t.Errorf("expect error but given nil")
 			}
 
-			errMess := "1 or more matchStaffServices were not found for selected staff"
+			errMess := "1 or more services were not found for selected staff"
 			if err.Error() != errMess {
 				t.Errorf("expect %s given %s", errMess, err.Error())
 			}

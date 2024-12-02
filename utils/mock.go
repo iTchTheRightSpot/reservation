@@ -11,7 +11,7 @@ type mockLogger struct {
 }
 
 func NewMockLogger() ILogger {
-	utc, loc, err := dateInTimezone("")
+	utc, loc, err := dateInTimezone("UTC")
 	if err != nil {
 		return nil
 	}

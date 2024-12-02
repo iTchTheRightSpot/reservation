@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	db, err := database.ConnectToPostgre(env.DbConnectionString)
+	db, err := database.ConnectToPostgres(env.DbConnectionString)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -64,10 +64,9 @@ func TestScheduleStore(t *testing.T) {
 	t.Run("should save staff schedule", func(t *testing.T) {
 		t.Parallel()
 
+		ctx := context.Background()
 		tx, fn := setupTest(t)
 		defer fn()
-
-		ctx := context.Background()
 
 		// given
 		staffObj := staff.Staff{UUID: uuid.New()}

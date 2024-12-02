@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -42,7 +42,7 @@ func TestMain(m *testing.M) {
 	}
 	env = e
 
-	db, err = database.ConnectToPostgre(e.DbConnectionString)
+	db, err = database.ConnectToPostgres(e.DbConnectionString)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -64,7 +64,7 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 	}
 
 	return tx, func() {
-		if err := tx.Rollback(); err != nil {
+		if err = tx.Rollback(); err != nil {
 			return
 		}
 	}
@@ -95,6 +95,16 @@ func preSaveStaff(a *stores.Adapters) (*staff.Staff, error) {
 	return &s, nil
 }
 
+func count(arr []int, status int) int {
+	var count int
+	for _, num := range arr {
+		if num == status {
+			count += 1
+		}
+	}
+	return count
+}
+
 func TestScheduleHandler(t *testing.T) {
 	t.Parallel()
 
@@ -106,83 +116,107 @@ func TestScheduleHandler(t *testing.T) {
 		t.Run("reject request duplicate schedule", func(t *testing.T) {
 			t.Parallel()
 
-			tx, fn := setupTest(t)
-			defer fn()
+			var wg sync.WaitGroup
+			var mu sync.Mutex
+			var statusArr []int
+			var errArr []string
 
-			// setup dependencies
-			mux := http.NewServeMux()
-			prov := stores.MockLiveTransactionProvider(logger, tx)
-			adapters := stores.NewAdapters(logger, tx, prov)
-			jwtSer := auth.NewJwtService(logger, env)
-			ware := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
-			s := schedule.NewScheduleService(logger, adapters)
+			for i := 0; i < 2; i++ {
+				wg.Add(1)
 
-			save, err := preSaveStaff(adapters)
-			if err != nil {
-				t.Fatalf("preSaveStaff failed: %v", err)
+				go func() {
+					defer wg.Done()
+
+					tx, fn := setupTest(t)
+					defer fn()
+
+					// setup dependencies
+					mux := http.NewServeMux()
+					prov := stores.MockLiveTransactionProvider(logger, tx)
+					adapters := stores.NewAdapters(logger, tx, prov)
+					jwtSer := auth.NewJwtService(logger, env)
+					ware := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
+					s := schedule.NewScheduleService(logger, adapters)
+
+					save, err := preSaveStaff(adapters)
+					if err != nil {
+						t.Errorf("preSaveStaff failed: %v", err)
+						return
+					}
+
+					cred := []models.RolePermission{
+						{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
+					}
+
+					obj, err := jwtSer.GenerateJwt(
+						&models.JwtObj{
+							UserId:         save.UUID.String(),
+							AccessControls: cred,
+						},
+						utils.TwoDaysInSeconds,
+					)
+
+					dto := model.SchedulePayload{
+						StaffId: save.UUID.String(),
+						Times: &[]model.ScheduleSegmentPayload{
+							{
+								IsVisible:     true,
+								IsReoccurring: false,
+								Start:         logger.Date().Add(time.Hour).Format(utils.TimeFormat),
+								Duration:      3600,
+							},
+							{
+								IsVisible:     false,
+								IsReoccurring: true,
+								Start:         logger.Date().Add(3 * time.Hour).Format(utils.TimeFormat),
+								Duration:      3600,
+							},
+						},
+					}
+
+					dtoBytes, err := json.Marshal(dto)
+					if err != nil {
+						t.Errorf("failed to marshal SchedulePayload: %s", err)
+						return
+					}
+
+					// initialize routes
+					NewScheduleHandler(mux, ware, logger, s).Register()
+
+					sendRequest := func() *httptest.ResponseRecorder {
+						req := httptest.NewRequest(http.MethodPost, "/schedule", bytes.NewBuffer(dtoBytes))
+						req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+						req.Header.Set("Content-Type", "application/json")
+
+						rr := httptest.NewRecorder()
+						mux.ServeHTTP(rr, req)
+						return rr
+					}
+
+					rr := sendRequest()
+
+					mu.Lock()
+					statusArr = append(statusArr, rr.Code)
+					errArr = append(errArr, rr.Body.String())
+					mu.Unlock()
+				}()
 			}
 
-			cred := []models.RolePermission{
-				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
+			wg.Wait()
+
+			// assert
+			num := count(statusArr, 201)
+			if num != 1 {
+				t.Errorf("expect 1 given %v", num)
+				t.Errorf("%v", statusArr)
+				t.Errorf("%v", errArr)
 			}
 
-			obj, err := jwtSer.GenerateJwt(
-				&models.JwtObj{
-					UserId:         save.UUID.String(),
-					AccessControls: cred,
-				},
-				utils.TwoDaysInSeconds,
-			)
-
-			dto := model.SchedulePayload{
-				StaffId: save.UUID.String(),
-				Times: &[]model.ScheduleSegmentPayload{
-					{
-						IsVisible:     true,
-						IsReoccurring: false,
-						Start:         logger.Date().Add(time.Hour).Format(utils.TimeFormat),
-						Duration:      3600,
-					},
-					{
-						IsVisible:     false,
-						IsReoccurring: true,
-						Start:         logger.Date().Add(2 * time.Hour).Format(utils.TimeFormat),
-						Duration:      3600,
-					},
-				},
-			}
-
-			dtoBytes, err := json.Marshal(dto)
-			if err != nil {
-				t.Fatalf("failed to marshal SchedulePayload: %s", err)
-			}
-
-			// initialize routes
-			NewScheduleHandler(mux, ware, logger, s).Register()
-
-			sendRequest := func() *httptest.ResponseRecorder {
-				req := httptest.NewRequest(http.MethodPost, "/schedule", bytes.NewBuffer(dtoBytes))
-				req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
-				req.Header.Set("Content-Type", "application/json")
-
-				rr := httptest.NewRecorder()
-				mux.ServeHTTP(rr, req)
-				return rr
-			}
-
-			rr := sendRequest()
-			if rr.Code != http.StatusCreated {
-				t.Errorf("expected status code %d, got %d", http.StatusCreated, rr.Code)
-			}
-
-			rr = sendRequest()
-			if rr.Code != http.StatusBadRequest {
-				t.Errorf("expected status code %d, got %d", http.StatusBadRequest, rr.Code)
-			}
-
-			expectedError := "duplicate schedule detected from"
-			if !strings.Contains(rr.Body.String(), expectedError) {
-				t.Errorf("expected error message %q in response, got %q", expectedError, rr.Body.String())
+			num = count(statusArr, 409)
+			if num != 1 {
+				t.Errorf("expect 1 given %v", num)
+				t.Errorf("%v", statusArr)
+				t.Errorf("%v", errArr)
 			}
 		})
 
@@ -301,7 +335,7 @@ func TestScheduleHandler(t *testing.T) {
 					{
 						IsVisible:     false,
 						IsReoccurring: true,
-						Start:         logger.Date().Add(time.Duration(2) * time.Hour).Format(utils.TimeFormat),
+						Start:         logger.Date().Add(time.Duration(3) * time.Hour).Format(utils.TimeFormat),
 						Duration:      3600,
 					},
 				},

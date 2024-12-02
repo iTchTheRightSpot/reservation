@@ -1,3 +1,5 @@
+-- CREATE EXTENSION IF NOT EXISTS btree_gist;
+
 CREATE TABLE IF NOT EXISTS schedule
 (
     schedule_id    BIGSERIAL NOT NULL UNIQUE PRIMARY KEY,
@@ -10,9 +12,13 @@ CREATE TABLE IF NOT EXISTS schedule
         FOREIGN KEY (staff_id)
             REFERENCES staff (staff_id)
             ON DELETE RESTRICT
-            ON UPDATE RESTRICT
+            ON UPDATE RESTRICT,
+    CONSTRAINT EX_schedule_overlap_constraint
+        EXCLUDE USING gist (
+            staff_id WITH =, tstzrange(schedule_start, schedule_end) WITH &&
+        )
 );
 
 CREATE INDEX IX_schedule_composite1 ON schedule (staff_id, schedule_start, schedule_end);
 CREATE INDEX IX_schedule_composite2 ON schedule (staff_id, schedule_start, schedule_end, is_visible);
-CREATE INDEX IX_schedule_composite3 ON schedule (schedule_start, schedule_end, is_reoccurring);
+CREATE INDEX IX_schedule_composite3 ON schedule (schedule_start, schedule_end, is_visible, is_reoccurring);

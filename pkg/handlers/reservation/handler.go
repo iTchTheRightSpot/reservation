@@ -88,11 +88,9 @@ func (dep *ReservationHandler) availableDates(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	timezone := query.Get("timezone")
 	location := dep.logger.Timezone()
-
-	if timezone != "" {
-		location, err = time.LoadLocation(timezone)
+	if query.Get("timezone") != "" {
+		location, err = time.LoadLocation(query.Get("timezone"))
 		if err != nil {
 			dep.logger.Error(err.Error())
 			utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
