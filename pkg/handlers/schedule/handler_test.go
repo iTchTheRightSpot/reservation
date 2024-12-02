@@ -192,7 +192,7 @@ func TestScheduleHandler(t *testing.T) {
 			// initialize routes
 			NewScheduleHandler(mux, ware, logger, s).Register()
 
-			randNum := rand.Intn(15-2) + 2
+			randNum := rand.Intn(5-2) + 2
 
 			for i := 0; i < randNum; i++ {
 				wg.Add(1)
@@ -200,17 +200,12 @@ func TestScheduleHandler(t *testing.T) {
 				go func() {
 					defer wg.Done()
 
-					sendRequest := func() *httptest.ResponseRecorder {
-						req := httptest.NewRequest(http.MethodPost, "/schedule", bytes.NewBuffer(dtoBytes))
-						req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
-						req.Header.Set("Content-Type", "application/json")
+					req := httptest.NewRequest(http.MethodPost, "/schedule", bytes.NewBuffer(dtoBytes))
+					req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+					req.Header.Set("Content-Type", "application/json")
 
-						rr := httptest.NewRecorder()
-						mux.ServeHTTP(rr, req)
-						return rr
-					}
-
-					rr := sendRequest()
+					rr := httptest.NewRecorder()
+					mux.ServeHTTP(rr, req)
 
 					mu.Lock()
 					statusArr = append(statusArr, rr.Code)

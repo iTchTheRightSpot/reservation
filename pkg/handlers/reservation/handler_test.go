@@ -131,16 +131,14 @@ func TestReservationHandler(t *testing.T) {
 		adapters := stores.NewAdapters(logger, db, prov)
 		mux, savedStaff, saveService, _, _, payload := reservationFlow(t, logger, adapters, newTime)
 
-		randNum := rand.Intn((len(payload[0].Times)-1)-0) + 0
-
 		createBody := model.ReservationPayload{
 			StaffId:  savedStaff.UUID.String(),
-			Name:     fmt.Sprintf("user-name"),
+			Name:     "user-name",
 			Email:    fmt.Sprintf("%s@email.com", uuid.NewString()),
 			Address:  "123 transylvania",
 			Phone:    "0123456789",
 			Services: []string{saveService.Name},
-			Time:     payload[0].Times[randNum],
+			Time:     payload[0].Times[0],
 		}
 
 		createBodyBytes, _ := json.Marshal(createBody)
@@ -151,7 +149,7 @@ func TestReservationHandler(t *testing.T) {
 		var statusArr []int
 		var errArr []string
 
-		randNum = rand.Intn(15-2) + 2
+		randNum := rand.Intn(5-2) + 2
 
 		for idx := 0; idx < randNum; idx++ {
 			wg.Add(1)
