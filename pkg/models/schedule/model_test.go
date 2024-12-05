@@ -1,4 +1,4 @@
-package shift
+package schedule
 
 import (
 	"fmt"
@@ -7,21 +7,21 @@ import (
 	"time"
 )
 
-func TestShift(t *testing.T) {
+func TestScheduleModel(t *testing.T) {
 	t.Parallel()
 
 	logger := utils.NewMockLogger()
 	timezone := logger.Timezone()
 
-	t.Run("return error shift in the past", func(t *testing.T) {
+	t.Run("return error schedule in the past", func(t *testing.T) {
 		t.Parallel()
 
 		// given
 		now := logger.Date()
-		timeSlots := []ShiftSegmentPayload{
+		timeSlots := []ScheduleSegmentPayload{
 			{IsVisible: true, Start: now.Format(utils.TimeFormat), Duration: 3600},
 		}
-		dto := ShiftPayload{
+		dto := SchedulePayload{
 			StaffId: "test-staff-uuid",
 			Times:   &timeSlots,
 		}
@@ -51,12 +51,12 @@ func TestShift(t *testing.T) {
 		now := logger.Date()
 		start1 := now.Add(time.Duration(30) * time.Minute).Format(utils.TimeFormat)
 
-		timeSlots := []ShiftSegmentPayload{
+		timeSlots := []ScheduleSegmentPayload{
 			{IsVisible: true, Start: now.Format(utils.TimeFormat), Duration: 3600},
 			{IsVisible: false, Start: start1, Duration: 3600},
 		}
 
-		dto := ShiftPayload{
+		dto := SchedulePayload{
 			StaffId: "test-staff-uuid",
 			Times:   &timeSlots,
 		}
@@ -85,11 +85,11 @@ func TestShift(t *testing.T) {
 		// given
 		now := logger.Date()
 		start1 := now.Add(time.Duration(1) * time.Hour).Format(utils.TimeFormat)
-		timeSlots := []ShiftSegmentPayload{
+		timeSlots := []ScheduleSegmentPayload{
 			{IsVisible: true, Start: now.Format(utils.TimeFormat), Duration: 3600},
 			{IsVisible: false, Start: start1, Duration: 3600},
 		}
-		dto := ShiftPayload{
+		dto := SchedulePayload{
 			StaffId: "test-staff-uuid",
 			Times:   &timeSlots,
 		}
@@ -111,11 +111,11 @@ func TestShift(t *testing.T) {
 	t.Run("return error as time slot contains invalid format", func(t *testing.T) {
 		t.Parallel()
 
-		timeSlots := []ShiftSegmentPayload{
+		timeSlots := []ScheduleSegmentPayload{
 			{IsVisible: true, Start: "invalidTime", Duration: 3600},
 		}
 
-		dto := ShiftPayload{
+		dto := SchedulePayload{
 			StaffId: "test-staff-uuid",
 			Times:   &timeSlots,
 		}
@@ -129,7 +129,7 @@ func TestShift(t *testing.T) {
 	t.Run("return error as time slots is nil", func(t *testing.T) {
 		t.Parallel()
 
-		dto := ShiftPayload{
+		dto := SchedulePayload{
 			StaffId: "test-staff-uuid",
 			Times:   nil,
 		}

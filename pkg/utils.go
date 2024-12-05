@@ -13,6 +13,7 @@ import (
 
 type Db interface {
 	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 }
 
@@ -43,7 +44,7 @@ func ReadBody[T any](r *http.Request) (*T, error) {
 	}
 
 	var payload T
-	if err := json.Unmarshal(bodyBytes, &payload); err != nil {
+	if err = json.Unmarshal(bodyBytes, &payload); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal request body: %w", err)
 	}
 

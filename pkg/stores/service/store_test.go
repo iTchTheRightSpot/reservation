@@ -3,9 +3,12 @@ package service
 import (
 	"context"
 	"database/sql"
+	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
+	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"log"
 	"reflect"
@@ -60,7 +63,7 @@ func TestServiceStore(t *testing.T) {
 
 	logger := utils.NewMockLogger()
 
-	t.Run("should save service", func(t *testing.T) {
+	t.Run("should save and return service by name", func(t *testing.T) {
 		t.Parallel()
 
 		tx, fn := setupTest(t)
@@ -70,9 +73,11 @@ func TestServiceStore(t *testing.T) {
 		ctx := context.Background()
 
 		// given
-		s := service.Service{
-			Name:  "name",
-			Price: 1000.95,
+		s := service.ServiceEntity{
+			Name:        "name",
+			Price:       1000.95,
+			Duration:    3600,
+			CleanUpTime: 1800,
 		}
 
 		// method to test
@@ -84,6 +89,61 @@ func TestServiceStore(t *testing.T) {
 		// assert
 		if !reflect.DeepEqual(s, *save) {
 			t.Errorf("expect %v to equal %v", s, &save)
+		}
+
+		find, err := store.ServiceByName(ctx, "name")
+		if err != nil {
+			t.Error(err)
+		}
+
+		// assert
+		if !reflect.DeepEqual(*save, *find) {
+			t.Errorf("expect %v to equal %v", save, find)
+		}
+	})
+
+	t.Run("should save service and return by services staff id", func(t *testing.T) {
+		t.Parallel()
+
+		tx, fn := setupTest(t)
+		defer fn()
+		ctx := context.Background()
+
+		store := NewServiceStore(logger, tx)
+		staffStore := staff.NewStaffStore(logger, tx)
+		ss := staff.NewStaffServiceStore(logger, tx)
+
+		// given
+		s := service.ServiceEntity{
+			Name:        "name",
+			Price:       1000.95,
+			Duration:    3600,
+			CleanUpTime: 1800,
+		}
+
+		if _, err := store.Save(ctx, &s); err != nil {
+			t.Error(err.Error())
+		}
+
+		se := model.Staff{UUID: uuid.New()}
+		if _, err := staffStore.Save(ctx, &se); err != nil {
+			t.Error(err.Error())
+		}
+
+		if _, err := ss.Save(ctx, &model.StaffServiceEntity{ServiceId: s.ServiceId, StaffId: se.StaffId}); err != nil {
+			t.Error(err.Error())
+		}
+
+		// method to test
+		arr, err := store.ServicesByStaffId(ctx, se.StaffId)
+
+		// assert
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		if !reflect.DeepEqual(*arr[0], s) {
+			t.Errorf("expect %v to equal given %v", s, *arr[0])
 		}
 	})
 
@@ -97,7 +157,7 @@ func TestServiceStore(t *testing.T) {
 		ctx := context.Background()
 
 		// given
-		s := service.Service{
+		s := service.ServiceEntity{
 			Name:  "name",
 			Price: 10001.95,
 		}

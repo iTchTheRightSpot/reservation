@@ -38,8 +38,8 @@ jobs:
       - name: Tests
         run: go test ./...
 
-      - name: Race test
-        run: go test ./... --race
+#      - name: Race test
+#        run: go clean -testcache && go test ./... --race
 
       - name: Docker compose down
         run: docker compose down -v

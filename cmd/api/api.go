@@ -17,17 +17,16 @@ type ErpServer struct {
 }
 
 func (s *ErpServer) Serve() {
-	a := cmd.NewHandlerRegistry(http.NewServeMux(), s.Db, s.Logger, s.Env)
+	s.Logger.Log(fmt.Sprintf("starting server on PORT %s", s.Env.Address))
+
 	server := http.Server{
 		Addr:              s.Env.Address,
 		WriteTimeout:      10 * time.Second,
 		IdleTimeout:       30 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       5 * time.Second,
-		Handler:           a.Initialize(),
+		Handler:           cmd.NewHandlerRegistry(http.NewServeMux(), s.Db, s.Logger, s.Env).Initialize(),
 	}
 
-	s.Logger.Log(fmt.Sprintf("starting server on PORT %s", server.Addr))
-
-	s.Logger.Fatal("server failed to start: %v", server.ListenAndServe())
+	s.Logger.Fatal("server stopped ", server.ListenAndServe())
 }

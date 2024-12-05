@@ -1,20 +1,16 @@
-package shift
+package service
 
 import (
 	"bytes"
-	"context"
 	"database/sql"
 	"encoding/json"
-	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
-	shiftModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/shift"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
+	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/shift"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/services/service"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"log"
@@ -22,7 +18,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
-	"time"
 )
 
 var db *sql.DB
@@ -68,99 +63,56 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 	}
 }
 
-func preSaveStaff(a *stores.Adapters) (*staff.Staff, error) {
-	ctx := context.Background()
-
-	p := profile.Profile{
-		Firstname: "erp",
-		Lastname:  "erp",
-		Email:     "erp@email.com",
-	}
-
-	if _, err := a.ProfileStore.Save(ctx, &p); err != nil {
-		return nil, err
-	}
-
-	s := staff.Staff{
-		UUID:      uuid.New(),
-		ProfileId: &p.ProfileId,
-	}
-
-	if _, err := a.StaffStore.Save(ctx, &s); err != nil {
-		return nil, err
-	}
-
-	return &s, nil
-}
-
-func TestShiftHandler(t *testing.T) {
+func TestServiceHandler(t *testing.T) {
 	t.Parallel()
 
 	logger := utils.NewMockLogger()
 
-	t.Run("should save shift", func(t *testing.T) {
-		t.Parallel()
-
+	t.Run("should create service", func(t *testing.T) {
 		tx, fn := setupTest(t)
 		defer fn()
 
 		// given
 		mux := http.NewServeMux()
 		prov := stores.MockLiveTransactionProvider(logger, tx)
-		adap := stores.NewAdapters(logger, tx, prov)
+		adapters := stores.NewAdapters(logger, tx, prov)
 		jwtSer := auth.NewJwtService(logger, env)
 		m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
-		s := shift.NewShiftService(logger, adap)
+		s := service.NewServiceImpl(logger, adapters)
 
-		save, err := preSaveStaff(adap)
-		if err != nil {
-			t.Error(err)
+		arr := []models.RolePermission{
+			{
+				Role:        models.STAFF,
+				Permissions: []models.PermissionEnum{models.WRITE},
+			},
 		}
 
-		cred := make([]models.RolePermission, 1)
-		cred[0] = models.RolePermission{
-			Role:        models.STAFF,
-			Permissions: []models.PermissionEnum{models.WRITE},
-		}
 		obj, err := jwtSer.GenerateJwt(
 			&models.JwtObj{
-				UserId:         save.UUID.String(),
-				AccessControls: cred,
+				UserId:         "staff-uuid",
+				AccessControls: arr,
 			},
 			utils.TwoDaysInSeconds,
 		)
 
-		dto := shiftModel.ShiftPayload{
-			StaffId: save.UUID.String(),
-			Times: &[]shiftModel.ShiftSegmentPayload{
-				{
-					IsVisible:     true,
-					IsReoccurring: false,
-					Start:         logger.Date().Add(time.Duration(1) * time.Hour).Format(utils.TimeFormat),
-					Duration:      3600,
-				},
-				{
-					IsVisible:     false,
-					IsReoccurring: true,
-					Start:         logger.Date().Add(time.Duration(2) * time.Hour).Format(utils.TimeFormat),
-					Duration:      3600,
-				},
-			},
-		}
-
-		dtoBytes, err := json.Marshal(dto)
+		dtoBytes, err := json.Marshal(model.ServicePayload{
+			Name:        "erp",
+			Price:       15.97,
+			Duration:    3600,
+			CleanUpTime: 1800,
+		})
 		if err != nil {
-			t.Errorf("failed to marshal ShiftPayload: %s", err)
+			t.Errorf("failed to marshal SchedulePayload: %s", err)
 		}
 
-		req := httptest.NewRequest(http.MethodPost, "/shift", bytes.NewBuffer(dtoBytes))
+		req := httptest.NewRequest(http.MethodPost, "/service", bytes.NewBuffer(dtoBytes))
 		req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
 		req.Header.Set("Content-Type", "application/json")
 
 		rr := httptest.NewRecorder()
 
 		// handler to test
-		NewShiftHandler(mux, m, logger, s).Register()
+		NewServiceHandler(mux, logger, s, m).Register()
 
 		mux.ServeHTTP(rr, req)
 

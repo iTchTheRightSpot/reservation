@@ -10,7 +10,7 @@ import (
 
 func main() {
 	// logger
-	logger, err := utils.NewLogger("")
+	logger, err := utils.NewLogger("UTC")
 	if err != nil {
 		return
 	}

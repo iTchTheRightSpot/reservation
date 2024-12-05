@@ -17,7 +17,7 @@ type ILogger interface {
 
 const (
 	iError = "ERROR"
-	ilog   = "LOG"
+	iLog   = "LOG"
 	iFatal = "FATAL"
 )
 
@@ -67,7 +67,7 @@ func (l *logger) Error(variables ...interface{}) {
 }
 
 func (l *logger) Log(variables ...interface{}) {
-	log.Printf("%s %s %v\n", l.time, ilog, variables)
+	log.Printf("%s %s %v\n", l.time, iLog, variables)
 }
 
 func (l *logger) Fatal(variables ...interface{}) {

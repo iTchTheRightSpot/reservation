@@ -232,7 +232,7 @@ func TestMiddleware(t *testing.T) {
 			}
 		})
 
-		t.Run(fmt.Sprintf("reject request. not of role %s", models.DEVELOPER), func(t *testing.T) {
+		t.Run("reject request. not of role DEVELOPER", func(t *testing.T) {
 			t.Parallel()
 
 			// given
@@ -267,7 +267,7 @@ func TestMiddleware(t *testing.T) {
 			}
 		})
 
-		t.Run(fmt.Sprintf("accept request. role matches %s", models.STAFF), func(t *testing.T) {
+		t.Run("accept request. role matches STAFF", func(t *testing.T) {
 			t.Parallel()
 
 			// given
@@ -296,6 +296,103 @@ func TestMiddleware(t *testing.T) {
 			// method to test
 			staff := models.STAFF
 			middleware.HasRole(mockHandler, &staff).ServeHTTP(resp, req)
+
+			if resp.Code != http.StatusOK {
+				t.Errorf("expected status code %d, got %d", http.StatusOK, resp.Code)
+			}
+		})
+	})
+
+	t.Run("HasPermission middleware", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("reject request permission is nil", func(t *testing.T) {
+			t.Parallel()
+
+			// given
+			mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			})
+
+			req := httptest.NewRequest(http.MethodGet, "/path", nil)
+			resp := httptest.NewRecorder()
+
+			middleware := Middleware{Logger: logger}
+
+			// method to test
+			middleware.HasPermission(mockHandler, nil).ServeHTTP(resp, req)
+
+			if resp.Code != http.StatusInternalServerError {
+				t.Errorf("expected status code %d, got %d", http.StatusInternalServerError, resp.Code)
+			}
+		})
+
+		t.Run("reject request not permission READ", func(t *testing.T) {
+			t.Parallel()
+
+			// given
+			arr := []models.RolePermission{
+				{
+					Role:        models.STAFF,
+					Permissions: []models.PermissionEnum{models.READ, models.DELETE},
+				},
+			}
+			obj := &models.JwtObj{
+				AccessControls: arr,
+				UserId:         "staff-id",
+			}
+
+			mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			})
+
+			req := httptest.NewRequest(http.MethodGet, "/path", nil)
+			ctx := req.Context()
+			ctx = context.WithValue(ctx, utils.UserContextKey, obj)
+			req = req.WithContext(ctx)
+			resp := httptest.NewRecorder()
+
+			middleware := Middleware{Logger: logger}
+
+			// method to test
+			permission := models.WRITE
+			middleware.HasPermission(mockHandler, &permission).ServeHTTP(resp, req)
+
+			if resp.Code != http.StatusForbidden {
+				t.Errorf("expected status code %d, got %d", http.StatusForbidden, resp.Code)
+			}
+		})
+
+		t.Run("accept request matching permission", func(t *testing.T) {
+			t.Parallel()
+
+			// given
+			cred := []models.RolePermission{
+				{
+					Role:        models.STAFF,
+					Permissions: []models.PermissionEnum{models.READ, models.DELETE, models.WRITE},
+				},
+			}
+			obj := &models.JwtObj{
+				AccessControls: cred,
+				UserId:         "staff-id",
+			}
+
+			mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			})
+
+			req := httptest.NewRequest(http.MethodGet, "/path", nil)
+			ctx := req.Context()
+			ctx = context.WithValue(ctx, utils.UserContextKey, obj)
+			req = req.WithContext(ctx)
+			resp := httptest.NewRecorder()
+
+			middleware := Middleware{Logger: logger}
+
+			// method to test
+			staff := models.WRITE
+			middleware.HasPermission(mockHandler, &staff).ServeHTTP(resp, req)
 
 			if resp.Code != http.StatusOK {
 				t.Errorf("expected status code %d, got %d", http.StatusOK, resp.Code)
@@ -541,5 +638,4 @@ func TestMiddleware(t *testing.T) {
 			}
 		})
 	})
-
 }
