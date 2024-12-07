@@ -48,7 +48,9 @@ func TestScheduleModel(t *testing.T) {
 		t.Parallel()
 
 		// given
-		now := logger.Date()
+		d := logger.Date()
+		now := time.Date(d.Year(), d.Month(), d.Day(), 9, 0, 0, 0, d.Location())
+
 		start1 := now.Add(time.Duration(30) * time.Minute).Format(utils.TimeFormat)
 
 		timeSlots := []ScheduleSegmentPayload{
@@ -83,7 +85,8 @@ func TestScheduleModel(t *testing.T) {
 		t.Parallel()
 
 		// given
-		now := logger.Date()
+		d := logger.Date()
+		now := time.Date(d.Year(), d.Month(), d.Day(), 9, 0, 0, 0, d.Location())
 		start1 := now.Add(time.Duration(1) * time.Hour).Format(utils.TimeFormat)
 		timeSlots := []ScheduleSegmentPayload{
 			{IsVisible: true, Start: now.Format(utils.TimeFormat), Duration: 3600},
