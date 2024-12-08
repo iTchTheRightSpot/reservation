@@ -203,6 +203,111 @@ func TestReservationHandler(t *testing.T) {
 			t.Errorf("%v", errArr)
 		}
 	})
+
+	t.Run("cancel reservation", func(t *testing.T) {
+		t.Run("invalid reservation id & already cancelled reservation", func(t *testing.T) {
+			tx, fn := setupTest(t)
+			defer fn()
+
+			mux := http.NewServeMux()
+			prov := stores.MockLiveTransactionProvider(logger, tx)
+			adapters := stores.NewAdapters(logger, tx, prov)
+			cache := pkg.NewInMemoryCache[string, []model.ReservationTimeSlots](logger, 30, 30)
+			mailService := &mail.MockMailService{}
+			reservationService := reservation.NewReservationService(logger, adapters, cache, mailService)
+
+			staf, err := preSaveStaff(adapters)
+			if err != nil {
+				t.Fatalf(err.Error())
+			}
+
+			resv := &model.Reservation{
+				StaffId:      staf.StaffId,
+				Name:         "user-1",
+				Email:        uuid.NewString() + "@email.com",
+				Status:       model.CANCELLED,
+				CreatedAt:    baseDate,
+				ScheduledFor: newTime,
+				ExpireAt:     newTime.Add(1 * time.Hour),
+			}
+			if err = adapters.ReservationStore.Save(context.Background(), resv); err != nil {
+				t.Fatalf(err.Error())
+			}
+
+			NewReservationHandler(mux, logger, reservationService).Register()
+
+			req := httptest.NewRequest(http.MethodPost, "/reservation/cancel/0", nil)
+			req.Header.Set("Content-Type", "application/json")
+			rr := httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+
+			if rr.Code != http.StatusNotFound {
+				t.Errorf("expected status code %d, got %d", http.StatusNotFound, rr.Code)
+			}
+
+			url := fmt.Sprintf("/reservation/cancel/%v", resv.ReservationId)
+			req = httptest.NewRequest(http.MethodPost, url, nil)
+			req.Header.Set("Content-Type", "application/json")
+			rr = httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+
+			if rr.Code != http.StatusBadRequest {
+				t.Errorf("expected status code %d, got %d", http.StatusBadRequest, rr.Code)
+			}
+
+			var obj utils.Error
+			if err = json.NewDecoder(rr.Body).Decode(&obj); err != nil {
+				t.Errorf(err.Error())
+			}
+
+			str := "reservation already cancelled"
+			if !strings.Contains(str, obj.Message) {
+				t.Errorf("expected to contain %s given %s", str, obj.Message)
+			}
+		})
+
+		t.Run("success", func(t *testing.T) {
+			tx, fn := setupTest(t)
+			defer fn()
+
+			mux := http.NewServeMux()
+			prov := stores.MockLiveTransactionProvider(logger, tx)
+			adapters := stores.NewAdapters(logger, tx, prov)
+			cache := pkg.NewInMemoryCache[string, []model.ReservationTimeSlots](logger, 30, 30)
+			mailService := &mail.MockMailService{}
+			reservationService := reservation.NewReservationService(logger, adapters, cache, mailService)
+
+			staf, err := preSaveStaff(adapters)
+			if err != nil {
+				t.Fatalf(err.Error())
+			}
+
+			resv := &model.Reservation{
+				StaffId:      staf.StaffId,
+				Name:         "user-1",
+				Email:        uuid.NewString() + "@email.com",
+				Status:       model.CONFIRMED,
+				CreatedAt:    baseDate,
+				ScheduledFor: newTime,
+				ExpireAt:     newTime.Add(1 * time.Hour),
+			}
+			if err = adapters.ReservationStore.Save(context.Background(), resv); err != nil {
+				t.Fatalf(err.Error())
+			}
+
+			NewReservationHandler(mux, logger, reservationService).Register()
+
+			url := fmt.Sprintf("/reservation/cancel/%v", resv.ReservationId)
+			req := httptest.NewRequest(http.MethodPost, url, nil)
+			req.Header.Set("Content-Type", "application/json")
+			rr := httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+
+			if rr.Code != http.StatusNoContent {
+				t.Errorf("expected status code %d, got %d", http.StatusNoContent, rr.Code)
+			}
+		})
+	})
 }
 
 func randomTimezone(zones []string) (*time.Location, error) {

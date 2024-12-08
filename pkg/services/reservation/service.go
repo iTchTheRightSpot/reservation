@@ -12,6 +12,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/mail"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"reflect"
 	"slices"
 	"strconv"
 	"strings"
@@ -22,6 +23,7 @@ import (
 type IReservationService interface {
 	Create(ctx context.Context, p *reservation.ReservationPayload) error
 	AvailableDates(ctx context.Context, o *reservation.AvailableTimesPayload) (*[]reservation.ReservationTimeSlots, error)
+	Cancel(ctx context.Context, reservationId uint64) error
 }
 
 type reservationService struct {
@@ -309,4 +311,24 @@ func (dep *reservationService) Create(ctx context.Context, p *reservation.Reserv
 
 	dep.cache.Clear()
 	return dep.mail.SendReservationConfirmation()
+}
+
+func (dep *reservationService) Cancel(ctx context.Context, reservationId uint64) error {
+	r, err := dep.adapters.ReservationStore.ReservationById(ctx, reservationId)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return &utils.NotFoundError{Message: "invalid reservation id"}
+	}
+
+	if reflect.DeepEqual(r.Status, reservation.CANCELLED) {
+		return &utils.BadRequestError{Message: "reservation already cancelled"}
+	}
+
+	err = dep.adapters.ReservationStore.UpdateReservationStatus(ctx, r.ReservationId, reservation.CANCELLED)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return &utils.InsertionError{Message: "error cancelling reservation"}
+	}
+
+	return nil
 }
