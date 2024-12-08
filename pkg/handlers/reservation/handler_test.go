@@ -24,14 +24,17 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 	"time"
+	"unicode"
 )
 
 var db *sql.DB
@@ -83,15 +86,21 @@ func TestReservationHandler(t *testing.T) {
 	baseDate := logger.Date()
 	startTime := time.Date(baseDate.Year(), baseDate.Month(), baseDate.Day(), 9, 0, 0, 0, logger.Timezone())
 	newTime := startTime.Add(24 * time.Hour)
+	zones := timezones()
 
 	t.Run("single request make reservation", func(t *testing.T) {
 		tx, fn := setupTest(t)
 		defer fn()
 
 		// setup dependencies
+		zone, err := randomTimezone(zones)
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
+
 		prov := stores.MockLiveTransactionProvider(logger, tx)
 		adapters := stores.NewAdapters(logger, tx, prov)
-		mux, savedStaff, saveService, req, rr, payload := reservationFlow(t, logger, adapters, newTime)
+		mux, savedStaff, saveService, req, rr, payload := reservationFlow(t, logger, adapters, newTime, zone.String())
 
 		// create reservation
 		createBody := model.ReservationPayload{
@@ -101,7 +110,8 @@ func TestReservationHandler(t *testing.T) {
 			Address:  "123 transylvania",
 			Phone:    "0123456789",
 			Services: []string{saveService.Name},
-			Time:     payload[0].Times[1],
+			Time:     payload[0].Times[rand.Intn(len(payload[0].Times))],
+			Timezone: zone.String(),
 		}
 
 		createBodyBytes, err := json.Marshal(createBody)
@@ -127,9 +137,15 @@ func TestReservationHandler(t *testing.T) {
 		}()
 
 		// setup dependencies
+		zone, err := randomTimezone(zones)
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
+
+		// setup dependencies
 		prov := stores.NewTransactionProvider(logger, db)
 		adapters := stores.NewAdapters(logger, db, prov)
-		mux, savedStaff, saveService, _, _, payload := reservationFlow(t, logger, adapters, newTime)
+		mux, savedStaff, saveService, _, _, payload := reservationFlow(t, logger, adapters, newTime, zone.String())
 
 		createBody := model.ReservationPayload{
 			StaffId:  savedStaff.UUID.String(),
@@ -138,7 +154,8 @@ func TestReservationHandler(t *testing.T) {
 			Address:  "123 transylvania",
 			Phone:    "0123456789",
 			Services: []string{saveService.Name},
-			Time:     payload[0].Times[0],
+			Time:     payload[0].Times[rand.Intn(len(payload[0].Times))],
+			Timezone: zone.String(),
 		}
 
 		createBodyBytes, _ := json.Marshal(createBody)
@@ -186,6 +203,15 @@ func TestReservationHandler(t *testing.T) {
 			t.Errorf("%v", errArr)
 		}
 	})
+}
+
+func randomTimezone(zones []string) (*time.Location, error) {
+	location, err := time.LoadLocation(zones[rand.Intn(len(zones))])
+	if err != nil {
+		return nil, err
+	}
+
+	return location, nil
 }
 
 func preSaveStaff(a *stores.Adapters) (*staff.Staff, error) {
@@ -257,7 +283,7 @@ func inRange(arr []int) int {
 	return n
 }
 
-func reservationFlow(t *testing.T, logger utils.ILogger, adapters *stores.Adapters, newTime time.Time) (*http.ServeMux, *staff.Staff, *service.ServiceEntity, *http.Request, *httptest.ResponseRecorder, []model.ReservationTimeSlots) {
+func reservationFlow(t *testing.T, logger utils.ILogger, adapters *stores.Adapters, newTime time.Time, timezone string) (*http.ServeMux, *staff.Staff, *service.ServiceEntity, *http.Request, *httptest.ResponseRecorder, []model.ReservationTimeSlots) {
 	mux := http.NewServeMux()
 	jwtService := auth.NewJwtService(logger, env)
 	ware := &middleware.Middleware{Logger: logger, Auth: jwtService, Param: env.CookieParam}
@@ -329,7 +355,10 @@ func reservationFlow(t *testing.T, logger utils.ILogger, adapters *stores.Adapte
 	// retrieve valid reservation times
 	NewReservationHandler(mux, logger, reservationService).Register()
 
-	url := fmt.Sprintf("/reservation?day=%v&month=%v&year=%v&staff_id=%s&service=%s", 1, int(newTime.Month()), newTime.Year(), savedStaff.UUID.String(), saveService.Name)
+	url := fmt.Sprintf(
+		"/reservation?day=%v&month=%v&year=%v&staff_id=%s&service=%s&timezone=%s",
+		1, int(newTime.Month()), newTime.Year(), savedStaff.UUID.String(), saveService.Name, timezone,
+	)
 	req = httptest.NewRequest(http.MethodGet, url, nil)
 	req.Header.Set("Content-Type", "application/json")
 	rr = httptest.NewRecorder()
@@ -344,4 +373,60 @@ func reservationFlow(t *testing.T, logger utils.ILogger, adapters *stores.Adapte
 		t.Errorf(err.Error())
 	}
 	return mux, savedStaff, saveService, req, rr, payload
+}
+
+func timezones() []string {
+	var zones []string
+	var zoneDirs = []string{
+		// Update path according to your OS
+		"/usr/share/zoneinfo/",
+		"/usr/share/lib/zoneinfo/",
+		"/usr/lib/locale/TZ/",
+	}
+
+	for _, zd := range zoneDirs {
+		zones = walkTzDir(zd, zones)
+
+		for idx, zone := range zones {
+			zones[idx] = strings.ReplaceAll(zone, zd+"/", "")
+		}
+	}
+
+	return zones
+}
+
+func walkTzDir(path string, zones []string) []string {
+	fileInfos, err := ioutil.ReadDir(path)
+	if err != nil {
+		return zones
+	}
+
+	isAlpha := func(s string) bool {
+		for _, r := range s {
+			if !unicode.IsLetter(r) {
+				return false
+			}
+		}
+		return true
+	}
+
+	for _, info := range fileInfos {
+		if info.Name() != strings.ToUpper(info.Name()[:1])+info.Name()[1:] {
+			continue
+		}
+
+		if !isAlpha(info.Name()[:1]) {
+			continue
+		}
+
+		newPath := path + "/" + info.Name()
+
+		if info.IsDir() {
+			zones = walkTzDir(newPath, zones)
+		} else {
+			zones = append(zones, newPath)
+		}
+	}
+
+	return zones
 }

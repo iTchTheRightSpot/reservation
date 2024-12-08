@@ -183,6 +183,24 @@ func (dep *reservationService) matchStaffServices(ctx context.Context, requested
 	return arr, nil
 }
 
+func (dep *reservationService) dateInTimezone(p *reservation.ReservationPayload) (time.Time, error) {
+	num, err := strconv.ParseInt(p.Time, 10, 64)
+	if err != nil {
+		return time.Time{}, &utils.BadRequestError{Message: err.Error()}
+	}
+
+	if p.Timezone == "" {
+		return time.UnixMilli(num).In(dep.logger.Timezone()), nil
+	}
+
+	l, err := time.LoadLocation(p.Timezone)
+	if err != nil {
+		return time.Time{}, &utils.BadRequestError{Message: err.Error()}
+	}
+
+	return time.UnixMilli(num).In(l).In(dep.logger.Timezone()), nil
+}
+
 func (dep *reservationService) sumUpServiceDuration(s []*service.ServiceEntity) int {
 	count := 0
 	for _, entity := range s {
@@ -248,12 +266,12 @@ func (dep *reservationService) Create(ctx context.Context, p *reservation.Reserv
 		return err
 	}
 
-	parseInt, err := strconv.ParseInt(p.Time, 10, 64)
+	start, err := dep.dateInTimezone(p)
 	if err != nil {
-		return &utils.BadRequestError{Message: err.Error()}
+		dep.logger.Error(err.Error())
+		return err
 	}
 
-	start := time.UnixMilli(parseInt)
 	if start.Before(dep.logger.Date()) {
 		mess := "cannot make a reservation for a past day"
 		dep.logger.Error(mess)
@@ -266,6 +284,7 @@ func (dep *reservationService) Create(ctx context.Context, p *reservation.Reserv
 	if err != nil {
 		return err
 	}
+
 	if count < 1 {
 		mess := "invalid reservation time"
 		dep.logger.Error(mess)
