@@ -30,20 +30,8 @@ type Middleware struct {
 	Param  *utils.CookieParam
 }
 
-type middlewareFunc func(http.Handler) http.Handler
-
 func (dep *Middleware) Initialize(router *http.ServeMux) http.Handler {
-	stack := dep.createStack(dep.timeout, dep.logging)
-	return stack(router)
-}
-
-func (dep *Middleware) createStack(m ...middlewareFunc) middlewareFunc {
-	return func(next http.Handler) http.Handler {
-		for i := len(m) - 1; i >= 0; i-- {
-			next = m[i](next)
-		}
-		return next
-	}
+	return dep.logging(dep.timeout(router))
 }
 
 // https://stackoverflow.com/questions/27234861/correct-way-of-getting-clients-ip-addresses-from-http-request
@@ -105,30 +93,23 @@ func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 			return
 		}
 
-		// validate if token is about to expire
 		isTokenExpiringSoon := func(now time.Time, t time.Time, expirationInSeconds int) bool {
 			return t.Before(now.Add(time.Duration(expirationInSeconds) * time.Second))
 		}
 
-		b := !strings.HasSuffix(r.URL.Path, "/logout")
-		if b && isTokenExpiringSoon(dep.Logger.Date(), *obj.ExpireAt, utils.TwoDaysInSeconds) {
+		isLogout := strings.HasSuffix(r.URL.Path, "/logout")
+		if !isLogout && isTokenExpiringSoon(dep.Logger.Date(), *obj.ExpireAt, utils.TwoDaysInSeconds) {
 			if o, err := dep.Auth.GenerateJwt(obj, utils.TwoDaysInSeconds); err != nil {
 				dep.Logger.Error(fmt.Sprintf("failed to refresh token %s", err))
 			} else {
 				cookie.Value = o.Token
 				cookie.Expires = o.ExpireAt
 				http.SetCookie(w, cookie)
-				dep.Logger.Log("Refreshed jwt")
+				dep.Logger.Log("refreshed jwt")
 			}
 		}
 
-		// add the user to the context
-		ctx := r.Context()
-		ctx = context.WithValue(ctx, utils.UserContextKey, obj)
-		r = r.WithContext(ctx)
-
-		// call the function if the token is valid
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), utils.UserContextKey, obj)))
 	})
 }
 

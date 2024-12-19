@@ -1,4 +1,4 @@
-# Enterprise Resource Planning application powered by Go & PostgreSQL
+# Reservation application powered by Go & PostgreSQL
 
 ## Core Requirements
 

@@ -14,6 +14,8 @@ import (
 type IReservationStore interface {
 	CountReservationsInRange(ctx context.Context, staffId uint64, start, end time.Time, statuses ...reservation.ReservationEnum) (int, error)
 	Save(ctx context.Context, r *reservation.Reservation) error
+	ReservationById(ctx context.Context, reservationId uint64) (*reservation.Reservation, error)
+	UpdateReservationStatus(ctx context.Context, reservationId uint64, status reservation.ReservationEnum) error
 }
 
 type reservationStore struct {
@@ -23,6 +25,35 @@ type reservationStore struct {
 
 func NewReservationStore(l utils.ILogger, db pkg.Db) IReservationStore {
 	return &reservationStore{logger: l, db: db}
+}
+
+func (dep *reservationStore) UpdateReservationStatus(ctx context.Context, reservationId uint64, status reservation.ReservationEnum) error {
+	q := "UPDATE reservation SET status = $2 WHERE reservation_id = $1"
+
+	_, err := dep.db.ExecContext(ctx, q, reservationId, status)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return errors.New("error updating reservation status")
+	}
+
+	return nil
+}
+
+func (dep *reservationStore) ReservationById(ctx context.Context, reservationId uint64) (*reservation.Reservation, error) {
+	var r reservation.Reservation
+
+	q := "SELECT * FROM reservation WHERE reservation_id = $1"
+	row := dep.db.QueryRowContext(ctx, q, reservationId)
+
+	err := row.Scan(
+		&r.ReservationId, &r.Name, &r.Email, &r.Description, &r.Address, &r.Phone, &r.ImageKey, &r.Price, &r.Status, &r.CreatedAt, &r.ScheduledFor, &r.ExpireAt, &r.StaffId)
+
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return nil, fmt.Errorf("error retrieving reservation with id %v", reservationId)
+	}
+
+	return &r, nil
 }
 
 func (dep *reservationStore) CountReservationsInRange(ctx context.Context, staffId uint64, start, end time.Time, statuses ...reservation.ReservationEnum) (int, error) {
@@ -72,6 +103,7 @@ func (dep *reservationStore) Save(ctx context.Context, r *reservation.Reservatio
 		dep.logger.Error(err.Error())
 		return errors.New("error saving reservation")
 	}
+
 	dep.logger.Error("reservation saved")
 	return nil
 }

@@ -24,14 +24,17 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 	"time"
+	"unicode"
 )
 
 var db *sql.DB
@@ -83,15 +86,21 @@ func TestReservationHandler(t *testing.T) {
 	baseDate := logger.Date()
 	startTime := time.Date(baseDate.Year(), baseDate.Month(), baseDate.Day(), 9, 0, 0, 0, logger.Timezone())
 	newTime := startTime.Add(24 * time.Hour)
+	zones := timezones()
 
 	t.Run("single request make reservation", func(t *testing.T) {
 		tx, fn := setupTest(t)
 		defer fn()
 
 		// setup dependencies
+		zone, err := randomTimezone(zones)
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
+
 		prov := stores.MockLiveTransactionProvider(logger, tx)
 		adapters := stores.NewAdapters(logger, tx, prov)
-		mux, savedStaff, saveService, req, rr, payload := reservationFlow(t, logger, adapters, newTime)
+		mux, savedStaff, saveService, req, rr, payload := reservationFlow(t, logger, adapters, newTime, zone.String())
 
 		// create reservation
 		createBody := model.ReservationPayload{
@@ -101,7 +110,8 @@ func TestReservationHandler(t *testing.T) {
 			Address:  "123 transylvania",
 			Phone:    "0123456789",
 			Services: []string{saveService.Name},
-			Time:     payload[0].Times[1],
+			Time:     payload[0].Times[rand.Intn(len(payload[0].Times))],
+			Timezone: zone.String(),
 		}
 
 		createBodyBytes, err := json.Marshal(createBody)
@@ -127,9 +137,15 @@ func TestReservationHandler(t *testing.T) {
 		}()
 
 		// setup dependencies
+		zone, err := randomTimezone(zones)
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
+
+		// setup dependencies
 		prov := stores.NewTransactionProvider(logger, db)
 		adapters := stores.NewAdapters(logger, db, prov)
-		mux, savedStaff, saveService, _, _, payload := reservationFlow(t, logger, adapters, newTime)
+		mux, savedStaff, saveService, _, _, payload := reservationFlow(t, logger, adapters, newTime, zone.String())
 
 		createBody := model.ReservationPayload{
 			StaffId:  savedStaff.UUID.String(),
@@ -138,7 +154,8 @@ func TestReservationHandler(t *testing.T) {
 			Address:  "123 transylvania",
 			Phone:    "0123456789",
 			Services: []string{saveService.Name},
-			Time:     payload[0].Times[0],
+			Time:     payload[0].Times[rand.Intn(len(payload[0].Times))],
+			Timezone: zone.String(),
 		}
 
 		createBodyBytes, _ := json.Marshal(createBody)
@@ -186,6 +203,120 @@ func TestReservationHandler(t *testing.T) {
 			t.Errorf("%v", errArr)
 		}
 	})
+
+	t.Run("cancel reservation", func(t *testing.T) {
+		t.Run("invalid reservation id & already cancelled reservation", func(t *testing.T) {
+			tx, fn := setupTest(t)
+			defer fn()
+
+			mux := http.NewServeMux()
+			prov := stores.MockLiveTransactionProvider(logger, tx)
+			adapters := stores.NewAdapters(logger, tx, prov)
+			cache := pkg.NewInMemoryCache[string, []model.ReservationTimeSlots](logger, 30, 30)
+			mailService := &mail.MockMailService{}
+			reservationService := reservation.NewReservationService(logger, adapters, cache, mailService)
+
+			staf, err := preSaveStaff(adapters)
+			if err != nil {
+				t.Fatalf(err.Error())
+			}
+
+			resv := &model.Reservation{
+				StaffId:      staf.StaffId,
+				Name:         "user-1",
+				Email:        uuid.NewString() + "@email.com",
+				Status:       model.CANCELLED,
+				CreatedAt:    baseDate,
+				ScheduledFor: newTime,
+				ExpireAt:     newTime.Add(1 * time.Hour),
+			}
+			if err = adapters.ReservationStore.Save(context.Background(), resv); err != nil {
+				t.Fatalf(err.Error())
+			}
+
+			NewReservationHandler(mux, logger, reservationService).Register()
+
+			req := httptest.NewRequest(http.MethodPost, "/reservation/cancel/0", nil)
+			req.Header.Set("Content-Type", "application/json")
+			rr := httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+
+			if rr.Code != http.StatusNotFound {
+				t.Errorf("expected status code %d, got %d", http.StatusNotFound, rr.Code)
+			}
+
+			url := fmt.Sprintf("/reservation/cancel/%v", resv.ReservationId)
+			req = httptest.NewRequest(http.MethodPost, url, nil)
+			req.Header.Set("Content-Type", "application/json")
+			rr = httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+
+			if rr.Code != http.StatusBadRequest {
+				t.Errorf("expected status code %d, got %d", http.StatusBadRequest, rr.Code)
+			}
+
+			var obj utils.Error
+			if err = json.NewDecoder(rr.Body).Decode(&obj); err != nil {
+				t.Errorf(err.Error())
+			}
+
+			str := "reservation already cancelled"
+			if !strings.Contains(str, obj.Message) {
+				t.Errorf("expected to contain %s given %s", str, obj.Message)
+			}
+		})
+
+		t.Run("success", func(t *testing.T) {
+			tx, fn := setupTest(t)
+			defer fn()
+
+			mux := http.NewServeMux()
+			prov := stores.MockLiveTransactionProvider(logger, tx)
+			adapters := stores.NewAdapters(logger, tx, prov)
+			cache := pkg.NewInMemoryCache[string, []model.ReservationTimeSlots](logger, 30, 30)
+			mailService := &mail.MockMailService{}
+			reservationService := reservation.NewReservationService(logger, adapters, cache, mailService)
+
+			staf, err := preSaveStaff(adapters)
+			if err != nil {
+				t.Fatalf(err.Error())
+			}
+
+			resv := &model.Reservation{
+				StaffId:      staf.StaffId,
+				Name:         "user-1",
+				Email:        uuid.NewString() + "@email.com",
+				Status:       model.CONFIRMED,
+				CreatedAt:    baseDate,
+				ScheduledFor: newTime,
+				ExpireAt:     newTime.Add(1 * time.Hour),
+			}
+			if err = adapters.ReservationStore.Save(context.Background(), resv); err != nil {
+				t.Fatalf(err.Error())
+			}
+
+			NewReservationHandler(mux, logger, reservationService).Register()
+
+			url := fmt.Sprintf("/reservation/cancel/%v", resv.ReservationId)
+			req := httptest.NewRequest(http.MethodPost, url, nil)
+			req.Header.Set("Content-Type", "application/json")
+			rr := httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+
+			if rr.Code != http.StatusNoContent {
+				t.Errorf("expected status code %d, got %d", http.StatusNoContent, rr.Code)
+			}
+		})
+	})
+}
+
+func randomTimezone(zones []string) (*time.Location, error) {
+	location, err := time.LoadLocation(zones[rand.Intn(len(zones))])
+	if err != nil {
+		return nil, err
+	}
+
+	return location, nil
 }
 
 func preSaveStaff(a *stores.Adapters) (*staff.Staff, error) {
@@ -257,7 +388,7 @@ func inRange(arr []int) int {
 	return n
 }
 
-func reservationFlow(t *testing.T, logger utils.ILogger, adapters *stores.Adapters, newTime time.Time) (*http.ServeMux, *staff.Staff, *service.ServiceEntity, *http.Request, *httptest.ResponseRecorder, []model.ReservationTimeSlots) {
+func reservationFlow(t *testing.T, logger utils.ILogger, adapters *stores.Adapters, newTime time.Time, timezone string) (*http.ServeMux, *staff.Staff, *service.ServiceEntity, *http.Request, *httptest.ResponseRecorder, []model.ReservationTimeSlots) {
 	mux := http.NewServeMux()
 	jwtService := auth.NewJwtService(logger, env)
 	ware := &middleware.Middleware{Logger: logger, Auth: jwtService, Param: env.CookieParam}
@@ -329,7 +460,10 @@ func reservationFlow(t *testing.T, logger utils.ILogger, adapters *stores.Adapte
 	// retrieve valid reservation times
 	NewReservationHandler(mux, logger, reservationService).Register()
 
-	url := fmt.Sprintf("/reservation?day=%v&month=%v&year=%v&staff_id=%s&service=%s", 1, int(newTime.Month()), newTime.Year(), savedStaff.UUID.String(), saveService.Name)
+	url := fmt.Sprintf(
+		"/reservation?day=%v&month=%v&year=%v&staff_id=%s&service=%s&timezone=%s",
+		1, int(newTime.Month()), newTime.Year(), savedStaff.UUID.String(), saveService.Name, timezone,
+	)
 	req = httptest.NewRequest(http.MethodGet, url, nil)
 	req.Header.Set("Content-Type", "application/json")
 	rr = httptest.NewRecorder()
@@ -344,4 +478,60 @@ func reservationFlow(t *testing.T, logger utils.ILogger, adapters *stores.Adapte
 		t.Errorf(err.Error())
 	}
 	return mux, savedStaff, saveService, req, rr, payload
+}
+
+func timezones() []string {
+	var zones []string
+	var zoneDirs = []string{
+		// Update path according to your OS
+		"/usr/share/zoneinfo/",
+		"/usr/share/lib/zoneinfo/",
+		"/usr/lib/locale/TZ/",
+	}
+
+	for _, zd := range zoneDirs {
+		zones = walkTzDir(zd, zones)
+
+		for idx, zone := range zones {
+			zones[idx] = strings.ReplaceAll(zone, zd+"/", "")
+		}
+	}
+
+	return zones
+}
+
+func walkTzDir(path string, zones []string) []string {
+	fileInfos, err := ioutil.ReadDir(path)
+	if err != nil {
+		return zones
+	}
+
+	isAlpha := func(s string) bool {
+		for _, r := range s {
+			if !unicode.IsLetter(r) {
+				return false
+			}
+		}
+		return true
+	}
+
+	for _, info := range fileInfos {
+		if info.Name() != strings.ToUpper(info.Name()[:1])+info.Name()[1:] {
+			continue
+		}
+
+		if !isAlpha(info.Name()[:1]) {
+			continue
+		}
+
+		newPath := path + "/" + info.Name()
+
+		if info.IsDir() {
+			zones = walkTzDir(newPath, zones)
+		} else {
+			zones = append(zones, newPath)
+		}
+	}
+
+	return zones
 }
