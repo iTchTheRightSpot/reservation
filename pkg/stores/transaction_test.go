@@ -17,15 +17,13 @@ var db *sql.DB
 
 func TestMain(m *testing.M) {
 	secret := config.SecretVariables{}
-	env, err := secret.Config()
-	if err != nil {
-		log.Fatal(err)
-	}
+	env := secret.Config()
 
-	db, err = database.ConnectToPostgres(env.DbConnectionString)
+	d, err := database.ConnectToPostgres(env.DbConnectionString)
 	if err != nil {
 		log.Fatal(err)
 	}
+	db = d
 
 	// close db connection
 	defer func(db *sql.DB) {
@@ -53,8 +51,8 @@ func TestTransactionProvider(t *testing.T) {
 		adap := NewAdapters(logger, db, NewTransactionProvider(logger, db))
 		var staffId uint64
 		// method to test
-		err := adap.Transaction.RunInTransaction(context.Background(), nil, func(adapters *Adapters) error {
-			ctx := context.Background()
+		ctx := context.Background()
+		err := adap.Transaction.RunInTransaction(ctx, nil, func(adapters *Adapters) error {
 			save, err := adapters.StaffStore.Save(ctx, &staff.Staff{UUID: uuid.UUID{}})
 			if err != nil {
 				return err
@@ -79,8 +77,8 @@ func TestTransactionProvider(t *testing.T) {
 		adap := NewAdapters(logger, db, NewTransactionProvider(logger, db))
 		var staffId uint64
 		// method to test
-		err := adap.Transaction.RunInTransaction(context.Background(), nil, func(adapters *Adapters) error {
-			ctx := context.Background()
+		ctx := context.Background()
+		err := adap.Transaction.RunInTransaction(ctx, nil, func(adapters *Adapters) error {
 			uu := uuid.UUID{}
 			save, err := adapters.StaffStore.Save(ctx, &staff.Staff{UUID: uu})
 			if err != nil {

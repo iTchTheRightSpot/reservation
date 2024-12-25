@@ -9,7 +9,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/mail"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/services/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -18,7 +18,7 @@ import (
 type serviceRegistry struct {
 	JwtService         auth.IJwtService
 	ScheduleService    schedule.IScheduleService
-	ServiceImpl        service.IService
+	ServiceImpl        service_type.IService
 	StaffService       staff.IStaffService
 	ReservationService reservation.IReservationService
 	MailService        mail.IMailService
@@ -30,7 +30,7 @@ func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *
 	return &serviceRegistry{
 		JwtService:      auth.NewJwtService(l, e),
 		ScheduleService: schedule.NewScheduleService(l, a),
-		ServiceImpl:     service.NewServiceImpl(l, a),
+		ServiceImpl:     service_type.NewServiceImpl(l, a),
 		StaffService:    staff.NewStaffService(l, a),
 		ReservationService: reservation.NewReservationService(
 			l,

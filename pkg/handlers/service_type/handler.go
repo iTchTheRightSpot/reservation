@@ -1,11 +1,11 @@
-package service
+package service_type
 
 import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/services/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"net/http"
 )
@@ -13,11 +13,11 @@ import (
 type ServiceHandler struct {
 	mux     *http.ServeMux
 	logger  utils.ILogger
-	service service.IService
+	service service_type.IService
 	ware    *middleware.Middleware
 }
 
-func NewServiceHandler(mux *http.ServeMux, l utils.ILogger, s service.IService, w *middleware.Middleware) *ServiceHandler {
+func NewServiceHandler(mux *http.ServeMux, l utils.ILogger, s service_type.IService, w *middleware.Middleware) *ServiceHandler {
 	return &ServiceHandler{
 		mux:     mux,
 		logger:  l,

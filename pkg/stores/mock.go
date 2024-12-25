@@ -6,7 +6,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 )
@@ -29,7 +29,7 @@ type MockUnitTransactionProvider struct {
 	RoleStore         profile.IRoleStore
 	PermissionStore   profile.IPermissionStore
 	ScheduleStore     schedule.IScheduleStore
-	ServiceStore      service.IServiceStore
+	ServiceStore      service_type.IServiceTypeStore
 	StaffStore        staff.IStaffStore
 	StaffServiceStore staff.IStaffServiceStore
 	ReservationStore  reservation.IReservationStore

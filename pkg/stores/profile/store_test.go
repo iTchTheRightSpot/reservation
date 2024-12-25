@@ -17,15 +17,13 @@ var db *sql.DB
 
 func TestMain(m *testing.M) {
 	secret := config.SecretVariables{}
-	env, err := secret.Config()
-	if err != nil {
-		log.Fatal(err)
-	}
+	env := secret.Config()
 
-	db, err = database.ConnectToPostgres(env.DbConnectionString)
+	d, err := database.ConnectToPostgres(env.DbConnectionString)
 	if err != nil {
 		log.Fatal(err)
 	}
+	db = d
 
 	// close db connection
 	defer func(db *sql.DB) {

@@ -11,7 +11,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	profileStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"
-	serviceStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/service"
+	serviceStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/service_type"
 	staffStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"log"
@@ -23,15 +23,13 @@ var db *sql.DB
 
 func TestMain(m *testing.M) {
 	secret := config.SecretVariables{}
-	env, err := secret.Config()
-	if err != nil {
-		log.Fatal(err)
-	}
+	env := secret.Config()
 
-	db, err = database.ConnectToPostgres(env.DbConnectionString)
+	d, err := database.ConnectToPostgres(env.DbConnectionString)
 	if err != nil {
 		log.Fatal(err)
 	}
+	db = d
 
 	// close db connection
 	defer func(db *sql.DB) {
@@ -83,7 +81,7 @@ func preSaveStaff(ps profileStore.IProfileStore, st staffStore.IStaffStore) (*st
 	return &s, nil
 }
 
-func preSaveService(a serviceStore.IServiceStore) (*service.ServiceEntity, error) {
+func preSaveService(a serviceStore.IServiceTypeStore) (*service.ServiceEntity, error) {
 	return a.Save(context.Background(), &service.ServiceEntity{
 		Name:        "erp",
 		Price:       19.56,
@@ -172,7 +170,7 @@ func TestReservationStore(t *testing.T) {
 			t.Errorf(err.Error())
 		}
 
-		erp, err := preSaveService(serviceStore.NewServiceStore(mockLog, tx))
+		erp, err := preSaveService(serviceStore.NewServiceTypeStore(mockLog, tx))
 		if err != nil {
 			t.Errorf(err.Error())
 		}

@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
@@ -37,16 +38,13 @@ func TestMain(m *testing.M) {
 	}
 
 	secret := config.SecretVariables{}
-	e, err := secret.Config()
-	if err != nil {
-		log.Fatal(err)
-	}
-	env = e
+	env = secret.Config()
 
-	db, err = database.ConnectToPostgres(e.DbConnectionString)
+	d, err := database.ConnectToPostgres(env.DbConnectionString)
 	if err != nil {
 		log.Fatal(err)
 	}
+	db = d
 
 	defer func(db *sql.DB) {
 		if err := db.Close(); err != nil {
@@ -96,13 +94,6 @@ func preSaveStaff(a *stores.Adapters) (*staff.Staff, error) {
 	return &s, nil
 }
 
-func deleteAll() error {
-	if _, err := db.Exec("TRUNCATE schedule, staff, profile CASCADE"); err != nil {
-		return err
-	}
-	return nil
-}
-
 func count(arr []int, status int) int {
 	var n int
 	for _, num := range arr {
@@ -141,7 +132,7 @@ func TestScheduleHandler(t *testing.T) {
 			s := schedule.NewScheduleService(logger, adapters)
 
 			defer func() {
-				if err := deleteAll(); err != nil {
+				if err := handlers.DeleteAll(db); err != nil {
 					t.Errorf(err.Error())
 				}
 			}()

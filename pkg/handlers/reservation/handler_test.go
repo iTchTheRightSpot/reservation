@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers"
 	scheduleHandler "github.com/iTchTheRightSpot/erp-golang/pkg/handlers/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
@@ -46,16 +47,14 @@ func TestMain(m *testing.M) {
 	}
 
 	secret := config.SecretVariables{}
-	e, err := secret.Config()
-	if err != nil {
-		log.Fatal(err)
-	}
-	env = e
+	env = secret.Config()
 
-	db, err = database.ConnectToPostgres(e.DbConnectionString)
+	d, err := database.ConnectToPostgres(env.DbConnectionString)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	db = d
 
 	defer func(db *sql.DB) {
 		if err := db.Close(); err != nil {
@@ -126,12 +125,13 @@ func TestReservationHandler(t *testing.T) {
 
 		if rr.Code != http.StatusCreated {
 			t.Errorf("expected status code %d, got %d", http.StatusCreated, rr.Code)
+			t.Errorf(rr.Body.String())
 		}
 	})
 
 	t.Run("concurrent request to reserve the sametime", func(t *testing.T) {
 		defer func() {
-			if err := deleteAll(); err != nil {
+			if err := handlers.DeleteAll(db); err != nil {
 				t.Errorf(err.Error())
 			}
 		}()
@@ -359,13 +359,6 @@ func linkServiceToStaff(a *stores.Adapters, sta *staff.Staff, staSer *service.Se
 		ServiceId: staSer.ServiceId,
 	})
 	return err
-}
-
-func deleteAll() error {
-	if _, err := db.Exec("TRUNCATE schedule, staff, profile, service, staff_service, reservation, reservation_service CASCADE"); err != nil {
-		return err
-	}
-	return nil
 }
 
 func count(arr []int, status int) int {

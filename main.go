@@ -17,10 +17,7 @@ func main() {
 
 	// config
 	obj := config.SecretVariables{}
-	env, err := obj.Config()
-	if err != nil {
-		return
-	}
+	env := obj.Config()
 
 	// connect to database
 	db, err := database.ConnectToPostgres(env.DbConnectionString)
