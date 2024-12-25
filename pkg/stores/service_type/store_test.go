@@ -139,7 +139,7 @@ func TestServiceStore(t *testing.T) {
 			t.Error(err.Error())
 		}
 
-		if !reflect.DeepEqual(*arr[0], s) {
+		if len(arr) == 0 || !reflect.DeepEqual(*arr[0], s) {
 			t.Errorf("expect %v to equal given %v", s, *arr[0])
 		}
 	})

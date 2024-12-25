@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 )
 
@@ -21,22 +22,23 @@ func NewTransactionProvider(l utils.ILogger, db *sql.DB) ITransactionProvider {
 }
 
 func (p *transactionProvider) RunInTransaction(ctx context.Context, iso *sql.TxOptions, txFunc func(*Adapters) error) error {
+	if iso != nil {
+		p.logger.Log(fmt.Sprintf("transaction beginning isolation level options %v", iso))
+	} else {
+		p.logger.Log("transaction beginning isolation level options nil")
+	}
+
 	err := p.runInTx(ctx, p.db, iso, func(tx *sql.Tx) error { return txFunc(NewAdapters(p.logger, tx, nil)) })
 	if err != nil {
 		p.logger.Error("transaction not committed", err.Error())
 		return err
 	}
+
 	p.logger.Log("transaction commited successfully")
 	return nil
 }
 
 func (p *transactionProvider) runInTx(ctx context.Context, db *sql.DB, iso *sql.TxOptions, fn func(*sql.Tx) error) error {
-	if iso != nil {
-		p.logger.Log("transaction beginning isolation level options", iso)
-	} else {
-		p.logger.Log("transaction beginning isolation level options nil")
-	}
-
 	tx, err := db.BeginTx(ctx, iso)
 	if err != nil {
 		p.logger.Error("error starting transaction", err.Error())

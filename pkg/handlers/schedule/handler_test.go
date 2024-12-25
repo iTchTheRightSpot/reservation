@@ -6,15 +6,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
@@ -69,31 +66,6 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 	}
 }
 
-func preSaveStaff(a *stores.Adapters) (*staff.Staff, error) {
-	ctx := context.Background()
-
-	p := profile.Profile{
-		Firstname: "erp",
-		Lastname:  "erp",
-		Email:     fmt.Sprintf("%s@email.com", uuid.NewString()),
-	}
-
-	if _, err := a.ProfileStore.Save(ctx, &p); err != nil {
-		return nil, err
-	}
-
-	s := staff.Staff{
-		UUID:      uuid.New(),
-		ProfileId: &p.ProfileId,
-	}
-
-	if _, err := a.StaffStore.Save(ctx, &s); err != nil {
-		return nil, err
-	}
-
-	return &s, nil
-}
-
 func count(arr []int, status int) int {
 	var n int
 	for _, num := range arr {
@@ -117,13 +89,22 @@ func inRange(arr []int) int {
 func TestScheduleHandler(t *testing.T) {
 	logger := utils.NewMockLogger()
 
+	del := func() {
+		if err := handlers.DeleteAll(db); err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+
 	t.Run("save & retrieve schedules handlers", func(t *testing.T) {
 		t.Run("reject request duplicate schedule", func(t *testing.T) {
+			defer del()
+
 			var wg sync.WaitGroup
 			var mu sync.Mutex
 			var statusArr []int
 			var errArr []string
 
+			ctx := context.Background()
 			mux := http.NewServeMux()
 			prov := stores.NewTransactionProvider(logger, db)
 			adapters := stores.NewAdapters(logger, db, prov)
@@ -131,14 +112,8 @@ func TestScheduleHandler(t *testing.T) {
 			ware := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
 			s := schedule.NewScheduleService(logger, adapters)
 
-			defer func() {
-				if err := handlers.DeleteAll(db); err != nil {
-					t.Errorf(err.Error())
-				}
-			}()
-
 			// setup dependencies
-			staf, err := preSaveStaff(adapters)
+			staf, err := handlers.PreSaveStaff(ctx, adapters)
 			if err != nil {
 				t.Errorf("preSaveStaff failed: %v", err)
 				return
@@ -228,6 +203,7 @@ func TestScheduleHandler(t *testing.T) {
 			defer fn()
 
 			// given
+			ctx := context.Background()
 			mux := http.NewServeMux()
 			prov := stores.MockLiveTransactionProvider(logger, tx)
 			adapters := stores.NewAdapters(logger, tx, prov)
@@ -235,7 +211,7 @@ func TestScheduleHandler(t *testing.T) {
 			m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
 			s := schedule.NewScheduleService(logger, adapters)
 
-			save, err := preSaveStaff(adapters)
+			save, err := handlers.PreSaveStaff(ctx, adapters)
 			if err != nil {
 				t.Error(err)
 			}
@@ -295,6 +271,7 @@ func TestScheduleHandler(t *testing.T) {
 			defer fn()
 
 			// given
+			ctx := context.Background()
 			mux := http.NewServeMux()
 			prov := stores.MockLiveTransactionProvider(logger, tx)
 			adapters := stores.NewAdapters(logger, tx, prov)
@@ -302,7 +279,7 @@ func TestScheduleHandler(t *testing.T) {
 			m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
 			s := schedule.NewScheduleService(logger, adapters)
 
-			save, err := preSaveStaff(adapters)
+			save, err := handlers.PreSaveStaff(ctx, adapters)
 			if err != nil {
 				t.Error(err)
 			}

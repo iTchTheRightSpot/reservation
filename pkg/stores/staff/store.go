@@ -2,6 +2,7 @@ package staff
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
@@ -24,7 +25,7 @@ func NewStaffStore(l utils.ILogger, db pkg.Db) IStaffStore {
 
 func (dep *staffStore) Save(ctx context.Context, r *staff.Staff) (*staff.Staff, error) {
 	if r == nil {
-		return nil, fmt.Errorf("staff object is nil")
+		return nil, errors.New("staff object is nil")
 	}
 
 	q := `
@@ -38,8 +39,8 @@ func (dep *staffStore) Save(ctx context.Context, r *staff.Staff) (*staff.Staff, 
 	err := row.Scan(&r.StaffId, &r.UUID, &r.Bio, &r.ProfileId)
 
 	if err != nil {
-		dep.logger.Error(err)
-		return nil, fmt.Errorf("exception saving to staff table")
+		dep.logger.Error(err.Error())
+		return nil, errors.New("exception saving to staff table")
 	}
 
 	return r, nil
@@ -52,7 +53,7 @@ func (dep *staffStore) StaffByUUID(ctx context.Context, staffUUID string) (*staf
 	row := dep.db.QueryRowContext(ctx, q, staffUUID)
 	err := row.Scan(&r.StaffId, &r.UUID, &r.Bio, &r.ProfileId)
 	if err != nil {
-		dep.logger.Error(err)
+		dep.logger.Error(err.Error())
 		return nil, fmt.Errorf("exception retrieving staff with uuid %s", staffUUID)
 	}
 
