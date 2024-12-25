@@ -81,6 +81,11 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 func TestReservationHandler(t *testing.T) {
 	logger := utils.NewMockLogger()
 
+	del := func() {
+		if err := handlers.DeleteAll(db); err != nil {
+			t.Errorf(err.Error())
+		}
+	}
 	baseDate := logger.Date()
 	startTime := time.Date(baseDate.Year(), baseDate.Month(), baseDate.Day(), 9, 0, 0, 0, logger.Timezone())
 	newTime := startTime.Add(24 * time.Hour)
@@ -130,11 +135,7 @@ func TestReservationHandler(t *testing.T) {
 	})
 
 	t.Run("concurrent request to reserve the sametime", func(t *testing.T) {
-		defer func() {
-			if err := handlers.DeleteAll(db); err != nil {
-				t.Errorf(err.Error())
-			}
-		}()
+		t.Cleanup(del)
 
 		// setup dependencies
 		zone, err := randomTimezone(zones)
@@ -167,7 +168,7 @@ func TestReservationHandler(t *testing.T) {
 		var statusArr []int
 		var errArr []string
 
-		randNum := rand.Intn(5-2) + 2
+		randNum := rand.Intn(10-2) + 2
 
 		for idx := 0; idx < randNum; idx++ {
 			wg.Add(1)
@@ -190,14 +191,14 @@ func TestReservationHandler(t *testing.T) {
 		wg.Wait()
 
 		// assert
-		num := count(statusArr, 201)
+		num := handlers.CountResponseStatus(statusArr, 201)
 		if num != 1 {
 			t.Errorf("expect 1 given %v", num)
 			t.Errorf("%v", statusArr)
 			t.Errorf("%v", errArr)
 		}
 
-		num = inRange(statusArr)
+		num = handlers.CountResponseStatus(statusArr, 409)
 		if num != (randNum - 1) {
 			t.Errorf("expect %v given %v", randNum-1, num)
 			t.Errorf("%v", statusArr)
@@ -340,26 +341,6 @@ func linkServiceToStaff(a *stores.Adapters, sta *staff.Staff, staSer *service.Se
 		ServiceId: staSer.ServiceId,
 	})
 	return err
-}
-
-func count(arr []int, status int) int {
-	var count int
-	for _, num := range arr {
-		if num == status {
-			count += 1
-		}
-	}
-	return count
-}
-
-func inRange(arr []int) int {
-	var n int
-	for _, num := range arr {
-		if num >= 400 && num <= 500 {
-			n += 1
-		}
-	}
-	return n
 }
 
 func reservationFlow(t *testing.T, ctx context.Context, logger utils.ILogger, adapters *stores.Adapters, newTime time.Time, timezone string) (*http.ServeMux, *staff.Staff, *service.ServiceEntity, *http.Request, *httptest.ResponseRecorder, []model.ReservationTimeSlots) {

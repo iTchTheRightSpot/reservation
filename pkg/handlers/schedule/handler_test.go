@@ -66,26 +66,6 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 	}
 }
 
-func count(arr []int, status int) int {
-	var n int
-	for _, num := range arr {
-		if num == status {
-			n += 1
-		}
-	}
-	return n
-}
-
-func inRange(arr []int) int {
-	var n int
-	for _, num := range arr {
-		if num >= 400 && num <= 500 {
-			n += 1
-		}
-	}
-	return n
-}
-
 func TestScheduleHandler(t *testing.T) {
 	logger := utils.NewMockLogger()
 
@@ -129,8 +109,7 @@ func TestScheduleHandler(t *testing.T) {
 		)
 
 		date := logger.Date()
-		d := time.Date(date.Year(), date.Month(), date.Day(), 9, 0, 0, 0, date.Location())
-		d = d.Add(24 * time.Hour)
+		d := time.Date(date.Year(), date.Month(), date.Day(), 9, 0, 0, 0, date.Location()).Add(24 * time.Hour)
 
 		dto := model.SchedulePayload{
 			StaffId: staf.UUID.String(),
@@ -159,15 +138,15 @@ func TestScheduleHandler(t *testing.T) {
 		// initialize routes
 		NewScheduleHandler(mux, ware, logger, s).Register()
 
-		randNum := rand.Intn(5-2) + 2
+		randNum := rand.Intn(10-2) + 2
 
 		for i := 0; i < randNum; i++ {
 			wg.Add(1)
 
-			go func() {
+			go func(barr []byte) {
 				defer wg.Done()
 
-				req := httptest.NewRequest(http.MethodPost, "/schedule", bytes.NewBuffer(dtoBytes))
+				req := httptest.NewRequest(http.MethodPost, "/schedule", bytes.NewBuffer(barr))
 				req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
 				req.Header.Set("Content-Type", "application/json")
 
@@ -178,20 +157,20 @@ func TestScheduleHandler(t *testing.T) {
 				statusArr = append(statusArr, rr.Code)
 				errArr = append(errArr, rr.Body.String())
 				mu.Unlock()
-			}()
+			}(dtoBytes)
 		}
 
 		wg.Wait()
 
 		// assert
-		num := count(statusArr, 201)
+		num := handlers.CountResponseStatus(statusArr, 201)
 		if num != 1 {
 			t.Errorf("expect 1 given %v", num)
 			t.Errorf("%v", statusArr)
 			t.Errorf("%v", errArr)
 		}
 
-		num = inRange(statusArr)
+		num = handlers.CountResponseStatus(statusArr, 409)
 		if num != (randNum - 1) {
 			t.Errorf("expect %v given %v", randNum-1, num)
 			t.Errorf("%v", statusArr)

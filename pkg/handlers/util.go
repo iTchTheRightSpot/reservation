@@ -11,7 +11,7 @@ import (
 )
 
 func DeleteAll(db *sql.DB) error {
-	if _, err := db.Exec("TRUNCATE schedule, staff, profile, service_type, staff_service, reservation, reservation_service CASCADE"); err != nil {
+	if _, err := db.Exec("TRUNCATE permission, role, profile, schedule, staff_service, reservation_service, reservation, service_type, staff"); err != nil {
 		return err
 	}
 	return nil
@@ -19,8 +19,8 @@ func DeleteAll(db *sql.DB) error {
 
 func PreSaveStaff(ctx context.Context, a *stores.Adapters) (*staff.Staff, error) {
 	p := profile.Profile{
-		Firstname: "erp",
-		Lastname:  "erp",
+		Firstname: "reservation",
+		Lastname:  "reservation",
 		Email:     fmt.Sprintf("%s@email.com", uuid.NewString()),
 	}
 
@@ -38,4 +38,14 @@ func PreSaveStaff(ctx context.Context, a *stores.Adapters) (*staff.Staff, error)
 	}
 
 	return &s, nil
+}
+
+func CountResponseStatus(arr []int, status int) int {
+	var n int
+	for _, num := range arr {
+		if num == status {
+			n += 1
+		}
+	}
+	return n
 }
