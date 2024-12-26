@@ -32,16 +32,13 @@ func TestMain(m *testing.M) {
 	}
 
 	secret := config.SecretVariables{}
-	e, err := secret.Config()
-	if err != nil {
-		log.Fatal(err)
-	}
-	env = e
+	env = secret.Config()
 
-	db, err = database.ConnectToPostgres(e.DbConnectionString)
+	d, err := database.ConnectToPostgres(env.DbConnectionString)
 	if err != nil {
 		log.Fatal(err)
 	}
+	db = d
 
 	defer func(db *sql.DB) {
 		if err := db.Close(); err != nil {

@@ -11,10 +11,7 @@ import (
 
 func main() {
 	secret := config.SecretVariables{}
-	env, err := secret.Config()
-	if err != nil {
-		log.Fatal(err)
-	}
+	env := secret.Config()
 
 	db, err := database.ConnectToPostgres(env.DbConnectionString)
 	if err != nil {
@@ -31,7 +28,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := m.Up(); err != nil {
+	if err = m.Up(); err != nil {
 		log.Fatal(err)
 	}
 }

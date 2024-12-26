@@ -25,14 +25,6 @@ func NewReservationHandler(mux *http.ServeMux, l utils.ILogger, s reservation.IR
 
 func (dep *ReservationHandler) Register() {
 	ware := middleware.RequestBodyMiddleware[model.ReservationPayload]{Logger: dep.logger}
-	//mux := http.NewServeMux()
-	//
-	//mux.HandleFunc("GET /", dep.availableDates)
-	//mux.Handle("POST /", ware.RequestBody(http.HandlerFunc(dep.create)))
-	//mux.HandleFunc("POST /cancel/{reservation_id}", dep.cancel)
-	//
-	//dep.mux.Handle("/reservation/", http.StripPrefix("/reservation", mux))
-
 	dep.mux.HandleFunc("GET /reservation", dep.availableDates)
 	dep.mux.Handle("POST /reservation", ware.RequestBody(http.HandlerFunc(dep.create)))
 	dep.mux.HandleFunc("POST /reservation/cancel/{reservation_id}", dep.cancel)
@@ -53,7 +45,7 @@ func (dep *ReservationHandler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dep.logger.Log("created a new reservation")
+	dep.logger.Log("reservation created")
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -61,22 +53,22 @@ func (dep *ReservationHandler) availableDates(w http.ResponseWriter, r *http.Req
 	query := r.URL.Query()
 	day, err := strconv.Atoi(query.Get("day"))
 	if err != nil {
-		dep.logger.Error("missing day err: ", err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: "missing day"})
+		dep.logger.Error("day missing err: ", err.Error())
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: "day missing"})
 		return
 	}
 
 	month, err := strconv.Atoi(query.Get("month"))
 	if err != nil {
-		dep.logger.Error("missing month err: ", err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: "missing month"})
+		dep.logger.Error("month missing err: ", err.Error())
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: "month missing"})
 		return
 	}
 
 	year, err := strconv.Atoi(query.Get("year"))
 	if err != nil {
-		dep.logger.Error("missing year err: ", err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: "missing year"})
+		dep.logger.Error("year missing err: ", err.Error())
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: "year missing"})
 		return
 	}
 

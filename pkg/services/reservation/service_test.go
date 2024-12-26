@@ -9,7 +9,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"testing"
@@ -27,7 +27,7 @@ func TestReservationService(t *testing.T) {
 		t.Run("reject creation staff not found", func(t *testing.T) {
 			t.Parallel()
 
-			serviceStore := &service.MockServiceStore{}
+			serviceStore := &service_type.MockServiceTypeStore{}
 			adapters := &stores.Adapters{
 				StaffStore:   &staff.MockStaffStore{StaffByUUIDError: fmt.Errorf("staff not found")},
 				ServiceStore: serviceStore,
@@ -57,7 +57,7 @@ func TestReservationService(t *testing.T) {
 			scheduleStore := &schedule.MockScheduleStore{}
 			adapters := &stores.Adapters{
 				StaffStore:    &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.Staff{}},
-				ServiceStore:  &service.MockServiceStore{ServicesByStaffIdError: fmt.Errorf("no matchStaffServices")},
+				ServiceStore:  &service_type.MockServiceTypeStore{ServicesByStaffIdError: fmt.Errorf("no matchStaffServices")},
 				ScheduleStore: scheduleStore,
 			}
 			s := NewReservationService(mockLog, adapters, nil, nil)
@@ -87,7 +87,7 @@ func TestReservationService(t *testing.T) {
 			scheduleStore := &schedule.MockScheduleStore{}
 			adapters := &stores.Adapters{
 				StaffStore:    &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.Staff{}},
-				ServiceStore:  &service.MockServiceStore{ServicesByStaffIdReturn: []*serviceModel.ServiceEntity{}},
+				ServiceStore:  &service_type.MockServiceTypeStore{ServicesByStaffIdReturn: []*serviceModel.ServiceEntity{}},
 				ScheduleStore: scheduleStore,
 			}
 			s := NewReservationService(mockLog, adapters, nil, nil)
@@ -122,7 +122,7 @@ func TestReservationService(t *testing.T) {
 			scheduleStore := &schedule.MockScheduleStore{}
 			adapters := &stores.Adapters{
 				StaffStore: &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.Staff{}},
-				ServiceStore: &service.MockServiceStore{
+				ServiceStore: &service_type.MockServiceTypeStore{
 					ServicesByStaffIdReturn: []*serviceModel.ServiceEntity{{Name: "erp"}}},
 				ScheduleStore: scheduleStore,
 			}
@@ -158,7 +158,7 @@ func TestReservationService(t *testing.T) {
 			scheduleStore := &schedule.MockScheduleStore{CountSchedulesInRangeAndVisibilityError: fmt.Errorf("err")}
 			adapters := &stores.Adapters{
 				StaffStore: &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.Staff{}},
-				ServiceStore: &service.MockServiceStore{
+				ServiceStore: &service_type.MockServiceTypeStore{
 					ServicesByStaffIdReturn: []*serviceModel.ServiceEntity{{Name: erp}}},
 				ScheduleStore: scheduleStore,
 			}
@@ -190,7 +190,7 @@ func TestReservationService(t *testing.T) {
 			reservationStore := &reservation.MockReservationStore{}
 			adapters := &stores.Adapters{
 				StaffStore: &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.Staff{}},
-				ServiceStore: &service.MockServiceStore{
+				ServiceStore: &service_type.MockServiceTypeStore{
 					ServicesByStaffIdReturn: []*serviceModel.ServiceEntity{{Name: erp}}},
 				ScheduleStore:    &schedule.MockScheduleStore{CountSchedulesInRangeAndVisibilityReturn: 0},
 				ReservationStore: reservationStore,

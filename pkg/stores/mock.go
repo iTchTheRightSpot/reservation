@@ -1,12 +1,11 @@
 package stores
 
 import (
-	"context"
 	"database/sql"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 )
@@ -20,7 +19,7 @@ func MockLiveTransactionProvider(l utils.ILogger, tx *sql.Tx) ITransactionProvid
 	return &mockLiveTransactionProvider{logger: l, tx: tx}
 }
 
-func (p *mockLiveTransactionProvider) RunInTransaction(_ context.Context, _ *sql.TxOptions, txFunc func(adapters *Adapters) error) error {
+func (p *mockLiveTransactionProvider) RunInTransaction(txFunc func(adapters *Adapters) error) error {
 	return txFunc(NewAdapters(p.logger, p.tx, nil))
 }
 
@@ -29,7 +28,7 @@ type MockUnitTransactionProvider struct {
 	RoleStore         profile.IRoleStore
 	PermissionStore   profile.IPermissionStore
 	ScheduleStore     schedule.IScheduleStore
-	ServiceStore      service.IServiceStore
+	ServiceStore      service_type.IServiceTypeStore
 	StaffStore        staff.IStaffStore
 	StaffServiceStore staff.IStaffServiceStore
 	ReservationStore  reservation.IReservationStore

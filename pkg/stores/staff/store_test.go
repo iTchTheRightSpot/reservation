@@ -15,36 +15,33 @@ import (
 	"testing"
 )
 
-var dbInstance *sql.DB
+var db *sql.DB
 
 func TestMain(m *testing.M) {
 	secret := config.SecretVariables{}
-	env, err := secret.Config()
+	env := secret.Config()
+
+	d, err := database.ConnectToPostgres(env.DbConnectionString)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	db, err := database.ConnectToPostgres(env.DbConnectionString)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	dbInstance = db
+	db = d
 
 	// close db connection
 	defer func(db *sql.DB) {
-		if err := db.Close(); err != nil {
+		if err = db.Close(); err != nil {
 			log.Printf("db connection did not close after tests")
 			return
 		}
-	}(db)
+	}(d)
 
 	// run tests
 	m.Run()
 }
 
 func setupTest(t *testing.T) (*sql.Tx, func()) {
-	tx, err := dbInstance.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		t.Fatalf("failed to start transaction: %v", err)
 	}

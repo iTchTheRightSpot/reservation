@@ -5,7 +5,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -36,7 +36,7 @@ func (dep *HandlerRegistry) Initialize() http.Handler {
 
 	// register handlers
 	schedule.NewScheduleHandler(v1, dep.ware, dep.logger, dep.services.ScheduleService).Register()
-	service.NewServiceHandler(v1, dep.logger, dep.services.ServiceImpl, dep.ware).Register()
+	service_type.NewServiceHandler(v1, dep.logger, dep.services.ServiceImpl, dep.ware).Register()
 	staff.NewStaffHandler(v1, dep.ware, dep.logger, dep.services.StaffService).Register()
 	reservation.NewReservationHandler(v1, dep.logger, dep.services.ReservationService).Register()
 

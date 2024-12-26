@@ -1,4 +1,4 @@
-package service
+package service_type
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 )
 
-type IServiceStore interface {
+type IServiceTypeStore interface {
 	Save(ctx context.Context, s *service.ServiceEntity) (*service.ServiceEntity, error)
 	ServiceByName(ctx context.Context, name string) (*service.ServiceEntity, error)
 	ServicesByStaffId(ctx context.Context, staffId uint64) ([]*service.ServiceEntity, error)
@@ -20,7 +20,7 @@ type serviceStore struct {
 	db     pkg.Db
 }
 
-func NewServiceStore(l utils.ILogger, db pkg.Db) IServiceStore {
+func NewServiceTypeStore(l utils.ILogger, db pkg.Db) IServiceTypeStore {
 	return &serviceStore{logger: l, db: db}
 }
 
@@ -30,7 +30,7 @@ func (dep *serviceStore) Save(ctx context.Context, s *service.ServiceEntity) (*s
 	}
 
 	q := `
-		INSERT INTO service (name, price, is_visible, is_reoccurring, duration, clean_up_time)
+		INSERT INTO service_type (name, price, is_visible, is_reoccurring, duration, clean_up_time)
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING service_id, name, price, is_visible, is_reoccurring, duration, clean_up_time
 	`
@@ -52,7 +52,7 @@ func (dep *serviceStore) ServiceByName(ctx context.Context, name string) (*servi
 	var q = `
 		SELECT
 		    service_id, name, price, is_visible, is_reoccurring, duration, clean_up_time
-		FROM service WHERE name = $1
+		FROM service_type WHERE name = $1
 	`
 
 	row := dep.db.QueryRowContext(ctx, q, name)
@@ -70,7 +70,7 @@ func (dep *serviceStore) ServicesByStaffId(ctx context.Context, staffId uint64) 
 	var arr []*service.ServiceEntity
 
 	var q = `
-	 SELECT s.* FROM service s
+	 SELECT s.* FROM service_type s
 	 INNER JOIN staff_service ss ON ss.service_id = s.service_id
 	 WHERE ss.staff_id = $1
 	`

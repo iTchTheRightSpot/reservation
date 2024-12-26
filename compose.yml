@@ -1,14 +1,14 @@
 services:
-  pg:
+  res-pg:
     image: postgres:15.6
     restart: always
-    container_name: pg
+    container_name: res-pg
     volumes:
-      - pd-db-data:/var/lib/postgresql/data
+      - res-db-data:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: mrp_db
-      POSTGRES_USER: mrp
-      POSTGRES_PASSWORD: mrp
+      POSTGRES_DB: reservation_db
+      POSTGRES_USER: reservation
+      POSTGRES_PASSWORD: reservation
     ports:
         - '5432:5432'
     expose:
@@ -20,4 +20,4 @@ services:
       retries: 5
 
 volumes:
-  pd-db-data:
+  res-db-data:

@@ -2,13 +2,10 @@ package schedule
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
-	"sync"
 	"time"
 )
 
@@ -52,31 +49,6 @@ func (dep *scheduleService) Schedules(ctx context.Context, p *schedule.AllSchedu
 	return res, nil
 }
 
-func (dep *scheduleService) validateSegments(ctx context.Context, staffID uint64, segments []schedule.ScheduledPeriod) error {
-	var wg sync.WaitGroup
-	errChan := make(chan error, len(segments))
-
-	for _, seg := range segments {
-		wg.Add(1)
-		go func(segment schedule.ScheduledPeriod) {
-			defer wg.Done()
-			count, err := dep.adapters.ScheduleStore.CountExistingSchedulesForStaff(ctx, staffID, segment.Start, segment.End)
-			if err != nil {
-				errChan <- errors.New(err.Error())
-				return
-			}
-			if count > 0 {
-				errChan <- fmt.Errorf("duplicate schedule detected from %v to %v", segment.Start, segment.End)
-			}
-		}(seg)
-	}
-
-	wg.Wait()
-	close(errChan)
-
-	return <-errChan
-}
-
 func (dep *scheduleService) Create(ctx context.Context, dto *schedule.SchedulePayload) error {
 	segments, err := dto.CheckForOverlappingSegments(dep.logger.Date(), dep.logger.Timezone())
 	if err != nil {
@@ -89,11 +61,7 @@ func (dep *scheduleService) Create(ctx context.Context, dto *schedule.SchedulePa
 		return &utils.BadRequestError{Message: "invalid staff id"}
 	}
 
-	if err = dep.validateSegments(ctx, staff.StaffId, segments); err != nil {
-		return &utils.BadRequestError{Message: err.Error()}
-	}
-
-	return dep.adapters.Transaction.RunInTransaction(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable}, func(adapters *stores.Adapters) error {
+	return dep.adapters.Transaction.RunInTransaction(func(adapters *stores.Adapters) error {
 		for _, segment := range segments {
 			_, err = adapters.ScheduleStore.Save(ctx, &schedule.Schedule{
 				StaffId:   staff.StaffId,

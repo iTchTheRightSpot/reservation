@@ -2,7 +2,6 @@ package reservation
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
@@ -220,7 +219,7 @@ func (dep *reservationService) sumUpServicePrice(s []*service.ServiceEntity) flo
 }
 
 func (dep *reservationService) createReservation(ctx context.Context, p *reservation.ReservationPayload, matchedServices []*service.ServiceEntity, s *staff.Staff, start time.Time, end time.Time) error {
-	return dep.adapters.Transaction.RunInTransaction(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable}, func(adapters *stores.Adapters) error {
+	return dep.adapters.Transaction.RunInTransaction(func(adapters *stores.Adapters) error {
 		priceSum := dep.sumUpServicePrice(matchedServices)
 
 		reserv := &reservation.Reservation{
@@ -289,18 +288,6 @@ func (dep *reservationService) Create(ctx context.Context, p *reservation.Reserv
 
 	if count < 1 {
 		mess := "invalid reservation time"
-		dep.logger.Error(mess)
-		return &utils.BadRequestError{Message: mess}
-	}
-
-	count, err = dep.adapters.ReservationStore.CountReservationsInRange(
-		ctx, staffObj.StaffId, start, end, reservation.CONFIRMED)
-
-	if err != nil {
-		return err
-	}
-	if count > 0 {
-		mess := "reservation time is not available failed"
 		dep.logger.Error(mess)
 		return &utils.BadRequestError{Message: mess}
 	}

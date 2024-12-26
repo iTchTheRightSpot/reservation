@@ -1,15 +1,21 @@
-# Reservation application powered by Go & PostgreSQL
+# Reservation application powered by Go & PostgresSQL
+
+## About
+Service similar to Square reservation
 
 ## Core Requirements
 
-1. **Personal Identifiable Information**
+1. **Multi-tenant**
+   - Single database, multiple schema
+
+2. **Personal Identifiable Information**
    - A user should be able to delete their personal info but only after 1 year of inactivity.
    - Data integrity should not be affected.
 
-2. **Roles and Permissions**
+3. **Roles and Permissions**
     - Data should be protected and only allowed to users with specific roles and or permissions.
 
-3. **Staff**
+4. **Staff**
     - Bares minimum to be a staff is to have a role `STAFF`.
     - **Schedule**
       - Only staffs with `WRITE` permission can create working hours for other staffs.
@@ -37,7 +43,7 @@
       That is an existing relationship with payment_detail.
       - Both staff & client should receive a notification 1 day before a `PENDING` appointment.
 
-4. **Clients**
+5. **Clients**
    - **Services**
      - A client should see all the services offered.
      - n number of services can be for one reservation.
@@ -46,12 +52,12 @@
      - A client can only be shown n valid reservation times for 1 staff.
      - Although business can be in a different timezone, valid reservation times should match out to
      said clients timezone.
-     - Clients cannot reschedule a reservation. The reservation has to be cancelled
+     - Clients cannot reschedule a reservation. The reservation has to be cancelled.
      - A reservation cannot be made for past dates.
      - Clients & staffs should receive notifications on appointment status change.
 
-5. **Payment**
-    - Only staffs can send invoices to clients. 
+6. **Payment**
+    - Only staffs can send invoices to clients.
     - Clients should be able to pay via online invoice.
 
 # Development docs

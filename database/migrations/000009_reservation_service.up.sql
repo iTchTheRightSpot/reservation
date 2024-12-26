@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS reservation_service
             ON UPDATE RESTRICT,
     CONSTRAINT FK_reservation_service_to_service_service_id
         FOREIGN KEY (service_id)
-            REFERENCES service(service_id)
+            REFERENCES service_type(service_id)
             ON DELETE RESTRICT
             ON UPDATE RESTRICT
 );

@@ -1,4 +1,4 @@
-package service
+package service_type
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/services/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"log"
@@ -29,16 +29,13 @@ func TestMain(m *testing.M) {
 	}
 
 	secret := config.SecretVariables{}
-	e, err := secret.Config()
-	if err != nil {
-		log.Fatal(err)
-	}
-	env = e
+	env = secret.Config()
 
-	db, err = database.ConnectToPostgres(e.DbConnectionString)
+	d, err := database.ConnectToPostgres(env.DbConnectionString)
 	if err != nil {
 		log.Fatal(err)
 	}
+	db = d
 
 	defer func(db *sql.DB) {
 		if err := db.Close(); err != nil {
@@ -78,7 +75,7 @@ func TestServiceHandler(t *testing.T) {
 		adapters := stores.NewAdapters(logger, tx, prov)
 		jwtSer := auth.NewJwtService(logger, env)
 		m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
-		s := service.NewServiceImpl(logger, adapters)
+		s := service_type.NewServiceImpl(logger, adapters)
 
 		arr := []models.RolePermission{
 			{

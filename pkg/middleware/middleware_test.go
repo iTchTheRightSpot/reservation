@@ -23,10 +23,7 @@ func TestMiddleware(t *testing.T) {
 	t.Parallel()
 
 	sv := &config.SecretVariables{}
-	env, err := sv.Config()
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
+	env := sv.Config()
 
 	logger := utils.NewMockLogger()
 

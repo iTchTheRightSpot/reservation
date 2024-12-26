@@ -15,10 +15,7 @@ func TestJwtService(t *testing.T) {
 		t.Fatalf("failed to change directory: %v", err)
 	}
 	env := &config.SecretVariables{}
-	con, err := env.Config()
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
+	con := env.Config()
 
 	t.Run("should generate and validate jwt", func(t *testing.T) {
 		t.Parallel()
