@@ -36,10 +36,10 @@ jobs:
         run: go run cmd/database/main.go
 
       - name: Tests
-        run: go test ./...
+        run: go test -p 1 ./...
 
-#      - name: Race test
-#        run: go clean -testcache && go test ./... --race
+      - name: Race test
+        run: go clean -testcache && go test ./... --race
 
       - name: Docker compose down
         run: docker compose down -v
