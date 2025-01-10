@@ -135,7 +135,6 @@ func TestReservationHandler(t *testing.T) {
 				StaffId:  staff1.UUID.String(),
 				Name:     "user-name",
 				Email:    uuid.NewString() + "@email.com",
-				Address:  "123 transylvania",
 				Phone:    "0123456789",
 				Services: types,
 				Time:     reserves[0].Times[0],
@@ -168,7 +167,6 @@ func TestReservationHandler(t *testing.T) {
 				StaffId:  staff1.UUID.String(),
 				Name:     "user-name",
 				Email:    uuid.NewString() + "@email.com",
-				Address:  "123 transylvania",
 				Phone:    "0123456789",
 				Services: types,
 				Time:     reserves[0].Times[0],
@@ -203,7 +201,6 @@ func TestReservationHandler(t *testing.T) {
 				StaffId:  staff1.UUID.String(),
 				Name:     "user-name",
 				Email:    uuid.NewString() + "@email.com",
-				Address:  "123 transylvania",
 				Phone:    "0123456789",
 				Services: types,
 				Time:     reserves[0].Times[0],
@@ -315,7 +312,7 @@ func firstReservation(ctx context.Context) (*model.Reservation, error) {
 	row := db.QueryRowContext(ctx, q)
 
 	err := row.Scan(
-		&r.ReservationId, &r.Name, &r.Email, &r.Description, &r.Address, &r.Phone, &r.ImageKey, &r.Price, &r.Status, &r.CreatedAt, &r.ScheduledFor, &r.ExpireAt, &r.StaffId)
+		&r.ReservationId, &r.Name, &r.Email, &r.Description, &r.Phone, &r.Price, &r.Status, &r.CreatedAt, &r.ScheduledFor, &r.ExpireAt, &r.StaffId)
 
 	if err != nil {
 		return nil, err

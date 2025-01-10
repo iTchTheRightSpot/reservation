@@ -1,1 +1,1 @@
-migrate -path ./database/migrations/ -database "postgres://mrp:mrp@localhost:5432/mrp_db?sslmode=disable" -verbose up
+migrate -path ./database/migrations/ -database "postgres://reservation:reservation@localhost:5432/reservation_db?sslmode=disable" -verbose up

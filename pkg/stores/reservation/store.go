@@ -46,7 +46,7 @@ func (dep *reservationStore) ReservationById(ctx context.Context, reservationId 
 	row := dep.db.QueryRowContext(ctx, q, reservationId)
 
 	err := row.Scan(
-		&r.ReservationId, &r.Name, &r.Email, &r.Description, &r.Address, &r.Phone, &r.ImageKey, &r.Price, &r.Status, &r.CreatedAt, &r.ScheduledFor, &r.ExpireAt, &r.StaffId)
+		&r.ReservationId, &r.Name, &r.Email, &r.Description, &r.Phone, &r.Price, &r.Status, &r.CreatedAt, &r.ScheduledFor, &r.ExpireAt, &r.StaffId)
 
 	if err != nil {
 		dep.logger.Error(err.Error())
@@ -88,16 +88,16 @@ func (dep *reservationStore) Save(ctx context.Context, r *reservation.Reservatio
 	}
 
 	q := `
-        INSERT INTO reservation (staff_id, name, email, description, address, phone, image_key, price, status, created_at, scheduled_for, expire_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-        RETURNING reservation_id, staff_id, name, email, description, address, phone, image_key, price, status, created_at, scheduled_for, expire_at;
+        INSERT INTO reservation (staff_id, name, email, description, phone, price, status, created_at, scheduled_for, expire_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        RETURNING reservation_id, staff_id, name, email, description, address, phone, price, status, created_at, scheduled_for, expire_at;
     `
 
 	row := dep.db.QueryRowContext(
-		ctx, q, r.StaffId, r.Name, r.Email, r.Description, r.Address, r.Phone, r.ImageKey, r.Price, r.Status, r.CreatedAt, r.ScheduledFor, r.ExpireAt)
+		ctx, q, r.StaffId, r.Name, r.Email, r.Description, r.Phone, r.Price, r.Status, r.CreatedAt, r.ScheduledFor, r.ExpireAt)
 
 	err := row.Scan(
-		&r.ReservationId, &r.StaffId, &r.Name, &r.Email, &r.Description, &r.Address, &r.Phone, &r.ImageKey, &r.Price, &r.Status, &r.CreatedAt, &r.ScheduledFor, &r.ExpireAt)
+		&r.ReservationId, &r.StaffId, &r.Name, &r.Email, &r.Description, &r.Phone, &r.Price, &r.Status, &r.CreatedAt, &r.ScheduledFor, &r.ExpireAt)
 
 	if err != nil {
 		dep.logger.Error(err.Error())

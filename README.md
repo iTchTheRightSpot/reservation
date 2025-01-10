@@ -5,17 +5,14 @@ Service similar to Square reservation
 
 ## Core Requirements
 
-1. **Multi-tenant**
-   - Single database, multiple schema
-
-2. **Personal Identifiable Information**
+1. **Personal Identifiable Information**
    - A user should be able to delete their personal info but only after 1 year of inactivity.
    - Data integrity should not be affected.
 
-3. **Roles and Permissions**
+2. **Roles and Permissions**
     - Data should be protected and only allowed to users with specific roles and or permissions.
 
-4. **Staff**
+3. **Staff**
     - Bares minimum to be a staff is to have a role `STAFF`.
     - **Schedule**
       - Only staffs with `WRITE` permission can create working hours for other staffs.
@@ -43,7 +40,7 @@ Service similar to Square reservation
       That is an existing relationship with payment_detail.
       - Both staff & client should receive a notification 1 day before a `PENDING` appointment.
 
-5. **Clients**
+4. **Clients**
    - **Services**
      - A client should see all the services offered.
      - n number of services can be for one reservation.
@@ -56,12 +53,13 @@ Service similar to Square reservation
      - A reservation cannot be made for past dates.
      - Clients & staffs should receive notifications on appointment status change.
 
-6. **Payment**
+5. **Payment**
     - Only staffs can send invoices to clients.
     - Clients should be able to pay via online invoice.
 
 # Development docs
-1. [Db Schema](https://dbdiagram.io/d/landscape-erp-66303ee65b24a634d01e83ea).
+1. [Db Schema](https://dbdiagram.io/d/chidi-salon-6780316c6b7fa355c3705d78).
+2. [Trello](https://trello.com/b/SyruRoS3/chidi-salon-requirement).
 2. [Validator](https://github.com/go-playground/validator/blob/master/README.md).
 3. [Go migrate](https://github.com/golang-migrate/migrate/blob/master/README.md).
 4. [PG](https://neon.tech/postgresql/postgresql-tutorial/postgresql-foreign-key).

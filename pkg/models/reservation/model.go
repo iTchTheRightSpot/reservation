@@ -15,9 +15,7 @@ type Reservation struct {
 	Name          string          `json:"name"`
 	Email         string          `json:"email"`
 	Description   *string         `json:"description"`
-	Address       *string         `json:"address"`
 	Phone         *string         `json:"phone"`
-	ImageKey      *string         `json:"image_key"`
 	Price         float64         `json:"price"`
 	Status        ReservationEnum `json:"status"`
 	CreatedAt     time.Time       `json:"created_at"`
@@ -36,7 +34,6 @@ type ReservationPayload struct {
 	Name        string   `json:"name" validate:"required"`
 	Email       string   `json:"email" validate:"required,max=320"`
 	Description string   `json:"description" validate:"max=255"`
-	Address     string   `json:"address" validate:"required,max=255"`
 	Phone       string   `json:"phone" validate:"required,max=20"`
 	Services    []string `json:"services" validate:"required,min=1,dive,required"`
 	Timezone    string   `json:"timezone"`
