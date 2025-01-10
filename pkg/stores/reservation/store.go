@@ -90,7 +90,7 @@ func (dep *reservationStore) Save(ctx context.Context, r *reservation.Reservatio
 	q := `
         INSERT INTO reservation (staff_id, name, email, description, phone, price, status, created_at, scheduled_for, expire_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-        RETURNING reservation_id, staff_id, name, email, description, address, phone, price, status, created_at, scheduled_for, expire_at;
+        RETURNING reservation_id, staff_id, name, email, description, phone, price, status, created_at, scheduled_for, expire_at;
     `
 
 	row := dep.db.QueryRowContext(
