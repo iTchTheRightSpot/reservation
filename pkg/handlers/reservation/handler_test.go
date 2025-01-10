@@ -65,195 +65,219 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func setupTest(t *testing.T) (*sql.Tx, func()) {
-	tx, err := db.Begin()
-	if err != nil {
-		t.Fatalf("failed to start transaction: %v", err)
-	}
-
-	return tx, func() {
-		if err := tx.Rollback(); err != nil {
-			return
-		}
-	}
-}
-
 func TestReservationHandler(t *testing.T) {
-	logger := utils.NewMockLogger()
-
-	del := func() {
+	t.Cleanup(func() {
 		if err := handlers.DeleteAll(db); err != nil {
 			t.Errorf(err.Error())
 		}
+	})
+
+	// given
+	mux := http.NewServeMux()
+	logger := utils.NewMockLogger()
+	prov := stores.NewTransactionProvider(logger, db)
+	adapters := stores.NewAdapters(logger, db, prov)
+	jwtSer := auth.NewJwtService(logger, env)
+	ware := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
+	s := schedule.NewScheduleService(logger, adapters)
+	cache := pkg.NewInMemoryCache[string, []model.ReservationTimeSlots](logger, 30, 30)
+	mailService := &mail.MockMailService{}
+	rs := reservation.NewReservationService(logger, adapters, cache, mailService)
+
+	ctx := context.Background()
+	staff1, err := handlers.PreSaveStaff(ctx, adapters)
+	if err != nil {
+		t.Error(err)
 	}
-	baseDate := logger.Date()
-	startTime := time.Date(baseDate.Year(), baseDate.Month(), baseDate.Day(), 9, 0, 0, 0, logger.Timezone())
-	newTime := startTime.Add(24 * time.Hour)
-	zones := timezones()
 
-	t.Run("single request make reservation", func(t *testing.T) {
-		tx, fn := setupTest(t)
-		defer fn()
+	serviceType1, err := preSaveService(ctx, adapters)
+	if err != nil {
+		t.Fatalf("preSaveService type 1 failed: %v", err)
+	}
 
-		// setup dependencies
-		zone, err := randomTimezone(zones)
-		if err != nil {
-			t.Fatalf(err.Error())
-		}
+	if err = linkServiceToStaff(adapters, staff1, serviceType1); err != nil {
+		t.Fatalf(err.Error())
+	}
 
-		prov := stores.MockLiveTransactionProvider(logger, tx)
-		adapters := stores.NewAdapters(logger, tx, prov)
-		ctx := context.Background()
-		mux, savedStaff, saveService, req, rr, payload := reservationFlow(t, ctx, logger, adapters, newTime, zone.String())
+	serviceType2, err := preSaveService(ctx, adapters)
+	if err != nil {
+		t.Fatalf("preSaveService type 2 failed: %v", err)
+	}
 
-		// create reservation
-		createBody := model.ReservationPayload{
-			StaffId:  savedStaff.UUID.String(),
-			Name:     "user-name",
-			Email:    "user@email.com",
-			Address:  "123 transylvania",
-			Phone:    "0123456789",
-			Services: []string{saveService.Name},
-			Time:     payload[0].Times[0],
-			Timezone: zone.String(),
-		}
+	if err = linkServiceToStaff(adapters, staff1, serviceType2); err != nil {
+		t.Fatalf(err.Error())
+	}
 
-		createBodyBytes, err := json.Marshal(createBody)
-		if err != nil {
-			t.Fatalf("failed to marshal SchedulePayload: %s", err)
-		}
+	// register schedule handler
+	scheduleHandler.NewScheduleHandler(mux, ware, logger, s).Register()
 
-		req = httptest.NewRequest(http.MethodPost, "/reservation", bytes.NewBuffer(createBodyBytes))
-		req.Header.Set("Content-Type", "application/json")
-		rr = httptest.NewRecorder()
-		mux.ServeHTTP(rr, req)
+	// register reservation handler
+	NewReservationHandler(mux, logger, rs).Register()
 
-		if rr.Code != http.StatusCreated {
-			t.Errorf("expected status code %d, got %d", http.StatusCreated, rr.Code)
-			t.Errorf(rr.Body.String())
-		}
-	})
+	date := logger.Date()
+	d := time.Date(date.Year(), date.Month(), date.Day(), 9, 0, 0, 0, logger.Timezone()).Add(24 * time.Hour)
+	zone, err := randomTimezone()
+	if err != nil {
+		t.Errorf("error getting timezone %s", err.Error())
+	}
 
-	t.Run("concurrent request to reserve the sametime", func(t *testing.T) {
-		t.Cleanup(del)
+	t.Run("flow to creating a reservation", func(t *testing.T) {
+		// create staff schedule
+		createSchedule(t, jwtSer, staff1, d, mux)
 
-		// setup dependencies
-		zone, err := randomTimezone(zones)
-		if err != nil {
-			t.Fatalf(err.Error())
-		}
+		t.Run("success. create a reservation single service", func(t *testing.T) {
+			// retrieve reservation times
+			types := []string{serviceType1.Name}
+			reserves := reservationTimes(t, d, staff1, types, zone.String(), mux, err)
 
-		// setup dependencies
-		prov := stores.NewTransactionProvider(logger, db)
-		adapters := stores.NewAdapters(logger, db, prov)
-		ctx := context.Background()
-		mux, savedStaff, saveService, _, _, payload := reservationFlow(t, ctx, logger, adapters, newTime, zone.String())
+			// create reservation
+			createBody := model.ReservationPayload{
+				StaffId:  staff1.UUID.String(),
+				Name:     "user-name",
+				Email:    uuid.NewString() + "@email.com",
+				Address:  "123 transylvania",
+				Phone:    "0123456789",
+				Services: types,
+				Time:     reserves[0].Times[0],
+				Timezone: zone.String(),
+			}
 
-		createBody := model.ReservationPayload{
-			StaffId:  savedStaff.UUID.String(),
-			Name:     "user-name",
-			Email:    fmt.Sprintf("%s@email.com", uuid.NewString()),
-			Address:  "123 transylvania",
-			Phone:    "0123456789",
-			Services: []string{saveService.Name},
-			Time:     payload[0].Times[0],
-			Timezone: zone.String(),
-		}
-
-		createBodyBytes, _ := json.Marshal(createBody)
-
-		// create reservation
-		var wg sync.WaitGroup
-		var mu sync.Mutex
-		var statusArr []int
-		var errArr []string
-
-		randNum := rand.Intn(10-2) + 2
-
-		for idx := 0; idx < randNum; idx++ {
-			wg.Add(1)
-
-			go func(i int) {
-				defer wg.Done()
-
-				req := httptest.NewRequest(http.MethodPost, "/reservation", bytes.NewBuffer(createBodyBytes))
-				req.Header.Set("Content-Type", "application/json")
-				rr := httptest.NewRecorder()
-				mux.ServeHTTP(rr, req)
-
-				mu.Lock()
-				statusArr = append(statusArr, rr.Code)
-				errArr = append(errArr, rr.Body.String())
-				mu.Unlock()
-			}(idx)
-		}
-
-		wg.Wait()
-
-		// assert
-		num := handlers.CountResponseStatus(statusArr, 201)
-		if num != 1 {
-			t.Errorf("expect 1 given %v", num)
-			t.Errorf("%v", statusArr)
-			t.Errorf("%v", errArr)
-		}
-
-		num = handlers.CountResponseStatus(statusArr, 409)
-		if num != (randNum - 1) {
-			t.Errorf("expect %v given %v", randNum-1, num)
-			t.Errorf("%v", statusArr)
-			t.Errorf("%v", errArr)
-		}
-	})
-
-	t.Run("cancel reservation", func(t *testing.T) {
-		t.Run("invalid reservation id & already cancelled reservation", func(t *testing.T) {
-			tx, fn := setupTest(t)
-			defer fn()
-
-			mux := http.NewServeMux()
-			prov := stores.MockLiveTransactionProvider(logger, tx)
-			adapters := stores.NewAdapters(logger, tx, prov)
-			ctx := context.Background()
-			cache := pkg.NewInMemoryCache[string, []model.ReservationTimeSlots](logger, 30, 30)
-			mailService := &mail.MockMailService{}
-			reservationService := reservation.NewReservationService(logger, adapters, cache, mailService)
-
-			staf, err := handlers.PreSaveStaff(ctx, adapters)
+			bts, err := json.Marshal(createBody)
 			if err != nil {
-				t.Fatalf(err.Error())
+				t.Fatalf("failed to marshal SchedulePayload: %s", err)
 			}
 
-			resv := &model.Reservation{
-				StaffId:      staf.StaffId,
-				Name:         "user-1",
-				Email:        uuid.NewString() + "@email.com",
-				Status:       model.CANCELLED,
-				CreatedAt:    baseDate,
-				ScheduledFor: newTime,
-				ExpireAt:     newTime.Add(1 * time.Hour),
-			}
-			if err = adapters.ReservationStore.Save(context.Background(), resv); err != nil {
-				t.Fatalf(err.Error())
-			}
-
-			NewReservationHandler(mux, logger, reservationService).Register()
-
-			req := httptest.NewRequest(http.MethodPost, "/reservation/cancel/0", nil)
-			req.WithContext(ctx)
+			req := httptest.NewRequest(http.MethodPost, "/reservation", bytes.NewBuffer(bts))
 			req.Header.Set("Content-Type", "application/json")
 			rr := httptest.NewRecorder()
 			mux.ServeHTTP(rr, req)
 
-			if rr.Code != http.StatusNotFound {
-				t.Errorf("expected status code %d, got %d", http.StatusNotFound, rr.Code)
+			if rr.Code != http.StatusCreated {
+				t.Errorf("expected status code %d, got %d", http.StatusCreated, rr.Code)
+				t.Errorf(rr.Body.String())
+			}
+		})
+
+		t.Run("success. create a reservation multiple services", func(t *testing.T) {
+			// retrieve reservation times
+			types := []string{serviceType1.Name, serviceType2.Name}
+			reserves := reservationTimes(t, d, staff1, types, zone.String(), mux, err)
+
+			// create reservation
+			payload := model.ReservationPayload{
+				StaffId:  staff1.UUID.String(),
+				Name:     "user-name",
+				Email:    uuid.NewString() + "@email.com",
+				Address:  "123 transylvania",
+				Phone:    "0123456789",
+				Services: types,
+				Time:     reserves[0].Times[0],
+				Timezone: zone.String(),
 			}
 
-			url := fmt.Sprintf("/reservation/cancel/%v", resv.ReservationId)
-			req = httptest.NewRequest(http.MethodPost, url, nil)
-			req.WithContext(ctx)
+			bts, err := json.Marshal(payload)
+			if err != nil {
+				t.Fatalf("failed to marshal SchedulePayload: %s", err)
+			}
+
+			req := httptest.NewRequest(http.MethodPost, "/reservation", bytes.NewBuffer(bts))
 			req.Header.Set("Content-Type", "application/json")
-			rr = httptest.NewRecorder()
+			rr := httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+
+			if rr.Code != http.StatusCreated {
+				t.Errorf("expected status code %d, got %d", http.StatusCreated, rr.Code)
+				t.Errorf(rr.Body.String())
+			}
+		})
+
+		t.Run("concurrent request to reserve the sametime", func(t *testing.T) {
+			ddate := d.Add(48 * time.Hour)
+			createSchedule(t, jwtSer, staff1, ddate, mux)
+
+			// retrieve reservation times
+			types := []string{serviceType1.Name, serviceType2.Name}
+			reserves := reservationTimes(t, ddate, staff1, types, zone.String(), mux, err)
+
+			payload := model.ReservationPayload{
+				StaffId:  staff1.UUID.String(),
+				Name:     "user-name",
+				Email:    uuid.NewString() + "@email.com",
+				Address:  "123 transylvania",
+				Phone:    "0123456789",
+				Services: types,
+				Time:     reserves[0].Times[0],
+				Timezone: zone.String(),
+			}
+
+			bbyt, _ := json.Marshal(payload)
+
+			// create reservation
+			var wg sync.WaitGroup
+			var mu sync.Mutex
+			var statusArr []int
+			var errArr []string
+
+			randNum := rand.Intn(10-2) + 2
+
+			for idx := 0; idx < randNum; idx++ {
+				wg.Add(1)
+
+				go func(i int) {
+					defer wg.Done()
+
+					req := httptest.NewRequest(http.MethodPost, "/reservation", bytes.NewBuffer(bbyt))
+					req.Header.Set("Content-Type", "application/json")
+					rr := httptest.NewRecorder()
+					mux.ServeHTTP(rr, req)
+
+					mu.Lock()
+					statusArr = append(statusArr, rr.Code)
+					errArr = append(errArr, rr.Body.String())
+					mu.Unlock()
+				}(idx)
+			}
+
+			wg.Wait()
+
+			// assert
+			num := handlers.CountResponseStatus(statusArr, 201)
+			if num != 1 {
+				t.Errorf("expect 1 given %v", num)
+				t.Errorf("%v", statusArr)
+				t.Errorf("%v", errArr)
+			}
+
+			num = handlers.CountResponseStatus(statusArr, 409)
+			if num != (randNum - 1) {
+				t.Errorf("expect %v given %v", randNum-1, num)
+				t.Errorf("%v", statusArr)
+				t.Errorf("%v", errArr)
+			}
+		})
+
+		first, err := firstReservation(ctx)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+
+		t.Run("success. cancel reservation", func(t *testing.T) {
+			url := fmt.Sprintf("/reservation/cancel/%v", first.ReservationId)
+			req := httptest.NewRequest(http.MethodPost, url, nil)
+			req.Header.Set("Content-Type", "application/json")
+			rr := httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+
+			if rr.Code != http.StatusNoContent {
+				t.Errorf("expected status code %d, got %d", http.StatusNoContent, rr.Code)
+			}
+		})
+
+		t.Run("reject. already cancelled reservation", func(t *testing.T) {
+			url := fmt.Sprintf("/reservation/cancel/%v", first.ReservationId)
+			req := httptest.NewRequest(http.MethodPost, url, nil)
+			req.Header.Set("Content-Type", "application/json")
+			rr := httptest.NewRecorder()
 			mux.ServeHTTP(rr, req)
 
 			if rr.Code != http.StatusBadRequest {
@@ -271,134 +295,94 @@ func TestReservationHandler(t *testing.T) {
 			}
 		})
 
-		t.Run("success", func(t *testing.T) {
-			tx, fn := setupTest(t)
-			defer fn()
-
-			mux := http.NewServeMux()
-			prov := stores.MockLiveTransactionProvider(logger, tx)
-			adapters := stores.NewAdapters(logger, tx, prov)
-			ctx := context.Background()
-			cache := pkg.NewInMemoryCache[string, []model.ReservationTimeSlots](logger, 30, 30)
-			mailService := &mail.MockMailService{}
-			reservationService := reservation.NewReservationService(logger, adapters, cache, mailService)
-
-			staf, err := handlers.PreSaveStaff(ctx, adapters)
-			if err != nil {
-				t.Fatalf(err.Error())
-			}
-
-			resv := &model.Reservation{
-				StaffId:      staf.StaffId,
-				Name:         "user-1",
-				Email:        uuid.NewString() + "@email.com",
-				Status:       model.CONFIRMED,
-				CreatedAt:    baseDate,
-				ScheduledFor: newTime,
-				ExpireAt:     newTime.Add(1 * time.Hour),
-			}
-			if err = adapters.ReservationStore.Save(context.Background(), resv); err != nil {
-				t.Fatalf(err.Error())
-			}
-
-			NewReservationHandler(mux, logger, reservationService).Register()
-
-			url := fmt.Sprintf("/reservation/cancel/%v", resv.ReservationId)
-			req := httptest.NewRequest(http.MethodPost, url, nil)
-			req.WithContext(ctx)
+		t.Run("reject reservation cancellation. invalid reservation id", func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, "/reservation/cancel/0", nil)
 			req.Header.Set("Content-Type", "application/json")
 			rr := httptest.NewRecorder()
 			mux.ServeHTTP(rr, req)
 
-			if rr.Code != http.StatusNoContent {
-				t.Errorf("expected status code %d, got %d", http.StatusNoContent, rr.Code)
+			if rr.Code != http.StatusNotFound {
+				t.Errorf("expected status code %d, got %d", http.StatusNotFound, rr.Code)
 			}
 		})
 	})
 }
 
-func randomTimezone(zones []string) (*time.Location, error) {
-	location, err := time.LoadLocation(zones[rand.Intn(len(zones))])
+func firstReservation(ctx context.Context) (*model.Reservation, error) {
+	var r model.Reservation
+
+	q := "SELECT * FROM reservation LIMIT 1"
+	row := db.QueryRowContext(ctx, q)
+
+	err := row.Scan(
+		&r.ReservationId, &r.Name, &r.Email, &r.Description, &r.Address, &r.Phone, &r.ImageKey, &r.Price, &r.Status, &r.CreatedAt, &r.ScheduledFor, &r.ExpireAt, &r.StaffId)
+
 	if err != nil {
 		return nil, err
 	}
 
-	return location, nil
+	return &r, nil
 }
 
-func preSaveService(ctx context.Context, a *stores.Adapters) (*service.ServiceEntity, error) {
-	return a.ServiceStore.Save(ctx, &service.ServiceEntity{
-		Name:        uuid.New().String(),
-		Price:       19.56,
-		Duration:    3600,
-		CleanUpTime: 30 * 60,
-	})
+func reservationTimes(t *testing.T, d time.Time, staff1 *staff.Staff, serviceTypes []string, zone string, mux *http.ServeMux, err error) []model.ReservationTimeSlots {
+	var sb strings.Builder
+	for _, ser := range serviceTypes {
+		sb.WriteString("service=" + ser + "&")
+	}
+
+	url := fmt.Sprintf(
+		"/reservation?day=%v&month=%v&year=%v&staff_id=%s&%stimezone=%s",
+		1, int(d.Month()), d.Year(), staff1.UUID.String(), sb.String(), zone,
+	)
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	req.Header.Set("Content-Type", "application/json")
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("expected status code %d, got %d", http.StatusOK, rr.Code)
+	}
+
+	var payload []model.ReservationTimeSlots
+	if err = json.Unmarshal(rr.Body.Bytes(), &payload); err != nil {
+		t.Errorf(err.Error())
+	}
+
+	return payload
 }
 
-func linkServiceToStaff(a *stores.Adapters, sta *staff.Staff, staSer *service.ServiceEntity) error {
-	_, err := a.StaffServiceStore.Save(context.Background(), &staff.StaffServiceEntity{
-		StaffId:   sta.StaffId,
-		ServiceId: staSer.ServiceId,
-	})
-	return err
-}
-
-func reservationFlow(t *testing.T, ctx context.Context, logger utils.ILogger, adapters *stores.Adapters, newTime time.Time, timezone string) (*http.ServeMux, *staff.Staff, *service.ServiceEntity, *http.Request, *httptest.ResponseRecorder, []model.ReservationTimeSlots) {
-	mux := http.NewServeMux()
-	jwtService := auth.NewJwtService(logger, env)
-	ware := &middleware.Middleware{Logger: logger, Auth: jwtService, Param: env.CookieParam}
-	scheduleService := schedule.NewScheduleService(logger, adapters)
-	cache := pkg.NewInMemoryCache[string, []model.ReservationTimeSlots](logger, 30, 30)
-	mailService := &mail.MockMailService{}
-	reservationService := reservation.NewReservationService(logger, adapters, cache, mailService)
-
-	savedStaff, err := handlers.PreSaveStaff(ctx, adapters)
-	if err != nil {
-		t.Fatalf("preSaveStaff failed: %v", err)
-	}
-
-	saveService, err := preSaveService(ctx, adapters)
-	if err != nil {
-		t.Fatalf("preSaveService failed: %v", err)
-	}
-
-	if err = linkServiceToStaff(adapters, savedStaff, saveService); err != nil {
-		t.Fatalf(err.Error())
-	}
-
+func createSchedule(t *testing.T, jwtSer auth.IJwtService, staff1 *staff.Staff, d time.Time, mux *http.ServeMux) {
 	cred := []models.RolePermission{
 		{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 	}
 
-	obj, err := jwtService.GenerateJwt(
+	obj, err := jwtSer.GenerateJwt(
 		&models.JwtObj{
-			UserId:         savedStaff.UUID.String(),
+			UserId:         staff1.UUID.String(),
 			AccessControls: cred,
 		},
 		utils.TwoDaysInSeconds,
 	)
 
 	dto := scheduleModel.SchedulePayload{
-		StaffId: savedStaff.UUID.String(),
+		StaffId: staff1.UUID.String(),
 		Times: &[]scheduleModel.ScheduleSegmentPayload{
 			{
 				IsVisible:     true,
 				IsReoccurring: false,
-				Start:         newTime.Format(utils.TimeFormat),
-				Duration:      8 * 60 * 60,
+				Start:         d.Format(utils.TimeFormat),
+				Duration:      8 * 60 * 60, // 8 hrs shift
 			},
 		},
 	}
 
 	dtoBytes, err := json.Marshal(dto)
 	if err != nil {
-		t.Fatalf("failed to marshal SchedulePayload: %s", err)
+		t.Errorf("failed to marshal SchedulePayload: %s", err)
+		return
 	}
 
-	// handler to test
-	scheduleHandler.NewScheduleHandler(mux, ware, logger, scheduleService).Register()
-
-	// route to test
+	// create schedule route to test
 	req := httptest.NewRequest(http.MethodPost, "/schedule", bytes.NewBuffer(dtoBytes))
 	req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
 	req.Header.Set("Content-Type", "application/json")
@@ -411,34 +395,33 @@ func reservationFlow(t *testing.T, ctx context.Context, logger utils.ILogger, ad
 	if rr.Code != http.StatusCreated {
 		t.Errorf("expected status code %d, got %d", http.StatusCreated, rr.Code)
 	}
-
-	// retrieve valid reservation times
-	NewReservationHandler(mux, logger, reservationService).Register()
-
-	url := fmt.Sprintf(
-		"/reservation?day=%v&month=%v&year=%v&staff_id=%s&service=%s&timezone=%s",
-		1, int(newTime.Month()), newTime.Year(), savedStaff.UUID.String(), saveService.Name, timezone,
-	)
-	req = httptest.NewRequest(http.MethodGet, url, nil)
-	req.Header.Set("Content-Type", "application/json")
-	rr = httptest.NewRecorder()
-	mux.ServeHTTP(rr, req)
-
-	if rr.Code != http.StatusOK {
-		t.Errorf("expected status code %d, got %d", http.StatusOK, rr.Code)
-	}
-
-	var payload []model.ReservationTimeSlots
-	if err = json.Unmarshal(rr.Body.Bytes(), &payload); err != nil {
-		t.Errorf(err.Error())
-	}
-	return mux, savedStaff, saveService, req, rr, payload
 }
 
-func timezones() []string {
+func preSaveService(ctx context.Context, a *stores.Adapters) (*service.ServiceTypeEntity, error) {
+	s := service.ServiceTypeEntity{
+		Name:          uuid.New().String(),
+		Price:         19.56,
+		Duration:      3600,
+		CleanUpTime:   30 * 60,
+		IsVisible:     true,
+		IsReoccurring: false,
+	}
+	err := a.ServiceStore.Save(ctx, &s)
+	return &s, err
+}
+
+func linkServiceToStaff(a *stores.Adapters, sta *staff.Staff, staSer *service.ServiceTypeEntity) error {
+	_, err := a.StaffServiceStore.Save(context.Background(), &staff.StaffServiceEntity{
+		StaffId:   sta.StaffId,
+		ServiceId: staSer.ServiceId,
+	})
+	return err
+}
+
+func randomTimezone() (*time.Location, error) {
 	var zones []string
 	var zoneDirs = []string{
-		// Update path according to your OS
+		// update path according to your OS
 		"/usr/share/zoneinfo/",
 		"/usr/share/lib/zoneinfo/",
 		"/usr/lib/locale/TZ/",
@@ -452,7 +435,12 @@ func timezones() []string {
 		}
 	}
 
-	return zones
+	location, err := time.LoadLocation(zones[rand.Intn(len(zones))])
+	if err != nil {
+		return nil, err
+	}
+
+	return location, nil
 }
 
 func walkTzDir(path string, zones []string) []string {

@@ -78,18 +78,14 @@ func TestScheduleStore(t *testing.T) {
 		}
 
 		// method to test
-		save, err := NewScheduleStore(mockLog, tx).Save(ctx, s)
+		err := NewScheduleStore(mockLog, tx).Save(ctx, s)
 		if err != nil {
 			t.Errorf("schedule not saved")
 		}
 
 		// assert
-		if save.ScheduleId < 1 {
+		if s.ScheduleId < 1 {
 			t.Errorf("schedule not save as ScheduleId is less than 1")
-		}
-
-		if !reflect.DeepEqual(save, s) {
-			t.Errorf("expect %v to equal %v", s, save)
 		}
 	})
 
@@ -115,7 +111,7 @@ func TestScheduleStore(t *testing.T) {
 			End:     mockLog.Date().Add(time.Duration(8) * time.Hour),
 		}
 
-		if _, err := store.Save(ctx, s); err != nil {
+		if err := store.Save(ctx, s); err != nil {
 			t.Errorf("schedule not saved")
 		}
 
@@ -151,7 +147,7 @@ func TestScheduleStore(t *testing.T) {
 			End:     mockLog.Date().Add(time.Duration(8) * time.Hour),
 		}
 
-		if _, err := store.Save(ctx, s); err != nil {
+		if err := store.Save(ctx, s); err != nil {
 			t.Errorf("schedule not saved")
 		}
 
@@ -185,12 +181,12 @@ func TestScheduleStore(t *testing.T) {
 		}
 
 		start := mockLog.Date()
-		save, err := store.Save(ctx, &schedule.Schedule{
+		s := schedule.Schedule{
 			StaffId: staffObj.StaffId,
 			Start:   start,
 			End:     start.Add(time.Duration(8) * time.Hour),
-		})
-		if err != nil {
+		}
+		if err := store.Save(ctx, &s); err != nil {
 			t.Error(err.Error())
 		}
 
@@ -204,8 +200,12 @@ func TestScheduleStore(t *testing.T) {
 			t.Error(err.Error())
 		}
 
-		if !reflect.DeepEqual(save, schs[0]) {
-			t.Errorf("expect %v to equal given %v", save, schs[0])
+		if s.ScheduleId < 1 {
+			t.Errorf("schedule not save as ScheduleId is less than 1")
+		}
+
+		if !reflect.DeepEqual(s, *schs[0]) {
+			t.Errorf("expect %v to equal given %v", s, schs[0])
 		}
 	})
 
@@ -226,7 +226,7 @@ func TestScheduleStore(t *testing.T) {
 		}
 
 		start := mockLog.Date()
-		_, err := store.Save(ctx, &schedule.Schedule{
+		err := store.Save(ctx, &schedule.Schedule{
 			StaffId: staffObj.StaffId,
 			Start:   start,
 			End:     start.Add(time.Duration(8) * time.Hour),
@@ -262,7 +262,7 @@ func TestScheduleStore(t *testing.T) {
 		}
 	})
 
-	t.Run("should count schedules in range, visibility and difference", func(t *testing.T) {
+	t.Run("should return schedules within timeframe", func(t *testing.T) {
 		t.Parallel()
 
 		tx, fn := setupTest(t)
@@ -278,9 +278,10 @@ func TestScheduleStore(t *testing.T) {
 			t.Errorf("%s", err)
 		}
 
+		// pre-save schedules
 		for i := 0; i < 5; i++ {
 			start := time.Date(mockLog.Date().Year(), mockLog.Date().Month(), i+1, 0, 0, 0, 0, mockLog.Timezone())
-			_, err := store.Save(ctx, &schedule.Schedule{
+			err := store.Save(ctx, &schedule.Schedule{
 				StaffId:   staffObj.StaffId,
 				Start:     start,
 				End:       start.Add(time.Duration(8) * time.Hour),
@@ -296,7 +297,7 @@ func TestScheduleStore(t *testing.T) {
 		lastDayOfMonth := firstDayOfMonth.AddDate(0, 1, -1)
 
 		// method to test
-		schs, err := store.SchedulesInRangeAndVisibilityAndDifference(ctx, staffObj.StaffId, firstDayOfMonth, lastDayOfMonth, true, 5*60*60)
+		schs, err := store.SchedulesWithinTimeframe(ctx, staffObj.StaffId, firstDayOfMonth, lastDayOfMonth, true, 5*60*60)
 
 		// assert
 		if err != nil {

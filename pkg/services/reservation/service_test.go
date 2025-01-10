@@ -87,7 +87,7 @@ func TestReservationService(t *testing.T) {
 			scheduleStore := &schedule.MockScheduleStore{}
 			adapters := &stores.Adapters{
 				StaffStore:    &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.Staff{}},
-				ServiceStore:  &service_type.MockServiceTypeStore{ServicesByStaffIdReturn: []*serviceModel.ServiceEntity{}},
+				ServiceStore:  &service_type.MockServiceTypeStore{ServicesByStaffIdReturn: []*serviceModel.ServiceTypeEntity{}},
 				ScheduleStore: scheduleStore,
 			}
 			s := NewReservationService(mockLog, adapters, nil, nil)
@@ -123,7 +123,7 @@ func TestReservationService(t *testing.T) {
 			adapters := &stores.Adapters{
 				StaffStore: &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.Staff{}},
 				ServiceStore: &service_type.MockServiceTypeStore{
-					ServicesByStaffIdReturn: []*serviceModel.ServiceEntity{{Name: "erp"}}},
+					ServicesByStaffIdReturn: []*serviceModel.ServiceTypeEntity{{Name: "erp"}}},
 				ScheduleStore: scheduleStore,
 			}
 			s := NewReservationService(mockLog, adapters, nil, nil)
@@ -159,7 +159,7 @@ func TestReservationService(t *testing.T) {
 			adapters := &stores.Adapters{
 				StaffStore: &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.Staff{}},
 				ServiceStore: &service_type.MockServiceTypeStore{
-					ServicesByStaffIdReturn: []*serviceModel.ServiceEntity{{Name: erp}}},
+					ServicesByStaffIdReturn: []*serviceModel.ServiceTypeEntity{{Name: erp}}},
 				ScheduleStore: scheduleStore,
 			}
 			s := NewReservationService(mockLog, adapters, nil, nil)
@@ -191,7 +191,7 @@ func TestReservationService(t *testing.T) {
 			adapters := &stores.Adapters{
 				StaffStore: &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.Staff{}},
 				ServiceStore: &service_type.MockServiceTypeStore{
-					ServicesByStaffIdReturn: []*serviceModel.ServiceEntity{{Name: erp}}},
+					ServicesByStaffIdReturn: []*serviceModel.ServiceTypeEntity{{Name: erp}}},
 				ScheduleStore:    &schedule.MockScheduleStore{CountSchedulesInRangeAndVisibilityReturn: 0},
 				ReservationStore: reservationStore,
 			}

@@ -140,8 +140,12 @@ func (dep *reservationService) AvailableDates(ctx context.Context, o *reservatio
 
 	duration := dep.sumUpServiceDuration(services)
 
-	schedules, err := dep.adapters.ScheduleStore.SchedulesInRangeAndVisibilityAndDifference(
+	schedules, err := dep.adapters.ScheduleStore.SchedulesWithinTimeframe(
 		ctx, staf.StaffId, o.StartDateTime, o.EndDateTime, true, duration)
+
+	if err != nil {
+		return nil, &utils.NotFoundError{Message: "invalid time to make a reservation"}
+	}
 
 	chunks := dep.generateChunks(schedules, duration)
 
@@ -155,13 +159,13 @@ func (dep *reservationService) AvailableDates(ctx context.Context, o *reservatio
 	return filter, nil
 }
 
-func (dep *reservationService) matchStaffServices(ctx context.Context, requestedServices []string, staffObj *staff.Staff) ([]*service.ServiceEntity, error) {
-	serviceEntities, err := dep.adapters.ServiceStore.ServicesByStaffId(ctx, staffObj.StaffId)
+func (dep *reservationService) matchStaffServices(ctx context.Context, requestedServices []string, staffObj *staff.Staff) ([]*service.ServiceTypeEntity, error) {
+	serviceEntities, err := dep.adapters.ServiceStore.ServicesByStaffId(ctx, staffObj.StaffId, true)
 	if err != nil {
 		return nil, &utils.NotFoundError{Message: "invalid service for staff"}
 	}
 
-	arr := make([]*service.ServiceEntity, 0)
+	arr := make([]*service.ServiceTypeEntity, 0)
 
 	for _, entity := range serviceEntities {
 		match := slices.ContainsFunc(requestedServices, func(s string) bool {
@@ -202,7 +206,7 @@ func (dep *reservationService) dateInTimezone(p *reservation.ReservationPayload)
 	return time.UnixMilli(num).In(l).In(dep.logger.Timezone()), nil
 }
 
-func (dep *reservationService) sumUpServiceDuration(s []*service.ServiceEntity) int {
+func (dep *reservationService) sumUpServiceDuration(s []*service.ServiceTypeEntity) int {
 	count := 0
 	for _, entity := range s {
 		count += entity.Duration + entity.CleanUpTime
@@ -210,7 +214,7 @@ func (dep *reservationService) sumUpServiceDuration(s []*service.ServiceEntity) 
 	return count
 }
 
-func (dep *reservationService) sumUpServicePrice(s []*service.ServiceEntity) float64 {
+func (dep *reservationService) sumUpServicePrice(s []*service.ServiceTypeEntity) float64 {
 	var count float64
 	for _, entity := range s {
 		count += entity.Price
@@ -218,7 +222,7 @@ func (dep *reservationService) sumUpServicePrice(s []*service.ServiceEntity) flo
 	return count
 }
 
-func (dep *reservationService) createReservation(ctx context.Context, p *reservation.ReservationPayload, matchedServices []*service.ServiceEntity, s *staff.Staff, start time.Time, end time.Time) error {
+func (dep *reservationService) createReservation(ctx context.Context, p *reservation.ReservationPayload, matchedServices []*service.ServiceTypeEntity, s *staff.Staff, start time.Time, end time.Time) error {
 	return dep.adapters.Transaction.RunInTransaction(func(adapters *stores.Adapters) error {
 		priceSum := dep.sumUpServicePrice(matchedServices)
 
@@ -317,5 +321,6 @@ func (dep *reservationService) Cancel(ctx context.Context, reservationId uint64)
 		return &utils.InsertionError{Message: "error cancelling reservation"}
 	}
 
+	dep.cache.Clear()
 	return nil
 }

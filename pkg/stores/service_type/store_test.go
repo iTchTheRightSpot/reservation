@@ -70,7 +70,7 @@ func TestServiceStore(t *testing.T) {
 		ctx := context.Background()
 
 		// given
-		s := service.ServiceEntity{
+		s := service.ServiceTypeEntity{
 			Name:        "name",
 			Price:       1000.95,
 			Duration:    3600,
@@ -78,14 +78,13 @@ func TestServiceStore(t *testing.T) {
 		}
 
 		// method to test
-		save, err := store.Save(ctx, &s)
-		if err != nil {
+		if err := store.Save(ctx, &s); err != nil {
 			t.Error(err)
 		}
 
 		// assert
-		if !reflect.DeepEqual(s, *save) {
-			t.Errorf("expect %v to equal %v", s, &save)
+		if s.ServiceId < 1 {
+			t.Errorf("expect id to be >= 1 given %v", s.ServiceId)
 		}
 
 		find, err := store.ServiceByName(ctx, "name")
@@ -94,8 +93,8 @@ func TestServiceStore(t *testing.T) {
 		}
 
 		// assert
-		if !reflect.DeepEqual(*save, *find) {
-			t.Errorf("expect %v to equal %v", save, find)
+		if !reflect.DeepEqual(s, *find) {
+			t.Errorf("expect %v to equal %v", s, find)
 		}
 	})
 
@@ -111,14 +110,14 @@ func TestServiceStore(t *testing.T) {
 		ss := staff.NewStaffServiceStore(logger, tx)
 
 		// given
-		s := service.ServiceEntity{
+		s := service.ServiceTypeEntity{
 			Name:        "name",
 			Price:       1000.95,
 			Duration:    3600,
 			CleanUpTime: 1800,
 		}
 
-		if _, err := store.Save(ctx, &s); err != nil {
+		if err := store.Save(ctx, &s); err != nil {
 			t.Error(err.Error())
 		}
 
@@ -132,7 +131,7 @@ func TestServiceStore(t *testing.T) {
 		}
 
 		// method to test
-		arr, err := store.ServicesByStaffId(ctx, se.StaffId)
+		arr, err := store.ServicesByStaffId(ctx, se.StaffId, false)
 
 		// assert
 		if err != nil {
@@ -154,20 +153,20 @@ func TestServiceStore(t *testing.T) {
 		ctx := context.Background()
 
 		// given
-		s := service.ServiceEntity{
+		s := service.ServiceTypeEntity{
 			Name:  "name",
 			Price: 10001.95,
 		}
 
 		// method to test
-		if _, err := store.Save(ctx, &s); err == nil {
+		if err := store.Save(ctx, &s); err == nil {
 			t.Error(err)
 		}
 
 		// method to test
 		s.Name = "higher"
 		s.Price = 1000.959
-		if _, err := store.Save(ctx, &s); err == nil {
+		if err := store.Save(ctx, &s); err == nil {
 			t.Error(err)
 		}
 	})

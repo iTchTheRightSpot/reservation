@@ -6,28 +6,28 @@ import (
 )
 
 type MockServiceTypeStore struct {
-	ServiceSave             *service.ServiceEntity
+	ServiceSave             *service.ServiceTypeEntity
 	ServiceSaveError        error
 	ServiceSaveCalled       bool
-	ServiceByNameReturn     *service.ServiceEntity
+	ServiceByNameReturn     *service.ServiceTypeEntity
 	ServiceByNameError      error
 	ServiceByNameCalled     bool
-	ServicesByStaffIdReturn []*service.ServiceEntity
+	ServicesByStaffIdReturn []*service.ServiceTypeEntity
 	ServicesByStaffIdError  error
 	ServicesByStaffIdCalled bool
 }
 
-func (dep *MockServiceTypeStore) Save(context.Context, *service.ServiceEntity) (*service.ServiceEntity, error) {
+func (dep *MockServiceTypeStore) Save(context.Context, *service.ServiceTypeEntity) error {
 	dep.ServiceSaveCalled = true
-	return dep.ServiceSave, dep.ServiceSaveError
+	return dep.ServiceSaveError
 }
 
-func (dep *MockServiceTypeStore) ServiceByName(context.Context, string) (*service.ServiceEntity, error) {
+func (dep *MockServiceTypeStore) ServiceByName(context.Context, string) (*service.ServiceTypeEntity, error) {
 	dep.ServiceByNameCalled = true
 	return dep.ServiceByNameReturn, dep.ServiceByNameError
 }
 
-func (dep *MockServiceTypeStore) ServicesByStaffId(context.Context, uint64) ([]*service.ServiceEntity, error) {
+func (dep *MockServiceTypeStore) ServicesByStaffId(context.Context, uint64, bool) ([]*service.ServiceTypeEntity, error) {
 	dep.ServicesByStaffIdCalled = true
 	return dep.ServicesByStaffIdReturn, dep.ServicesByStaffIdError
 }
