@@ -33,14 +33,14 @@ func (dep *ServiceHandler) Register() {
 		Role:        staff,
 		Permissions: []models.PermissionEnum{models.WRITE},
 	}
-	m := middleware.RequestBodyMiddleware[model.ServicePayload]{Logger: dep.logger}
+	m := middleware.RequestBodyMiddleware[model.ServiceTypePayload]{Logger: dep.logger}
 
 	mux.Handle("POST /", dep.ware.HasRoleAndPermissions(m.RequestBody(http.HandlerFunc(dep.create)), rp))
 	dep.mux.Handle("/service", dep.ware.Authentication(dep.ware.HasRole(mux, &staff)))
 }
 
 func (dep *ServiceHandler) create(w http.ResponseWriter, r *http.Request) {
-	dto, err := pkg.ReadBody[model.ServicePayload](r)
+	dto, err := pkg.ReadBody[model.ServiceTypePayload](r)
 	if err != nil {
 		dep.logger.Error(err.Error())
 		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})

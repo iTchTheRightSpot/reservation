@@ -24,9 +24,9 @@ type MockScheduleStore struct {
 	SchedulesInRangeAndVisibilityAndDifferenceCalled bool
 }
 
-func (dep *MockScheduleStore) Save(context.Context, *schedule.Schedule) (*schedule.Schedule, error) {
+func (dep *MockScheduleStore) Save(context.Context, *schedule.Schedule) error {
 	dep.ScheduleSaveCalled = true
-	return dep.ScheduleSave, dep.ScheduleSaveError
+	return dep.ScheduleSaveError
 }
 
 func (dep *MockScheduleStore) SchedulesInRange(context.Context, uint64, time.Time, time.Time) ([]*schedule.Schedule, error) {
@@ -44,7 +44,7 @@ func (dep *MockScheduleStore) CountSchedulesInRangeAndVisibility(context.Context
 	return dep.CountSchedulesInRangeAndVisibilityReturn, dep.CountSchedulesInRangeAndVisibilityError
 }
 
-func (dep *MockScheduleStore) SchedulesInRangeAndVisibilityAndDifference(context.Context, uint64, time.Time, time.Time, bool, int) ([]*schedule.Schedule, error) {
+func (dep *MockScheduleStore) SchedulesWithinTimeframe(context.Context, uint64, time.Time, time.Time, bool, int) ([]*schedule.Schedule, error) {
 	dep.SchedulesInRangeAndVisibilityAndDifferenceCalled = true
 	return dep.SchedulesInRangeAndVisibilityAndDifferenceReturn, dep.SchedulesInRangeAndVisibilityAndDifferenceError
 }

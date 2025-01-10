@@ -63,7 +63,7 @@ func (dep *scheduleService) Create(ctx context.Context, dto *schedule.SchedulePa
 
 	return dep.adapters.Transaction.RunInTransaction(func(adapters *stores.Adapters) error {
 		for _, segment := range segments {
-			_, err = adapters.ScheduleStore.Save(ctx, &schedule.Schedule{
+			err = adapters.ScheduleStore.Save(ctx, &schedule.Schedule{
 				StaffId:   staff.StaffId,
 				Start:     segment.Start,
 				End:       segment.End,

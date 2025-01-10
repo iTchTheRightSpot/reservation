@@ -3,6 +3,7 @@ package service_type
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
@@ -10,9 +11,9 @@ import (
 )
 
 type IServiceTypeStore interface {
-	Save(ctx context.Context, s *service.ServiceEntity) (*service.ServiceEntity, error)
-	ServiceByName(ctx context.Context, name string) (*service.ServiceEntity, error)
-	ServicesByStaffId(ctx context.Context, staffId uint64) ([]*service.ServiceEntity, error)
+	Save(ctx context.Context, s *service.ServiceTypeEntity) error
+	ServiceByName(ctx context.Context, name string) (*service.ServiceTypeEntity, error)
+	ServicesByStaffId(ctx context.Context, staffId uint64, visible bool) ([]*service.ServiceTypeEntity, error)
 }
 
 type serviceStore struct {
@@ -24,9 +25,9 @@ func NewServiceTypeStore(l utils.ILogger, db pkg.Db) IServiceTypeStore {
 	return &serviceStore{logger: l, db: db}
 }
 
-func (dep *serviceStore) Save(ctx context.Context, s *service.ServiceEntity) (*service.ServiceEntity, error) {
+func (dep *serviceStore) Save(ctx context.Context, s *service.ServiceTypeEntity) error {
 	if s == nil {
-		return nil, fmt.Errorf("schedule object is nil")
+		return errors.New("service type entity is nil")
 	}
 
 	q := `
@@ -40,14 +41,14 @@ func (dep *serviceStore) Save(ctx context.Context, s *service.ServiceEntity) (*s
 
 	if err != nil {
 		dep.logger.Error(err)
-		return nil, fmt.Errorf("exception saving to service table")
+		return errors.New("exception saving to service table")
 	}
 	dep.logger.Log("new service saved")
-	return s, nil
+	return nil
 }
 
-func (dep *serviceStore) ServiceByName(ctx context.Context, name string) (*service.ServiceEntity, error) {
-	var s service.ServiceEntity
+func (dep *serviceStore) ServiceByName(ctx context.Context, name string) (*service.ServiceTypeEntity, error) {
+	var s service.ServiceTypeEntity
 
 	var q = `
 		SELECT
@@ -66,16 +67,16 @@ func (dep *serviceStore) ServiceByName(ctx context.Context, name string) (*servi
 	return &s, nil
 }
 
-func (dep *serviceStore) ServicesByStaffId(ctx context.Context, staffId uint64) ([]*service.ServiceEntity, error) {
-	var arr []*service.ServiceEntity
+func (dep *serviceStore) ServicesByStaffId(ctx context.Context, staffId uint64, visible bool) ([]*service.ServiceTypeEntity, error) {
+	var arr []*service.ServiceTypeEntity
 
 	var q = `
 	 SELECT s.* FROM service_type s
 	 INNER JOIN staff_service ss ON ss.service_id = s.service_id
-	 WHERE ss.staff_id = $1
+	 WHERE ss.staff_id = $1 AND s.is_visible = $2
 	`
 
-	rows, err := dep.db.QueryContext(ctx, q, staffId)
+	rows, err := dep.db.QueryContext(ctx, q, staffId, visible)
 	if err != nil {
 		dep.logger.Error(err)
 		return nil, fmt.Errorf("exception retrieving services")
@@ -84,7 +85,7 @@ func (dep *serviceStore) ServicesByStaffId(ctx context.Context, staffId uint64) 
 	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
 
 	for rows.Next() {
-		var s service.ServiceEntity
+		var s service.ServiceTypeEntity
 
 		err = rows.Scan(&s.ServiceId, &s.Name, &s.Price, &s.IsVisible, &s.IsReoccurring, &s.Duration, &s.CleanUpTime)
 

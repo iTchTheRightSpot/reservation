@@ -64,7 +64,6 @@ func TestScheduleHandler(t *testing.T) {
 	t.Cleanup(del)
 
 	// given
-	ctx := context.Background()
 	mux := http.NewServeMux()
 	prov := stores.NewTransactionProvider(logger, db)
 	adapters := stores.NewAdapters(logger, db, prov)
@@ -72,6 +71,7 @@ func TestScheduleHandler(t *testing.T) {
 	m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
 	s := schedule.NewScheduleService(logger, adapters)
 
+	ctx := context.Background()
 	staff1, err := handlers.PreSaveStaff(ctx, adapters)
 	if err != nil {
 		t.Error(err)

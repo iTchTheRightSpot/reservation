@@ -12,11 +12,11 @@ import (
 )
 
 type IScheduleStore interface {
-	Save(ctx context.Context, s *schedule.Schedule) (*schedule.Schedule, error)
+	Save(ctx context.Context, s *schedule.Schedule) error
 	CountExistingSchedulesForStaff(ctx context.Context, staffId uint64, start, end time.Time) (int, error)
 	SchedulesInRange(ctx context.Context, staffId uint64, start time.Time, end time.Time) ([]*schedule.Schedule, error)
 	CountSchedulesInRangeAndVisibility(ctx context.Context, staffId uint64, start time.Time, end time.Time, isVisible bool) (int, error)
-	SchedulesInRangeAndVisibilityAndDifference(ctx context.Context, staffId uint64, start time.Time, end time.Time, isVisible bool, duration int) ([]*schedule.Schedule, error)
+	SchedulesWithinTimeframe(ctx context.Context, staffId uint64, start time.Time, end time.Time, isVisible bool, duration int) ([]*schedule.Schedule, error)
 }
 
 type scheduleStore struct {
@@ -62,9 +62,9 @@ func (dep *scheduleStore) SchedulesInRange(ctx context.Context, staffId uint64, 
 	return arr, err
 }
 
-func (dep *scheduleStore) Save(ctx context.Context, s *schedule.Schedule) (*schedule.Schedule, error) {
+func (dep *scheduleStore) Save(ctx context.Context, s *schedule.Schedule) error {
 	if s == nil {
-		return nil, errors.New("schedule object is nil")
+		return errors.New("schedule object is nil")
 	}
 
 	q := `
@@ -78,10 +78,10 @@ func (dep *scheduleStore) Save(ctx context.Context, s *schedule.Schedule) (*sche
 
 	if err != nil {
 		dep.logger.Error(err)
-		return nil, errors.New("exception saving to schedule table")
+		return errors.New("exception saving to schedule table")
 	}
 
-	return s, nil
+	return nil
 }
 
 func (dep *scheduleStore) CountExistingSchedulesForStaff(ctx context.Context, staffId uint64, start, end time.Time) (int, error) {
@@ -130,17 +130,17 @@ func (dep *scheduleStore) CountSchedulesInRangeAndVisibility(ctx context.Context
 	return count, nil
 }
 
-func (dep *scheduleStore) SchedulesInRangeAndVisibilityAndDifference(ctx context.Context, staffId uint64, start time.Time, end time.Time, isVisible bool, duration int) ([]*schedule.Schedule, error) {
+func (dep *scheduleStore) SchedulesWithinTimeframe(ctx context.Context, staffId uint64, start time.Time, end time.Time, isVisible bool, duration int) ([]*schedule.Schedule, error) {
 	q := `
-        SELECT * FROM schedule s
-        WHERE s.staff_id = $1
-        AND (
-            (s.schedule_start BETWEEN $2 AND $3) OR
-            (s.schedule_end BETWEEN $2 AND $3)
-        )
-        AND is_visible = $4
-        AND EXTRACT(EPOCH FROM (s.schedule_end - s.schedule_start)) >= $5
-    `
+	   SELECT * FROM schedule s
+	   WHERE s.staff_id = $1
+	   AND (
+	       (s.schedule_start BETWEEN $2 AND $3) OR
+	       (s.schedule_end BETWEEN $2 AND $3)
+	   )
+	   AND is_visible = $4
+	   AND EXTRACT(EPOCH FROM (s.schedule_end - s.schedule_start)) >= $5
+	`
 
 	rows, err := dep.db.QueryContext(ctx, q, staffId, start, end, isVisible, duration)
 	if err != nil {

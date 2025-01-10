@@ -92,7 +92,7 @@ func TestServiceHandler(t *testing.T) {
 			utils.TwoDaysInSeconds,
 		)
 
-		dtoBytes, err := json.Marshal(model.ServicePayload{
+		dtoBytes, err := json.Marshal(model.ServiceTypePayload{
 			Name:        "erp",
 			Price:       15.97,
 			Duration:    3600,

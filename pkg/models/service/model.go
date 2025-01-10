@@ -1,6 +1,6 @@
 package service
 
-type ServiceEntity struct {
+type ServiceTypeEntity struct {
 	ServiceId     uint64  `json:"service_id"`
 	Name          string  `json:"name"`
 	Price         float64 `json:"price"`
@@ -10,7 +10,7 @@ type ServiceEntity struct {
 	CleanUpTime   int     `json:"clean_up_time"`
 }
 
-type ServicePayload struct {
+type ServiceTypePayload struct {
 	Name          string  `json:"name" validate:"required,max=50"`
 	Price         float64 `json:"price" validate:"required"`
 	IsVisible     bool    `json:"is_visible"`

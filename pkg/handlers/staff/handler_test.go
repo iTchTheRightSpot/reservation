@@ -88,13 +88,15 @@ func preSaveStaff(a *stores.Adapters) (*model.Staff, error) {
 	return &s, nil
 }
 
-func preSaveService(a *stores.Adapters) (*service.ServiceEntity, error) {
-	return a.ServiceStore.Save(context.Background(), &service.ServiceEntity{
+func preSaveService(a *stores.Adapters) (*service.ServiceTypeEntity, error) {
+	s := service.ServiceTypeEntity{
 		Name:        "erp",
 		Price:       19.56,
 		Duration:    3600,
 		CleanUpTime: 30 * 60,
-	})
+	}
+	err := a.ServiceStore.Save(context.Background(), &s)
+	return &s, err
 }
 
 func TestStaffHandler(t *testing.T) {

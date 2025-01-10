@@ -81,13 +81,15 @@ func preSaveStaff(ps profileStore.IProfileStore, st staffStore.IStaffStore) (*st
 	return &s, nil
 }
 
-func preSaveService(a serviceStore.IServiceTypeStore) (*service.ServiceEntity, error) {
-	return a.Save(context.Background(), &service.ServiceEntity{
+func preSaveService(a serviceStore.IServiceTypeStore) (*service.ServiceTypeEntity, error) {
+	s := service.ServiceTypeEntity{
 		Name:        "erp",
 		Price:       19.56,
 		Duration:    3600,
 		CleanUpTime: 30 * 60,
-	})
+	}
+	err := a.Save(context.Background(), &s)
+	return &s, err
 }
 
 func TestReservationStore(t *testing.T) {

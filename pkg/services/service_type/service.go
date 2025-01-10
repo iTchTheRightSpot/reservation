@@ -9,7 +9,7 @@ import (
 )
 
 type IService interface {
-	Create(ctx context.Context, p *service.ServicePayload) error
+	Create(ctx context.Context, p *service.ServiceTypePayload) error
 }
 
 type serviceImpl struct {
@@ -21,8 +21,8 @@ func NewServiceImpl(l utils.ILogger, a *stores.Adapters) IService {
 	return &serviceImpl{logger: l, adapters: a}
 }
 
-func (dep *serviceImpl) Create(ctx context.Context, p *service.ServicePayload) error {
-	s := service.ServiceEntity{
+func (dep *serviceImpl) Create(ctx context.Context, p *service.ServiceTypePayload) error {
+	s := service.ServiceTypeEntity{
 		Name:          strings.TrimSpace(p.Name),
 		Price:         p.Price,
 		IsVisible:     p.IsVisible,
@@ -31,7 +31,7 @@ func (dep *serviceImpl) Create(ctx context.Context, p *service.ServicePayload) e
 		CleanUpTime:   p.CleanUpTime,
 	}
 
-	if _, err := dep.adapters.ServiceStore.Save(ctx, &s); err != nil {
+	if err := dep.adapters.ServiceStore.Save(ctx, &s); err != nil {
 		dep.logger.Error(err.Error())
 		return &utils.InsertionError{Message: err.Error()}
 	}
