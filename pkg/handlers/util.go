@@ -11,7 +11,7 @@ import (
 )
 
 func DeleteAll(db *sql.DB) error {
-	if _, err := db.Exec("TRUNCATE permission, role, profile, schedule, staff_service, reservation_service, reservation, service_type, staff"); err != nil {
+	if _, err := db.Exec("TRUNCATE permission, role, profile, schedule, staff_service, reservation_service, payment_detail, reservation, service_type, staff"); err != nil {
 		return err
 	}
 	return nil

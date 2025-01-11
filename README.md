@@ -60,11 +60,12 @@ Service similar to Square reservation
 # Development docs
 1. [Db Schema](https://dbdiagram.io/d/chidi-salon-6780316c6b7fa355c3705d78).
 2. [Trello](https://trello.com/b/SyruRoS3/chidi-salon-requirement).
-2. [Validator](https://github.com/go-playground/validator/blob/master/README.md).
-3. [Go migrate](https://github.com/golang-migrate/migrate/blob/master/README.md).
-4. [PG](https://neon.tech/postgresql/postgresql-tutorial/postgresql-foreign-key).
-5. [In-memory caching](https://www.codingexplorations.com/blog/harnessing-in-memory-caching-in-go).
+3. [Validator](https://github.com/go-playground/validator/blob/master/README.md).
+4. [Go migrate](https://github.com/golang-migrate/migrate/blob/master/README.md).
+5. [PG](https://neon.tech/postgresql/postgresql-tutorial/postgresql-foreign-key).
+6. [In-memory caching](https://www.codingexplorations.com/blog/harnessing-in-memory-caching-in-go).
 
 ## Cmd
 1. `migrate create -ext sql -dir ./database/migrations/ -seq create_users_table`.
-2. `go clean -testcache`
+2. `docker run --rm -v $(pwd)/database/migrations:/database/migrations migrate/migrate create -ext sql -dir ./database/migrations/ -seq payment_detail`
+3. `go clean -testcache`
