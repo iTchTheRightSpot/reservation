@@ -4,6 +4,14 @@
   "compileOnSave": false,
   "compilerOptions": {
     "outDir": "./dist/out-tsc",
+    "baseUrl": "./",
+    "paths": {
+      "@root/*": ["src/app/*"],
+      "@store-front/*": ["src/app/store-front/*"],
+      "@staff/*": ["src/app/staff/*"],
+      "@shared/*": ["src/app/shared/*"],
+      "@404/*": ["src/app/shared/pages/*"]
+    },
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
