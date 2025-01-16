@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
-  selector: 'app-store-front',
+  selector: 'app-confirm',
   imports: [],
-  template: `store front works`,
+  templateUrl: './confirm.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StoreFrontComponent {}
+export class ConfirmComponent {}
