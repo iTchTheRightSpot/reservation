@@ -11,14 +11,14 @@ export const routes: Routes = [
     path: SERVICE_TYPE_ROUTE,
     loadComponent: () =>
       import(
-        '@store/pages/reservation/service-type/service-type.component'
+        '@store/pages/reservation/pages/service-type/service-type.component'
       ).then(m => m.ServiceTypeComponent)
   },
   {
     path: STAFF_ROUTE,
     canActivate: [reservationStaffGuard],
     loadComponent: () =>
-      import('@store/pages/reservation/staff/staff.component').then(
+      import('@store/pages/reservation/pages/staff/staff.component').then(
         m => m.StaffComponent
       )
   },
@@ -26,14 +26,14 @@ export const routes: Routes = [
     path: DATES_ROUTE,
     canActivate: [datesGuard],
     loadComponent: () =>
-      import('@store/pages/reservation/dates/dates.component').then(
+      import('@store/pages/reservation/pages/dates/dates.component').then(
         m => m.DatesComponent
       )
   },
   {
     path: CONFIRM_ROUTE,
     loadComponent: () =>
-      import('@store/pages/reservation/confirm/confirm.component').then(
+      import('@store/pages/reservation/pages/confirm/confirm.component').then(
         m => m.ConfirmComponent
       )
   },

@@ -1,0 +1,69 @@
+<div class="w-full mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+  <div class="w-full">
+    <p-datepicker
+      [style]="{ width: '100%' }"
+      class="max-w-full"
+      [(ngModel)]="date"
+      [minDate]="today"
+      [inline]="true"
+      [showWeek]="false"
+      [readonlyInput]="true"
+      [disabledDates]="invalidDates()"
+      (onSelect)="onSelectedCalendarDay($event)"
+      (onMonthChange)="onSelectedCalendarMonth($event)"
+      (onYearChange)="onSelectedCalendarYear($event)"
+    />
+
+    <div class="w-full p-3">
+      <div class="w-full">
+        <p class="text-center">
+          Times are shown in <strong>{{ tz }}</strong>
+        </p>
+        <h3 class="my-6 text-xl">
+          <strong>
+            {{ selected.getValue().toLocaleDateString('en-US', timeformat) }}
+          </strong>
+        </h3>
+      </div>
+
+      @switch (req().state) {
+        @case (state.LOADING) {
+          @for (a of style(3); track a) {
+            <div class="my-4">
+              <p-skeleton width="100%" height="2rem" />
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              @for (b of style(10); track b) {
+                <p-skeleton width="4rem" height="2rem" />
+              }
+            </div>
+          }
+        }
+
+        @case (state.ERROR) {
+          <p-message severity="error">{{ req().message }}</p-message>
+        }
+
+        @case (state.LOADED) {
+          @if (contains(selected.getValue(), req().data!!)) {
+            render times
+          } @else {
+            invalid times
+          }
+        }
+      }
+    </div>
+  </div>
+
+  <div class="w-full hidden md:block">
+    @if (check(service1.reservationState()); as obj) {
+      <app-summary
+        [staffImage]="obj.staff.image_key"
+        [staffName]="obj.staff.name"
+        [bio]="obj.staff.bio"
+        [services]="obj.services"
+      />
+    }
+  </div>
+</div>

@@ -5,7 +5,7 @@ module.exports = {
   theme: {
     extend: {
       width: {
-        'cx-75': '50%'
+        'cx-50': '50%'
       },
       colors: {
         dim: 'rgba(255, 255, 255, 0.3)'

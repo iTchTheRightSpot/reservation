@@ -21,7 +21,7 @@ import { filter, map, startWith } from 'rxjs';
 @Component({
   selector: 'app-reservation',
   imports: [RouterOutlet, Breadcrumb, RouterLink, NgClass],
-  template: ` <div class="w-full md:w-cx-75 m-auto">
+  template: ` <div class="w-full xl:w-cx-50 m-auto">
     <div class="mt-3">
       <p-breadcrumb [model]="items" [home]="home">
         <ng-template #item let-item>
@@ -35,7 +35,10 @@ import { filter, map, startWith } from 'rxjs';
         </ng-template>
       </p-breadcrumb>
     </div>
-    <router-outlet />
+
+    <div class="px-3 xl:px-0">
+      <router-outlet />
+    </div>
   </div>`,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -72,7 +75,7 @@ export class ReservationComponent {
 
   protected readonly home: MenuItem = {
     label: 'reservation',
-    icon: 'pi-print',
+    icon: 'pi pi-shopping-bag',
     routerLink: `/${STORE_FRONT_RESERVATION_ROUTE}/${SERVICE_TYPE_ROUTE}`
   };
 }

@@ -38,7 +38,7 @@ export class NavigationComponent {
     },
     {
       label: 'BOOK',
-      icon: 'pi-shopping-bag',
+      icon: 'pi pi-shopping-bag',
       routerLink: `/${STORE_FRONT_RESERVATION_ROUTE}`,
       routerLinkActiveOptions: { exact: true },
       styleClass:

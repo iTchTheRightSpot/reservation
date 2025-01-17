@@ -1,4 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import * as moment from 'moment-timezone';
 
 export enum ApiState {
   LOADING = 'LOADING',
@@ -46,3 +47,5 @@ const secImpl = (seconds: number) => {
   }
   return `${seconds} secs`;
 };
+
+export const TIMEZONE = moment.tz.guess();
