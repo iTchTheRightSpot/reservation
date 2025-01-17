@@ -26,21 +26,33 @@ import { STORE_FRONT_HOME_ROUTE } from '@root/app.routes';
 export class NavigationComponent {
   protected readonly router = inject(Router);
 
+  // TODO comeback to understand why this isn't highlighting active tab
   protected readonly items: MenuItem[] = [
     {
       label: 'HOME',
       icon: 'pi pi-home',
-      command: () => this.router.navigate([`/${STORE_FRONT_HOME_ROUTE}`])
+      routerLink: `/${STORE_FRONT_HOME_ROUTE}`,
+      routerLinkActiveOptions: { exact: true },
+      styleClass:
+        this.router.url === `/${STORE_FRONT_HOME_ROUTE}` ? 'text-primary' : ''
     },
     {
       label: 'BOOK',
       icon: 'pi-shopping-bag',
-      command: () => this.router.navigate([`/${STORE_FRONT_RESERVATION_ROUTE}`])
+      routerLink: `/${STORE_FRONT_RESERVATION_ROUTE}`,
+      routerLinkActiveOptions: { exact: true },
+      styleClass:
+        this.router.url === `/${STORE_FRONT_RESERVATION_ROUTE}`
+          ? 'text-primary'
+          : ''
     },
     {
       label: 'ABOUT',
       icon: 'pi pi-star',
-      command: () => this.router.navigate([`/${STORE_FRONT_ABOUT_ROUTE}`])
+      routerLink: `/${STORE_FRONT_ABOUT_ROUTE}`,
+      routerLinkActiveOptions: { exact: true },
+      styleClass:
+        this.router.url === `/${STORE_FRONT_ABOUT_ROUTE}` ? 'text-primary' : ''
     }
   ];
 }
