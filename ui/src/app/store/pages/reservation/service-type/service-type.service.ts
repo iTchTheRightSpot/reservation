@@ -34,7 +34,7 @@ export class ServiceTypeService {
     this.http
       .get<
         ServiceTypeModel[]
-      >(`${environment.domain}service-offered`, { withCredentials: true })
+      >(`${environment.domain}service`, { withCredentials: true })
       .pipe(
         tap(arr => this.cache.next(arr)),
         map(

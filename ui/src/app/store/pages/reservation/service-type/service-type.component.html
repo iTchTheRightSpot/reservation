@@ -1,4 +1,4 @@
-<div class="mt-3 w-full">
+<div class="w-full mt-3">
   @switch (services().state) {
     @case (state.LOADING) {
       <div
@@ -31,19 +31,38 @@
     }
     @case (state.LOADED) {
       <div class="w-full pb-3">
-        @for (s of services().data; track s.name) {
-          <ul class="m-0 p-0 list-none">
-            <li>
-              <div class="flex">
-                <p-skeleton shape="circle" size="4rem" styleClass="mr-2" />
-                <div class="self-center" style="flex: 1">
-                  <p-skeleton width="100%" styleClass="mb-2" />
-                  <p-skeleton width="75%" />
+        <ul class="m-0 p-0 list-none">
+          @for (s of services().data; track s.name + s.price + s.duration) {
+            <li class="mt-4 cursor-pointer" tabindex="0" (click)="selected(s)">
+              <p-card [header]="s.name">
+                <div class="m-0 flex justify-between">
+                  <span
+                    >₦{{ s.price }} <strong>.</strong>
+                    {{ formatSeconds(s.duration) }}
+                  </span>
+
+                  <p-radio-button
+                    [name]="s.name"
+                    [ngModel]="contains(s)"
+                    [binary]="contains(s)"
+                    [value]="s"
+                    (ngModelChange)="selected($event)"
+                  />
                 </div>
-              </div>
+              </p-card>
             </li>
-          </ul>
-        }
+          }
+        </ul>
+        <div
+          class="w-full mt-4 text-right"
+          [ngClass]="{ hidden: selectedServices.length < 1 }"
+        >
+          <p-button
+            label="Add"
+            (click)="submit()"
+            [disabled]="selectedServices.length < 1"
+          />
+        </div>
       </div>
     }
   }

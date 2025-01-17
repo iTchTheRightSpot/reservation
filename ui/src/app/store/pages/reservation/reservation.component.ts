@@ -9,6 +9,8 @@ import { Breadcrumb } from 'primeng/breadcrumb';
 import { MenuItem } from 'primeng/api';
 import { STORE_FRONT_RESERVATION_ROUTE } from '@store/store.routes';
 import {
+  CONFIRM_ROUTE,
+  DATES_ROUTE,
   SERVICE_TYPE_ROUTE,
   STAFF_ROUTE
 } from '@store/pages/reservation/reservation.routes';
@@ -58,8 +60,14 @@ export class ReservationComponent {
       label: 'staffs',
       route: `/${STORE_FRONT_RESERVATION_ROUTE}/${STAFF_ROUTE}`
     },
-    { label: 'dates' },
-    { label: 'confirm' }
+    {
+      label: 'dates',
+      route: `/${STORE_FRONT_RESERVATION_ROUTE}/${DATES_ROUTE}`
+    },
+    {
+      label: 'confirm',
+      route: `/${STORE_FRONT_RESERVATION_ROUTE}/${CONFIRM_ROUTE}`
+    }
   ];
 
   protected readonly home: MenuItem = {

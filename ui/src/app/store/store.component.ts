@@ -25,7 +25,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
   ],
   template: `
     <div
-      class="w-full md:w-cx-75 m-auto"
+      class="w-full md:w-cx-75 m-auto z-10"
       [ngClass]="{ pos: url(), pos1: !url() }"
     >
       <app-navigation />
