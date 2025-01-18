@@ -72,7 +72,7 @@ func preSaveStaff(a *stores.Adapters) (*model.Staff, error) {
 		Email:     "erp@email.com",
 	}
 
-	if _, err := a.ProfileStore.Save(ctx, &p); err != nil {
+	if err := a.ProfileStore.Save(ctx, &p); err != nil {
 		return nil, err
 	}
 
@@ -81,7 +81,7 @@ func preSaveStaff(a *stores.Adapters) (*model.Staff, error) {
 		ProfileId: &p.ProfileId,
 	}
 
-	if _, err := a.StaffStore.Save(ctx, &s); err != nil {
+	if err := a.StaffStore.Save(ctx, &s); err != nil {
 		return nil, err
 	}
 

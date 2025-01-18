@@ -408,11 +408,10 @@ func preSaveService(ctx context.Context, a *stores.Adapters) (*service.ServiceTy
 }
 
 func linkServiceToStaff(a *stores.Adapters, sta *staff.Staff, staSer *service.ServiceTypeEntity) error {
-	_, err := a.StaffServiceStore.Save(context.Background(), &staff.StaffServiceEntity{
+	return a.StaffServiceStore.Save(context.Background(), &staff.StaffServiceEntity{
 		StaffId:   sta.StaffId,
 		ServiceId: staSer.ServiceId,
 	})
-	return err
 }
 
 func randomTimezone() (*time.Location, error) {

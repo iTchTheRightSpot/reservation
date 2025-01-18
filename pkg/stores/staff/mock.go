@@ -14,9 +14,9 @@ type MockStaffStore struct {
 	StaffByUUIDCalled bool
 }
 
-func (dep *MockStaffStore) Save(context.Context, *staff.Staff) (*staff.Staff, error) {
+func (dep *MockStaffStore) Save(context.Context, *staff.Staff) error {
 	dep.StaffSaveCalled = true
-	return dep.StaffSave, dep.StaffSaveError
+	return dep.StaffSaveError
 }
 
 func (dep *MockStaffStore) StaffByUUID(context.Context, string) (*staff.Staff, error) {
@@ -33,9 +33,9 @@ type MockStaffServiceStore struct {
 	CountByStaffIdAndServiceIdCalled bool
 }
 
-func (dep *MockStaffServiceStore) Save(context.Context, *staff.StaffServiceEntity) (*staff.StaffServiceEntity, error) {
+func (dep *MockStaffServiceStore) Save(context.Context, *staff.StaffServiceEntity) error {
 	dep.StaffServiceEntitySaveCalled = true
-	return dep.StaffServiceEntitySave, dep.StaffServiceEntitySaveError
+	return dep.StaffServiceEntitySaveError
 }
 
 func (dep *MockStaffServiceStore) CountByStaffIdAndServiceId(context.Context, uint64, uint64) (int, error) {

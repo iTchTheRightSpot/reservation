@@ -67,7 +67,7 @@ func TestScheduleStore(t *testing.T) {
 
 		// given
 		staffObj := staff.Staff{UUID: uuid.New()}
-		if _, err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
+		if err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
 			t.Errorf("%s", err)
 		}
 
@@ -100,7 +100,7 @@ func TestScheduleStore(t *testing.T) {
 
 		// given
 		staffObj := staff.Staff{UUID: uuid.New()}
-		if _, err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
+		if err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
 			t.Errorf("%s", err)
 		}
 
@@ -136,7 +136,7 @@ func TestScheduleStore(t *testing.T) {
 		ctx := context.Background()
 
 		staffObj := staff.Staff{UUID: uuid.New()}
-		if _, err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
+		if err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
 			t.Errorf("%s", err)
 		}
 
@@ -176,7 +176,7 @@ func TestScheduleStore(t *testing.T) {
 
 		// given
 		staffObj := staff.Staff{UUID: uuid.New()}
-		if _, err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
+		if err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
 			t.Errorf("%s", err)
 		}
 
@@ -221,7 +221,7 @@ func TestScheduleStore(t *testing.T) {
 
 		// given
 		staffObj := staff.Staff{UUID: uuid.New()}
-		if _, err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
+		if err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
 			t.Errorf("%s", err)
 		}
 
@@ -274,7 +274,7 @@ func TestScheduleStore(t *testing.T) {
 
 		// given
 		staffObj := staff.Staff{UUID: uuid.New()}
-		if _, err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
+		if err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
 			t.Errorf("%s", err)
 		}
 

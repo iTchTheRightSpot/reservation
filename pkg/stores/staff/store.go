@@ -10,7 +10,7 @@ import (
 )
 
 type IStaffStore interface {
-	Save(ctx context.Context, r *staff.Staff) (*staff.Staff, error)
+	Save(ctx context.Context, r *staff.Staff) error
 	StaffByUUID(ctx context.Context, staffUUID string) (*staff.Staff, error)
 }
 
@@ -23,9 +23,9 @@ func NewStaffStore(l utils.ILogger, db pkg.Db) IStaffStore {
 	return &staffStore{logger: l, db: db}
 }
 
-func (dep *staffStore) Save(ctx context.Context, r *staff.Staff) (*staff.Staff, error) {
+func (dep *staffStore) Save(ctx context.Context, r *staff.Staff) error {
 	if r == nil {
-		return nil, errors.New("staff object is nil")
+		return errors.New("staff object is nil")
 	}
 
 	q := `
@@ -40,10 +40,10 @@ func (dep *staffStore) Save(ctx context.Context, r *staff.Staff) (*staff.Staff, 
 
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New("exception saving to staff table")
+		return errors.New("exception saving to staff table")
 	}
 
-	return r, nil
+	return nil
 }
 
 func (dep *staffStore) StaffByUUID(ctx context.Context, staffUUID string) (*staff.Staff, error) {

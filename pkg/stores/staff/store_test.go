@@ -77,7 +77,7 @@ func TestStaffStore(t *testing.T) {
 			Email:     "frog@email.com",
 		}
 
-		if _, err := profileRepo.Save(ctx, &p); err != nil {
+		if err := profileRepo.Save(ctx, &p); err != nil {
 			t.Errorf("%s", err)
 		}
 
@@ -87,21 +87,16 @@ func TestStaffStore(t *testing.T) {
 		}
 
 		// method to test
-		save, err := staffRepo.Save(ctx, &s)
-		if err != nil {
-			t.Errorf("%s", err)
+		if err := staffRepo.Save(ctx, &s); err != nil {
+			t.Error(err.Error())
 		}
 
-		if save.StaffId < 1 {
-			t.Errorf("staff not saved. Expected StaffId > 0, got %d", save.StaffId)
-		}
-
-		if !reflect.DeepEqual(&s, save) {
-			t.Errorf("staff not saved correctly. expected: %+v, Got: %+v", s, save)
+		if s.StaffId < 1 {
+			t.Errorf("staff not saved. Expected StaffId > 0, got %d", s.StaffId)
 		}
 
 		// method to test
-		if _, err = staffRepo.StaffByUUID(ctx, uuid.New().String()); err == nil {
+		if _, err := staffRepo.StaffByUUID(ctx, uuid.New().String()); err == nil {
 			t.Errorf("should not find staff that does not exist")
 		}
 
@@ -110,8 +105,8 @@ func TestStaffStore(t *testing.T) {
 			t.Error(err)
 		}
 
-		if !reflect.DeepEqual(save, find) {
-			t.Errorf("expected: %+v, Got: %+v", save, find)
+		if !reflect.DeepEqual(s, find) {
+			t.Errorf("expected: %+v, Got: %+v", s, find)
 		}
 	})
 }

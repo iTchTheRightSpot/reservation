@@ -17,6 +17,10 @@ type MockServiceTypeStore struct {
 	ServicesByStaffIdCalled bool
 }
 
+func (dep *MockServiceTypeStore) ServicesByStatus(context.Context, bool) ([]*service.ServiceTypeEntity, error) {
+	return nil, nil
+}
+
 func (dep *MockServiceTypeStore) Save(context.Context, *service.ServiceTypeEntity) error {
 	dep.ServiceSaveCalled = true
 	return dep.ServiceSaveError

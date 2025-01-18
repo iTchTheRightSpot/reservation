@@ -24,7 +24,7 @@ func PreSaveStaff(ctx context.Context, a *stores.Adapters) (*staff.Staff, error)
 		Email:     fmt.Sprintf("%s@email.com", uuid.NewString()),
 	}
 
-	if _, err := a.ProfileStore.Save(ctx, &p); err != nil {
+	if err := a.ProfileStore.Save(ctx, &p); err != nil {
 		return nil, err
 	}
 
@@ -33,7 +33,7 @@ func PreSaveStaff(ctx context.Context, a *stores.Adapters) (*staff.Staff, error)
 		ProfileId: &p.ProfileId,
 	}
 
-	if _, err := a.StaffStore.Save(ctx, &s); err != nil {
+	if err := a.StaffStore.Save(ctx, &s); err != nil {
 		return nil, err
 	}
 

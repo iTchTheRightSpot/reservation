@@ -10,6 +10,7 @@ import (
 
 type IService interface {
 	Create(ctx context.Context, p *service.ServiceTypePayload) error
+	Services(ctx context.Context) (interface{}, error)
 }
 
 type serviceImpl struct {
@@ -19,6 +20,28 @@ type serviceImpl struct {
 
 func NewServiceImpl(l utils.ILogger, a *stores.Adapters) IService {
 	return &serviceImpl{logger: l, adapters: a}
+}
+
+func (dep *serviceImpl) Services(ctx context.Context) (interface{}, error) {
+	db, err := dep.adapters.ServiceStore.ServicesByStatus(ctx, true)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return nil, &utils.NotFoundError{Message: "an error occurred retrieving service types"}
+	}
+
+	type ui struct {
+		Name     string  `json:"name"`
+		Price    float64 `json:"price"`
+		Duration int     `json:"duration"`
+	}
+
+	arr := make([]*ui, len(db))
+
+	for i, e := range db {
+		arr[i] = &ui{Name: e.Name, Price: e.Price, Duration: e.Duration}
+	}
+
+	return arr, nil
 }
 
 func (dep *serviceImpl) Create(ctx context.Context, p *service.ServiceTypePayload) error {

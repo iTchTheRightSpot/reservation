@@ -2,14 +2,14 @@ package profile
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 )
 
 type IPermissionStore interface {
-	Save(ctx context.Context, p *models.Permission) (*models.Permission, error)
+	Save(ctx context.Context, p *models.Permission) error
 }
 
 type permissionStore struct {
@@ -21,9 +21,9 @@ func NewPermissionStore(l utils.ILogger, db pkg.Db) IPermissionStore {
 	return &permissionStore{logger: l, db: db}
 }
 
-func (dep *permissionStore) Save(ctx context.Context, p *models.Permission) (*models.Permission, error) {
+func (dep *permissionStore) Save(ctx context.Context, p *models.Permission) error {
 	if p == nil {
-		return nil, fmt.Errorf("permisson object is nil")
+		return errors.New("permission object is nil")
 	}
 
 	q := `
@@ -33,13 +33,10 @@ func (dep *permissionStore) Save(ctx context.Context, p *models.Permission) (*mo
 	`
 
 	row := dep.db.QueryRowContext(ctx, q, p.Permission, p.RoleId)
-
-	err := row.Scan(&p.PermissionId, &p.Permission, &p.RoleId)
-
-	if err != nil {
+	if err := row.Scan(&p.PermissionId, &p.Permission, &p.RoleId); err != nil {
 		dep.logger.Error(err)
-		return nil, fmt.Errorf("exception saving to permission table")
+		return errors.New("exception saving to permission table")
 	}
 
-	return p, nil
+	return nil
 }

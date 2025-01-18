@@ -2,14 +2,14 @@ package profile
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 )
 
 type IProfileStore interface {
-	Save(ctx context.Context, p *profile.Profile) (*profile.Profile, error)
+	Save(ctx context.Context, p *profile.Profile) error
 }
 
 type profileStore struct {
@@ -21,9 +21,9 @@ func NewProfileStore(l utils.ILogger, db pkg.Db) IProfileStore {
 	return &profileStore{logger: l, db: db}
 }
 
-func (dep *profileStore) Save(ctx context.Context, p *profile.Profile) (*profile.Profile, error) {
+func (dep *profileStore) Save(ctx context.Context, p *profile.Profile) error {
 	if p == nil {
-		return nil, fmt.Errorf("profile object is nil")
+		return errors.New("profile object is nil")
 	}
 
 	q := `
@@ -36,9 +36,9 @@ func (dep *profileStore) Save(ctx context.Context, p *profile.Profile) (*profile
 	err := row.Scan(&p.ProfileId, &p.Firstname, &p.Lastname, &p.Email, &p.ImageKey)
 
 	if err != nil {
-		dep.logger.Error(err)
-		return nil, fmt.Errorf("exception saving to profile table")
+		dep.logger.Error(err.Error())
+		return errors.New("exception saving to profile table")
 	}
 
-	return p, nil
+	return nil
 }

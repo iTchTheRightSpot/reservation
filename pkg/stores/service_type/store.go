@@ -14,6 +14,7 @@ type IServiceTypeStore interface {
 	Save(ctx context.Context, s *service.ServiceTypeEntity) error
 	ServiceByName(ctx context.Context, name string) (*service.ServiceTypeEntity, error)
 	ServicesByStaffId(ctx context.Context, staffId uint64, visible bool) ([]*service.ServiceTypeEntity, error)
+	ServicesByStatus(ctx context.Context, b bool) ([]*service.ServiceTypeEntity, error)
 }
 
 type serviceStore struct {
@@ -23,6 +24,41 @@ type serviceStore struct {
 
 func NewServiceTypeStore(l utils.ILogger, db pkg.Db) IServiceTypeStore {
 	return &serviceStore{logger: l, db: db}
+}
+
+func (dep *serviceStore) ServicesByStatus(ctx context.Context, b bool) ([]*service.ServiceTypeEntity, error) {
+	var arr []*service.ServiceTypeEntity
+
+	q := "SELECT * FROM service_type WHERE is_visible = $1"
+
+	rows, err := dep.db.QueryContext(ctx, q, b)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return nil, errors.New("exception retrieving services by status")
+	}
+
+	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
+
+	for rows.Next() {
+		var s service.ServiceTypeEntity
+
+		err = rows.Scan(&s.ServiceId, &s.Name, &s.Price, &s.IsVisible, &s.IsReoccurring, &s.Duration, &s.CleanUpTime)
+
+		if err != nil {
+			dep.logger.Error(err)
+			return nil, errors.New("exception scanning service by status")
+
+		}
+
+		arr = append(arr, &s)
+	}
+
+	if err = rows.Err(); err != nil {
+		dep.logger.Error(err.Error())
+		return nil, errors.New("error iterating services by status")
+	}
+
+	return arr, err
 }
 
 func (dep *serviceStore) Save(ctx context.Context, s *service.ServiceTypeEntity) error {
@@ -79,7 +115,7 @@ func (dep *serviceStore) ServicesByStaffId(ctx context.Context, staffId uint64, 
 	rows, err := dep.db.QueryContext(ctx, q, staffId, visible)
 	if err != nil {
 		dep.logger.Error(err)
-		return nil, fmt.Errorf("exception retrieving services")
+		return nil, errors.New("exception retrieving services")
 	}
 
 	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
@@ -91,7 +127,7 @@ func (dep *serviceStore) ServicesByStaffId(ctx context.Context, staffId uint64, 
 
 		if err != nil {
 			dep.logger.Error(err)
-			return nil, fmt.Errorf("exception scanning service")
+			return nil, errors.New("exception scanning service")
 
 		}
 
@@ -100,7 +136,7 @@ func (dep *serviceStore) ServicesByStaffId(ctx context.Context, staffId uint64, 
 
 	if err = rows.Err(); err != nil {
 		dep.logger.Error(err)
-		return nil, fmt.Errorf("error iterating services")
+		return nil, errors.New("error iterating services")
 	}
 
 	return arr, err

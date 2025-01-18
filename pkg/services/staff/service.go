@@ -40,7 +40,7 @@ func (dep *staffService) LinkServiceToStaff(ctx context.Context, staffUUID, serv
 		return &utils.InsertionError{Message: "service already linked to staff"}
 	}
 
-	_, err = dep.adapters.StaffServiceStore.Save(ctx, &staff.StaffServiceEntity{
+	err = dep.adapters.StaffServiceStore.Save(ctx, &staff.StaffServiceEntity{
 		StaffId: s.StaffId, ServiceId: service.ServiceId,
 	})
 

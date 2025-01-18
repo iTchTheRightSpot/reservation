@@ -9,7 +9,6 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"log"
-	"reflect"
 	"testing"
 )
 
@@ -69,17 +68,12 @@ func TestProfileStore(t *testing.T) {
 		}
 
 		// method to test
-		save, err := repo.Save(context.Background(), &p)
-		if err != nil {
+		if err := repo.Save(context.Background(), &p); err != nil {
 			t.Errorf("%s", err)
 		}
 
-		if save.ProfileId < 1 {
-			t.Errorf("profile not saved. Expected ProfileId > 0, got %d", save.ProfileId)
-		}
-
-		if !reflect.DeepEqual(&p, save) {
-			t.Errorf("staff not saved correctly. expected: %+v, Got: %+v", p, save)
+		if p.ProfileId < 1 {
+			t.Errorf("profile not saved. Expected ProfileId > 0, got %d", p.ProfileId)
 		}
 	})
 
@@ -97,17 +91,12 @@ func TestProfileStore(t *testing.T) {
 		}
 
 		// method to test
-		save, err := repo.Save(context.Background(), &p)
-		if err != nil {
-			t.Errorf("%s", err)
+		if err := repo.Save(context.Background(), &p); err != nil {
+			t.Error(err.Error())
 		}
 
-		if save.ProfileId < 1 {
-			t.Errorf("profile not saved. Expected ProfileId > 0, got %d", save.ProfileId)
-		}
-
-		if !reflect.DeepEqual(&p, save) {
-			t.Errorf("staff not saved correctly. expected: %+v, Got: %+v", p, save)
+		if p.ProfileId < 1 {
+			t.Errorf("profile not saved. Expected ProfileId > 0, got %d", p.ProfileId)
 		}
 	})
 
@@ -127,40 +116,30 @@ func TestProfileStore(t *testing.T) {
 		}
 
 		// save profile
-		if _, err := profileRepo.Save(ctx, &p); err != nil {
+		if err := profileRepo.Save(ctx, &p); err != nil {
 			t.Errorf("%s", err)
 		}
 
 		// save role & assert it is saved
 		r := models.Role{Role: models.STAFF, ProfileId: p.ProfileId}
 
-		save, err := roleRepo.Save(ctx, &r)
-		if err != nil {
+		if err := roleRepo.Save(ctx, &r); err != nil {
 			t.Errorf("%s", err)
 		}
 
-		if save.RoleId < 1 {
-			t.Errorf("role not saved. Expected RoleId > 0, got %d", save.RoleId)
-		}
-
-		if !reflect.DeepEqual(&r, save) {
-			t.Errorf("role not saved correctly. expected: %+v, Got: %+v", r, save)
+		if r.RoleId < 1 {
+			t.Errorf("role not saved. Expected RoleId > 0, got %d", r.RoleId)
 		}
 
 		// save permission & assert
 		per := models.Permission{Permission: models.WRITE, RoleId: r.RoleId}
 
-		savePer, err := permissionRepo.Save(ctx, &per)
-		if err != nil {
+		if err := permissionRepo.Save(ctx, &per); err != nil {
 			t.Errorf("%s", err)
 		}
 
-		if savePer.PermissionId < 1 {
-			t.Errorf("permission not saved. Expected PermissionId > 0, got %d", savePer.PermissionId)
-		}
-
-		if !reflect.DeepEqual(&per, savePer) {
-			t.Errorf("permission not saved correctly. expected: %+v, Got: %+v", r, save)
+		if per.PermissionId < 1 {
+			t.Errorf("permission not saved. Expected PermissionId > 0, got %d", per.PermissionId)
 		}
 	})
 }

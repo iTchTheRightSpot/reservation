@@ -12,9 +12,9 @@ type MockProfileStore struct {
 	MockProfileSaveCalled bool
 }
 
-func (dep *MockProfileStore) Save(context.Context, *profile.Profile) (*profile.Profile, error) {
+func (dep *MockProfileStore) Save(context.Context, *profile.Profile) error {
 	dep.MockProfileSaveCalled = true
-	return dep.MockProfileSave, dep.MockProfileSaveError
+	return dep.MockProfileSaveError
 }
 
 type MockPermissionStore struct {
@@ -23,9 +23,9 @@ type MockPermissionStore struct {
 	MockPermissionSaveCalled bool
 }
 
-func (dep *MockPermissionStore) Save(context.Context, *models.Permission) (*models.Permission, error) {
+func (dep *MockPermissionStore) Save(context.Context, *models.Permission) error {
 	dep.MockPermissionSaveCalled = true
-	return dep.MockPermissionSave, dep.MockPermissionSaveError
+	return dep.MockPermissionSaveError
 }
 
 type MockRoleStore struct {
@@ -34,7 +34,7 @@ type MockRoleStore struct {
 	MockRoleSaveCalled bool
 }
 
-func (dep *MockRoleStore) Save(context.Context, *models.Role) (*models.Role, error) {
+func (dep *MockRoleStore) Save(context.Context, *models.Role) error {
 	dep.MockRoleSaveCalled = true
-	return dep.MockRoleSave, dep.MockRoleSaveError
+	return dep.MockRoleSaveError
 }

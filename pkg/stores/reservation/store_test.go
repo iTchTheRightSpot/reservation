@@ -65,7 +65,7 @@ func preSaveStaff(ps profileStore.IProfileStore, st staffStore.IStaffStore) (*st
 		Email:     "erp@email.com",
 	}
 
-	if _, err := ps.Save(ctx, &p); err != nil {
+	if err := ps.Save(ctx, &p); err != nil {
 		return nil, err
 	}
 
@@ -74,7 +74,7 @@ func preSaveStaff(ps profileStore.IProfileStore, st staffStore.IStaffStore) (*st
 		ProfileId: &p.ProfileId,
 	}
 
-	if _, err := st.Save(ctx, &s); err != nil {
+	if err := st.Save(ctx, &s); err != nil {
 		return nil, err
 	}
 

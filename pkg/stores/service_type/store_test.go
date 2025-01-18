@@ -122,11 +122,11 @@ func TestServiceStore(t *testing.T) {
 		}
 
 		se := model.Staff{UUID: uuid.New()}
-		if _, err := staffStore.Save(ctx, &se); err != nil {
+		if err := staffStore.Save(ctx, &se); err != nil {
 			t.Error(err.Error())
 		}
 
-		if _, err := ss.Save(ctx, &model.StaffServiceEntity{ServiceId: s.ServiceId, StaffId: se.StaffId}); err != nil {
+		if err := ss.Save(ctx, &model.StaffServiceEntity{ServiceId: s.ServiceId, StaffId: se.StaffId}); err != nil {
 			t.Error(err.Error())
 		}
 
