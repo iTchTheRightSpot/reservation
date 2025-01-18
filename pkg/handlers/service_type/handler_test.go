@@ -141,10 +141,23 @@ func TestServiceHandler(t *testing.T) {
 			t.Errorf("expected size 1, got %d", size)
 			t.Errorf("%v", resp)
 		}
+
+		for _, obj := range resp {
+			if len(obj.Name) < 1 {
+				t.Error("expect name to not be empty")
+			}
+
+			if obj.Price < 1 {
+				t.Error("expect Price to be greater than zero")
+			}
+
+			if obj.Duration < 1 {
+				t.Error("expect Duration to be greater than zero")
+			}
+		}
 	})
 
 	t.Run("should retrieve staffs by services", func(t *testing.T) {
-
 		t.Run("reject missing request param(s)", func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/service/staffs", nil)
 			rr := httptest.NewRecorder()
