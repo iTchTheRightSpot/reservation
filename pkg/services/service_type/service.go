@@ -11,6 +11,7 @@ import (
 type IService interface {
 	Create(ctx context.Context, p *service.ServiceTypePayload) error
 	Services(ctx context.Context) (interface{}, error)
+	StaffByServices(ctx context.Context, services *[]string) (interface{}, error)
 }
 
 type serviceImpl struct {
@@ -39,6 +40,37 @@ func (dep *serviceImpl) Services(ctx context.Context) (interface{}, error) {
 
 	for i, e := range db {
 		arr[i] = &ui{Name: e.Name, Price: e.Price, Duration: e.Duration}
+	}
+
+	return arr, nil
+}
+
+func (dep *serviceImpl) StaffByServices(ctx context.Context, services *[]string) (interface{}, error) {
+	stafs, err := dep.adapters.StaffStore.StaffsByServices(ctx, services)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return nil, &utils.NotFoundError{Message: "no staffs found for said service(s)"}
+	}
+
+	type ui struct {
+		StaffId  string  `json:"staff_id"`
+		Name     string  `json:"name"`
+		ImageKey *string `json:"image_key"`
+		Bio      *string `json:"bio"`
+	}
+
+	arr := make([]*ui, len(stafs))
+
+	var str strings.Builder
+	for i, staf := range stafs {
+		str.Reset()
+
+		if staf.Bio == nil {
+			str.WriteString("Ready to put a smile on your face 🌞")
+		} else {
+			str.WriteString(*staf.Bio)
+		}
+		arr[i] = &ui{StaffId: staf.UUID.String(), Name: staf.Name, ImageKey: staf.ImageKey, Bio: staf.Bio}
 	}
 
 	return arr, nil

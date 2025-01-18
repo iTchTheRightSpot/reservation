@@ -14,6 +14,10 @@ type MockStaffStore struct {
 	StaffByUUIDCalled bool
 }
 
+func (dep *MockStaffStore) StaffsByServices(context.Context, *[]string) ([]*staff.StaffStoreFrontDb, error) {
+	return nil, nil
+}
+
 func (dep *MockStaffStore) Save(context.Context, *staff.Staff) error {
 	dep.StaffSaveCalled = true
 	return dep.StaffSaveError

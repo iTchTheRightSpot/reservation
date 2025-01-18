@@ -14,3 +14,10 @@ type StaffServiceEntity struct {
 	StaffId    uint64 `json:"staff_id"`
 	ServiceId  uint64 `json:"service_id"`
 }
+
+type StaffStoreFrontDb struct {
+	Name     string    `json:"name"`
+	UUID     uuid.UUID `json:"uuid"`
+	Bio      *string   `json:"bio"`
+	ImageKey *string   `json:"image_key"`
+}

@@ -36,6 +36,7 @@ func (dep *ServiceHandler) Register() {
 	m := middleware.RequestBodyMiddleware[model.ServiceTypePayload]{Logger: dep.logger}
 
 	dep.mux.HandleFunc("GET /service", dep.services)
+	dep.mux.HandleFunc("GET /service/staffs", dep.staffsByServices)
 	dep.mux.Handle("POST /service", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(m.RequestBody(http.HandlerFunc(dep.create)), rp)))
 }
 
@@ -58,6 +59,28 @@ func (dep *ServiceHandler) create(w http.ResponseWriter, r *http.Request) {
 
 func (dep *ServiceHandler) services(w http.ResponseWriter, r *http.Request) {
 	arr, err := dep.service.Services(r.Context())
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	response, _ := json.Marshal(arr)
+	if _, err = w.Write(response); err != nil {
+		dep.logger.Error(err.Error())
+	}
+}
+
+func (dep *ServiceHandler) staffsByServices(w http.ResponseWriter, r *http.Request) {
+	services := r.URL.Query()["service"]
+	if services == nil || len(services) < 1 {
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: "bad request, missing services type(s)"})
+		return
+	}
+
+	arr, err := dep.service.StaffByServices(r.Context(), &services)
 	if err != nil {
 		dep.logger.Error(err.Error())
 		utils.ErrorResponse(w, err)

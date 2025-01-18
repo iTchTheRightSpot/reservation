@@ -2,15 +2,19 @@ package service_type
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
@@ -19,6 +23,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -137,4 +142,91 @@ func TestServiceHandler(t *testing.T) {
 			t.Errorf("%v", resp)
 		}
 	})
+
+	t.Run("should retrieve staffs by services", func(t *testing.T) {
+
+		t.Run("reject missing request param(s)", func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, "/service/staffs", nil)
+			rr := httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+
+			// assert
+			if rr.Code != http.StatusBadRequest {
+				t.Errorf("expected status code %d, got %d", http.StatusBadRequest, rr.Code)
+			}
+
+			con := strings.Contains(rr.Body.String(), "bad request, missing services type(s)")
+			if !con {
+				t.Errorf("expect to contain bad request, missing services type(s)")
+				t.Errorf("%s", rr.Body.String())
+			}
+		})
+
+		t.Run("success", func(t *testing.T) {
+			// pre-save
+			ctx := context.Background()
+			serv1 := preSave(t, adapters, ctx)
+			serv2 := preSave(t, adapters, ctx)
+
+			url := fmt.Sprintf("/service/staffs?service=%s&service=%s", serv1.Name, serv2.Name)
+			req := httptest.NewRequest(http.MethodGet, url, nil)
+			rr := httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+
+			// assert
+			if rr.Code != http.StatusOK {
+				t.Errorf("expected status code %d, got %d", http.StatusOK, rr.Code)
+				t.Errorf("%s", rr.Body.String())
+			}
+
+			type ui struct {
+				StaffId  string  `json:"staff_id"`
+				Name     string  `json:"name"`
+				ImageKey *string `json:"image_key"`
+				Bio      *string `json:"bio"`
+			}
+
+			var resp []*ui
+			if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
+				t.Errorf(err.Error())
+			}
+
+			// assert
+			size := len(resp)
+			if size != 2 {
+				t.Errorf("expected size 1, got %d", size)
+				t.Errorf("%v", resp)
+			}
+		})
+	})
+}
+
+func preSave(t *testing.T, adapters *stores.Adapters, ctx context.Context) service.ServiceTypeEntity {
+	prof := profile.Profile{Firstname: "f", Lastname: "l", Email: uuid.NewString()}
+	if err := adapters.ProfileStore.Save(ctx, &prof); err != nil {
+		t.Error(err.Error())
+	}
+
+	staf := staff.Staff{ProfileId: &prof.ProfileId, UUID: uuid.New()}
+	if err := adapters.StaffStore.Save(ctx, &staf); err != nil {
+		t.Error(err.Error())
+	}
+
+	serv := service.ServiceTypeEntity{
+		Name:        uuid.NewString(),
+		Price:       20,
+		IsVisible:   true,
+		Duration:    3600,
+		CleanUpTime: 30 * 60,
+	}
+	if err := adapters.ServiceStore.Save(ctx, &serv); err != nil {
+		t.Error(err.Error())
+	}
+
+	if err := adapters.StaffServiceStore.Save(ctx, &staff.StaffServiceEntity{
+		StaffId: staf.StaffId, ServiceId: serv.ServiceId,
+	}); err != nil {
+		t.Error(err.Error())
+	}
+	return serv
 }
