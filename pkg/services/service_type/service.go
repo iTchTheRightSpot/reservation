@@ -70,7 +70,8 @@ func (dep *serviceImpl) StaffByServices(ctx context.Context, services *[]string)
 		} else {
 			str.WriteString(*staf.Bio)
 		}
-		arr[i] = &ui{StaffId: staf.UUID.String(), Name: staf.Name, ImageKey: staf.ImageKey, Bio: staf.Bio}
+		ss := str.String()
+		arr[i] = &ui{StaffId: staf.UUID.String(), Name: staf.Name, ImageKey: staf.ImageKey, Bio: &ss}
 	}
 
 	return arr, nil

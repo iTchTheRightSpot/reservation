@@ -197,6 +197,21 @@ func TestServiceHandler(t *testing.T) {
 				t.Errorf("expected size 1, got %d", size)
 				t.Errorf("%v", resp)
 			}
+
+			for _, obj := range resp {
+				if len(obj.StaffId) < 1 {
+					t.Error("expect staffId to not be empty")
+				}
+
+				if len(obj.Name) < 1 {
+					t.Error("expect name to not be empty")
+				}
+
+				if obj.Bio == nil || len(*obj.Bio) < 1 {
+					t.Error("expect bio to not be nil or empty")
+					t.Error(obj.Bio)
+				}
+			}
 		})
 	})
 }
