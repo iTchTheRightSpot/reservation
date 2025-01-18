@@ -105,7 +105,7 @@ func TestStaffStore(t *testing.T) {
 			t.Error(err)
 		}
 
-		if !reflect.DeepEqual(s, find) {
+		if !reflect.DeepEqual(s, *find) {
 			t.Errorf("expected: %+v, Got: %+v", s, find)
 		}
 	})
