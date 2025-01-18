@@ -9,18 +9,30 @@ import { StaffModel } from '@store/pages/reservation/pages/staff/staff.model';
 export class ReservationService {
   readonly reservationState = signal<ReservationModel>({
     services: undefined,
-    staff: undefined
+    staff: undefined,
+    dateTime: undefined
   });
 
   readonly setServiceTypes = (services: ServiceTypeModel[]) =>
     this.reservationState.set({
       services: services,
-      staff: undefined
+      staff: undefined,
+      dateTime: undefined
     });
 
   readonly setStaff = (staff: StaffModel) =>
     this.reservationState.set({
       services: this.reservationState().services,
-      staff: staff
+      staff: staff,
+      dateTime: undefined
     });
+
+  readonly setDateTime = (date: string) => {
+    const model = this.reservationState();
+    this.reservationState.set({
+      services: model.services,
+      staff: model.staff,
+      dateTime: date
+    });
+  };
 }

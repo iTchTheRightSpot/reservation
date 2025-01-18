@@ -45,8 +45,9 @@
                     [name]="s.name"
                     [ngModel]="contains(s)"
                     [binary]="contains(s)"
+                    [inputId]="s.name"
                     [value]="s"
-                    (ngModelChange)="selected($event)"
+                    (onClick)="selected(s)"
                   />
                 </div>
               </p-card>

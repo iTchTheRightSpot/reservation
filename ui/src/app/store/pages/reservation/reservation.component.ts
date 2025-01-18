@@ -36,7 +36,7 @@ import { filter, map, startWith } from 'rxjs';
       </p-breadcrumb>
     </div>
 
-    <div class="px-3 xl:px-0">
+    <div class="pb-3 xl:pb-0 px-3 xl:px-0">
       <router-outlet />
     </div>
   </div>`,

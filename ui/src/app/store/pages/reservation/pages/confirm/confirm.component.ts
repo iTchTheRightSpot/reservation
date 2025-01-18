@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ReservationService } from '@store/pages/reservation/reservation.service';
 
 @Component({
   selector: 'app-confirm',
@@ -6,4 +7,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   templateUrl: './confirm.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ConfirmComponent {}
+export class ConfirmComponent {
+  protected readonly service1 = inject(ReservationService);
+}

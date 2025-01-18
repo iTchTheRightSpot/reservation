@@ -11,10 +11,14 @@ import { NgClass } from '@angular/common';
   selector: 'app-summary',
   imports: [Card, Avatar, ToggleButton, FormsModule, NgClass],
   template: `
-    <div class="pt-4">
-      <div class="mb-3">
-        <h1 class="font-semibold text-base lg:text-lg">Appointment summary</h1>
-      </div>
+    <div>
+      @if (displayHeader()) {
+        <div class="mb-3">
+          <h1 class="font-semibold text-base lg:text-lg">
+            Appointment summary
+          </h1>
+        </div>
+      }
 
       <div class="w-full">
         <p-card>
@@ -71,6 +75,7 @@ export class SummaryComponent {
   staffImage = input.required<string>();
   staffName = input.required<string>();
   bio = input.required<string>();
+  displayHeader = input<boolean>(true);
 
   protected toggle = false;
 

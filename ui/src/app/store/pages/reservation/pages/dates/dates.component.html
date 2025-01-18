@@ -1,6 +1,6 @@
 <div class="w-full mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
   <div class="w-full">
-    <p-datepicker
+    <p-date-picker
       [style]="{ width: '100%' }"
       class="max-w-full"
       [(ngModel)]="date"
@@ -9,10 +9,18 @@
       [showWeek]="false"
       [readonlyInput]="true"
       [disabledDates]="invalidDates()"
-      (onSelect)="onSelectedCalendarDay($event)"
+      (onSelect)="selected.next($event)"
       (onMonthChange)="onSelectedCalendarMonth($event)"
       (onYearChange)="onSelectedCalendarYear($event)"
-    />
+    >
+      <ng-template pTemplate="date" let-date>
+        @if (crossDates(date, invalidDates())) {
+          <strong style="text-decoration: line-through">{{ date.day }}</strong>
+        } @else {
+          {{ date.day }}
+        }
+      </ng-template>
+    </p-date-picker>
 
     <div class="w-full p-3">
       <div class="w-full">
@@ -28,13 +36,13 @@
 
       @switch (req().state) {
         @case (state.LOADING) {
-          @for (a of style(3); track a) {
+          @for (a of skeleton(2); track a) {
             <div class="my-4">
               <p-skeleton width="100%" height="2rem" />
             </div>
 
             <div class="flex flex-wrap gap-2">
-              @for (b of style(10); track b) {
+              @for (b of skeleton(10); track b) {
                 <p-skeleton width="4rem" height="2rem" />
               }
             </div>
@@ -46,10 +54,23 @@
         }
 
         @case (state.LOADED) {
-          @if (contains(selected.getValue(), req().data!!)) {
-            render times
+          @if (contains(selected.getValue(), req().data!!); as ds) {
+            <div class="w-full flex flex-col gap-4">
+              <div class="flex flex-wrap gap-2">
+                <p class="w-full flex-none font-bold">Availabilities</p>
+
+                @for (time of ds; track time.original) {
+                  <p-button
+                    [label]="time.format"
+                    variant="outlined"
+                    severity="secondary"
+                    (onClick)="updateParent(time.original)"
+                  />
+                }
+              </div>
+            </div>
           } @else {
-            invalid times
+            <p class="font-bold">No availability</p>
           }
         }
       }
@@ -65,5 +86,38 @@
         [services]="obj.services"
       />
     }
+  </div>
+
+  <div class="w-full block md:hidden fixed left-0 right-0 bottom-0">
+    <p-sidebar
+      styleClass="p-sidebar-lg bg-red-600"
+      [(visible)]="sidebarVisible4"
+      position="down"
+      [dismissible]="false"
+    >
+      <ng-template pTemplate="header">
+        <span class="font-semibold text-xl">Appointment Summary</span>
+      </ng-template>
+
+      @if (check(service1.reservationState()); as obj) {
+        <ng-template pTemplate="content">
+          <app-summary
+            [staffImage]="obj.staff.image_key"
+            [staffName]="obj.staff.name"
+            [bio]="obj.staff.bio"
+            [services]="obj.services"
+            [displayHeader]="false"
+          />
+        </ng-template>
+      }
+    </p-sidebar>
+
+    <div class="w-full p-2 text-right">
+      <p-button
+        type="button"
+        icon="pi pi-arrow-right"
+        (onClick)="sidebarVisible4 = true"
+      />
+    </div>
   </div>
 </div>

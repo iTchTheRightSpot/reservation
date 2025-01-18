@@ -4,4 +4,5 @@ import { StaffModel } from '@store/pages/reservation/pages/staff/staff.model';
 export interface ReservationModel {
   services: ServiceTypeModel[] | undefined;
   staff: StaffModel | undefined;
+  dateTime: string | undefined;
 }

@@ -2,7 +2,17 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ReservationService } from '@store/pages/reservation/reservation.service';
 import { environment } from '@env/environment';
-import { catchError, map, of, switchMap, tap } from 'rxjs';
+import {
+  catchError,
+  concat,
+  concatMap,
+  map,
+  of,
+  startWith,
+  switchMap,
+  tap,
+  timer
+} from 'rxjs';
 import { DateModel, DummyDates } from './dates.model';
 import { ApiResponse, ApiState, err, TIMEZONE } from '@root/app.util';
 import { Cache } from '@root/cache';
@@ -17,17 +27,25 @@ export class DatesService {
   private readonly service = inject(ReservationService);
 
   readonly dates = (date: Date) => {
-    if (!environment.production)
-      return of<ApiResponse<DateModel[]>>({
-        state: ApiState.LOADED,
-        data: DummyDates(date.getMonth(), date.getFullYear())
-      });
+    if (!environment.production) {
+      const loading = of<ApiResponse<DateModel[]>>({ state: ApiState.LOADING });
+      const loaded = timer(1000).pipe(
+        switchMap(() =>
+          of<ApiResponse<DateModel[]>>({
+            state: ApiState.LOADED,
+            data: DummyDates(date.getMonth(), date.getFullYear())
+          })
+        )
+      );
+
+      return of('yes').pipe(concatMap(() => concat(loading, loaded)));
+    }
 
     const obj = this.service.reservationState();
     if (!obj.services || obj.services.length < 1 || !obj.staff)
       return of<ApiResponse<DateModel[]>>({
         state: ApiState.ERROR,
-        message: 'missing: service & staff'
+        message: 'missing: service(s) & staff'
       });
 
     const key = `${obj.staff.staff_id}_${obj.services.map(s => s.name).join('_')}_${date.getMonth()}_${date.getFullYear()}_${TIMEZONE}`;
@@ -62,6 +80,7 @@ export class DatesService {
           arr =>
             ({ state: ApiState.LOADED, data: arr }) as ApiResponse<DateModel[]>
         ),
+        startWith({ state: ApiState.LOADING } as ApiResponse<DateModel[]>),
         catchError(e => of(err<DateModel[]>(e)))
       );
   };

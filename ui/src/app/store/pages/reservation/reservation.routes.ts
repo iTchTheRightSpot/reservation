@@ -1,5 +1,9 @@
 import { Routes } from '@angular/router';
-import { datesGuard, reservationStaffGuard } from './reservation.guard';
+import {
+  confirmGuard,
+  datesGuard,
+  reservationStaffGuard
+} from './reservation.guard';
 
 export const SERVICE_TYPE_ROUTE = 'service';
 export const STAFF_ROUTE = 'staff';
@@ -32,6 +36,7 @@ export const routes: Routes = [
   },
   {
     path: CONFIRM_ROUTE,
+    canActivate: [confirmGuard],
     loadComponent: () =>
       import('@store/pages/reservation/pages/confirm/confirm.component').then(
         m => m.ConfirmComponent
