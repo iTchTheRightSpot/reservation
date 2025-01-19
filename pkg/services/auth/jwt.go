@@ -41,8 +41,8 @@ func loadPublicKey(path string) (*rsa.PublicKey, error) {
 }
 
 type IJwtService interface {
-	GenerateJwt(o *models.JwtObj, expirationInSeconds int) (*models.JwtResponse, error)
-	ValidateJwt(str string) (*models.JwtObj, error)
+	Encode(o *models.JwtObj, expirationInSeconds int) (*models.JwtResponse, error)
+	Decode(str string) (*models.JwtObj, error)
 }
 
 type jwtService struct {
@@ -65,7 +65,7 @@ func NewJwtService(l utils.ILogger, env *config.SecretVariables) IJwtService {
 	return &jwtService{logger: l, privKey: priv, pubKey: pub}
 }
 
-func (dep *jwtService) GenerateJwt(o *models.JwtObj, expirationInSeconds int) (*models.JwtResponse, error) {
+func (dep *jwtService) Encode(o *models.JwtObj, expirationInSeconds int) (*models.JwtResponse, error) {
 	exp := dep.logger.Date().Add(time.Duration(expirationInSeconds) * time.Second)
 
 	claims := jwt.NewWithClaims(
@@ -88,7 +88,7 @@ func (dep *jwtService) GenerateJwt(o *models.JwtObj, expirationInSeconds int) (*
 	return &models.JwtResponse{Token: token, ExpireAt: exp}, nil
 }
 
-func (dep *jwtService) ValidateJwt(str string) (*models.JwtObj, error) {
+func (dep *jwtService) Decode(str string) (*models.JwtObj, error) {
 	token, err := jwt.Parse(str, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			errMsg := fmt.Sprintf("unexpected signing method: %v", token.Header["alg"])

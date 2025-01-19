@@ -14,16 +14,36 @@ import (
 
 type IAccountService interface {
 	Register(ctx context.Context, obj *profile.ProfilePayload) error
+	Login(ctx context.Context, obj *models.Login) (*models.JwtResponse, error)
 }
 
 type accountService struct {
 	logger utils.ILogger
 	adp    *stores.Adapters
 	ps     auth.IPasswordService
+	jwt    auth.IJwtService
 }
 
-func NewAccountService(l utils.ILogger, a *stores.Adapters, ps auth.IPasswordService) IAccountService {
-	return &accountService{logger: l, adp: a, ps: ps}
+func NewAccountService(l utils.ILogger, a *stores.Adapters, j auth.IJwtService, ps auth.IPasswordService) IAccountService {
+	return &accountService{logger: l, adp: a, jwt: j, ps: ps}
+}
+
+// Login TODO implement logic to temporary lock account on brute force
+// TODO validate account is not locked
+func (dep *accountService) Login(ctx context.Context, obj *models.Login) (*models.JwtResponse, error) {
+	st, err := dep.adp.ProfileStore.ProfileByEmail(ctx, obj.Email)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return nil, &utils.NotFoundError{Message: "invalid email or password"}
+	}
+
+	if err = dep.ps.Validate(st.Password, []byte(obj.Password)); err != nil {
+		dep.logger.Error(err.Error())
+		return nil, &utils.NotFoundError{Message: "invalid email or password"}
+	}
+
+	// TODO profile, roles, permission, & staff tables
+	return dep.jwt.Encode(&models.JwtObj{}, utils.TwoDaysInSeconds)
 }
 
 func (dep *accountService) Register(ctx context.Context, obj *profile.ProfilePayload) error {

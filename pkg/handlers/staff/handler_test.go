@@ -88,7 +88,7 @@ func TestStaffHandler(t *testing.T) {
 			},
 		}
 
-		obj, _ := jwtSer.GenerateJwt(
+		obj, _ := jwtSer.Encode(
 			&models.JwtObj{
 				UserId:         saveStaff.UUID.String(),
 				AccessControls: cred,

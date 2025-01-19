@@ -35,13 +35,13 @@ func TestJwtService(t *testing.T) {
 		o := &models.JwtObj{AccessControls: cred, UserId: "staff-uuid"}
 
 		// method to test & assert
-		obj, err := s.GenerateJwt(o, utils.TwoDaysInSeconds)
+		obj, err := s.Encode(o, utils.TwoDaysInSeconds)
 		if err != nil {
 			t.Errorf("exception generating jwt %s", err)
 		}
 
 		// method to test & assert
-		v, err := s.ValidateJwt(obj.Token)
+		v, err := s.Decode(obj.Token)
 		if err != nil {
 			t.Errorf("exception validating generated token jwt %s", err)
 		}

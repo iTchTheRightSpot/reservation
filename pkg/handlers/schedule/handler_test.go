@@ -94,7 +94,7 @@ func TestScheduleHandler(t *testing.T) {
 				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 			}
 
-			obj, err := jwtSer.GenerateJwt(
+			obj, err := jwtSer.Encode(
 				&models.JwtObj{
 					UserId:         staff1.UUID.String(),
 					AccessControls: cred,
@@ -163,7 +163,7 @@ func TestScheduleHandler(t *testing.T) {
 				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.READ}},
 			}
 
-			obj, _ := jwtSer.GenerateJwt(
+			obj, _ := jwtSer.Encode(
 				&models.JwtObj{
 					UserId:         staff1.UUID.String(),
 					AccessControls: cred,
@@ -201,7 +201,7 @@ func TestScheduleHandler(t *testing.T) {
 				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.READ}},
 			}
 
-			obj, _ := jwtSer.GenerateJwt(
+			obj, _ := jwtSer.Encode(
 				&models.JwtObj{
 					UserId:         staff1.UUID.String(),
 					AccessControls: cred,
@@ -229,7 +229,7 @@ func TestScheduleHandler(t *testing.T) {
 				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 			}
 
-			obj, _ := jwtSer.GenerateJwt(
+			obj, _ := jwtSer.Encode(
 				&models.JwtObj{
 					UserId:         staff1.UUID.String(),
 					AccessControls: cred,
@@ -275,7 +275,7 @@ func TestScheduleHandler(t *testing.T) {
 			{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 		}
 
-		obj, err := jwtSer.GenerateJwt(
+		obj, err := jwtSer.Encode(
 			&models.JwtObj{
 				UserId:         staff1.UUID.String(),
 				AccessControls: cred,
@@ -355,7 +355,7 @@ func TestScheduleHandler(t *testing.T) {
 			{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 		}
 
-		obj, _ := jwtSer.GenerateJwt(
+		obj, _ := jwtSer.Encode(
 			&models.JwtObj{
 				UserId:         staff1.UUID.String(),
 				AccessControls: cred,

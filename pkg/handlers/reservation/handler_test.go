@@ -380,7 +380,7 @@ func createSchedule(t *testing.T, jwtSer auth.IJwtService, staff1 *staff.Staff, 
 		{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 	}
 
-	obj, err := jwtSer.GenerateJwt(
+	obj, err := jwtSer.Encode(
 		&models.JwtObj{
 			UserId:         staff1.UUID.String(),
 			AccessControls: cred,

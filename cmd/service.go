@@ -31,9 +31,10 @@ func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *
 	a := stores.NewAdapters(l, s, stores.NewTransactionProvider(l, s))
 	m := mail.NewMailService(l, e)
 	p := auth.NewPasswordService(l)
+	j := auth.NewJwtService(l, e)
 
 	return &serviceRegistry{
-		JwtService:      auth.NewJwtService(l, e),
+		JwtService:      j,
 		ScheduleService: schedule.NewScheduleService(l, a),
 		ServiceImpl:     service_type.NewServiceImpl(l, a),
 		StaffService:    staff.NewStaffService(l, a),
@@ -43,7 +44,7 @@ func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *
 			pkg.NewInMemoryCache[string, []*model.ReservationTimeSlots](l, 30, 30),
 			m,
 		),
-		AccountService:  account.NewAccountService(l, a, p),
+		AccountService:  account.NewAccountService(l, a, j, p),
 		PasswordService: p,
 		MailService:     m,
 	}

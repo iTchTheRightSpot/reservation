@@ -64,40 +64,62 @@ func TestAccountHandler(t *testing.T) {
 	adp := stores.NewAdapters(l, db, prov)
 	jwtSer := auth.NewJwtService(l, env)
 	ps := auth.NewPasswordService(l)
-	acs := account.NewAccountService(l, adp, ps)
+	acs := account.NewAccountService(l, adp, jwtSer, ps)
 
 	// register handler
 	m := &middleware.Middleware{Logger: l, Auth: jwtSer, Param: env.CookieParam}
-	NewAccountHandler(mux, m, l, ps, acs).Register()
+	NewAccountHandler(mux, m, l, env, ps, acs).Register()
+
+	// given
+	name := uuid.NewString()
+	p := profile.ProfilePayload{
+		Firstname: name,
+		Lastname:  name,
+		Email:     name + "@email.com",
+		Password:  "pa(ssworD123#",
+	}
 
 	t.Run("should register a user", func(t *testing.T) {
-		name := uuid.NewString()
 		cred := []models.RolePermission{
 			{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 		}
 
-		obj, err := jwtSer.GenerateJwt(
+		obj, err := jwtSer.Encode(
 			&models.JwtObj{
-				UserId:         name,
+				UserId:         p.Firstname,
 				AccessControls: cred,
 			},
 			utils.TwoDaysInSeconds,
 		)
 
-		pl, err := json.Marshal(profile.ProfilePayload{
-			Firstname: name,
-			Lastname:  name,
-			Email:     name + "@email.com",
-			Password:  "pa(ssworD123#",
-		})
-
+		pl, err := json.Marshal(p)
 		if err != nil {
-			t.Errorf("failed to marshal SchedulePayload: %s", err)
+			t.Errorf("failed to marshal ProfilePayload: %s", err)
 			return
 		}
 
 		req := httptest.NewRequest(http.MethodPost, "/account/register", bytes.NewBuffer(pl))
 		req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+		req.Header.Set("Content-Type", "application/json")
+
+		rr := httptest.NewRecorder()
+
+		mux.ServeHTTP(rr, req)
+
+		// assert
+		if rr.Code != http.StatusCreated {
+			t.Errorf("expected %d, received %d", http.StatusCreated, rr.Code)
+		}
+	})
+
+	t.Run("should login", func(t *testing.T) {
+		pl, err := json.Marshal(models.Login{Email: p.Email, Password: p.Password})
+		if err != nil {
+			t.Errorf("failed to marshal Login: %s", err)
+			return
+		}
+
+		req := httptest.NewRequest(http.MethodPost, "/account/login", bytes.NewBuffer(pl))
 		req.Header.Set("Content-Type", "application/json")
 
 		rr := httptest.NewRecorder()

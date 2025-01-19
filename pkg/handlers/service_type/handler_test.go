@@ -81,7 +81,7 @@ func TestServiceTypeHandler(t *testing.T) {
 			},
 		}
 
-		obj, err := jwtSer.GenerateJwt(
+		obj, err := jwtSer.Encode(
 			&models.JwtObj{
 				UserId:         "staff-uuid",
 				AccessControls: arr,

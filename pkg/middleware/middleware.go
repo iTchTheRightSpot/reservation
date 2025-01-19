@@ -88,7 +88,7 @@ func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 			return
 		}
 
-		obj, err := dep.Auth.ValidateJwt(cookie.Value)
+		obj, err := dep.Auth.Decode(cookie.Value)
 		if err != nil {
 			dep.Logger.Error(err)
 			utils.ErrorResponse(w, &utils.AuthenticationError{})
