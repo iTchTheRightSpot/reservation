@@ -5,6 +5,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
 	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/services/account"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/mail"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/reservation"
@@ -22,6 +23,7 @@ type serviceRegistry struct {
 	StaffService       staff.IStaffService
 	ReservationService reservation.IReservationService
 	MailService        mail.IMailService
+	AccountService     account.IAccountService
 }
 
 func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *serviceRegistry {
@@ -39,6 +41,7 @@ func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *
 			pkg.NewInMemoryCache[string, []*model.ReservationTimeSlots](l, 30, 30),
 			m,
 		),
-		MailService: m,
+		AccountService: account.NewAccountService(l, a, auth.NewPasswordService(l)),
+		MailService:    m,
 	}
 }

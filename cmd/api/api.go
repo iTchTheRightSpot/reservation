@@ -22,7 +22,8 @@ func (s *ErpServer) Serve() {
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{s.Env.FrontEnd},
 		AllowedMethods:   []string{http.MethodPost, http.MethodGet, http.MethodPut, http.MethodDelete, http.MethodOptions},
-		AllowedHeaders:   []string{"Content-Type", "Accept", "Cookie"},
+		AllowedHeaders:   []string{"Origin", "Content-Type", "Accept", "Cookie"},
+		ExposedHeaders:   []string{"Content-Length"},
 		AllowCredentials: true,
 	})
 

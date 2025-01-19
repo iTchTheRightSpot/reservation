@@ -27,13 +27,13 @@ func (dep *profileStore) Save(ctx context.Context, p *profile.Profile) error {
 	}
 
 	q := `
-		INSERT INTO profile (firstname, lastname, email, image_key)
-        VALUES ($1, $2, $3, $4)
-        RETURNING profile_id, firstname, lastname, email, image_key
+		INSERT INTO profile (firstname, lastname, email, password, image_key)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING profile_id, firstname, lastname, email, password image_key
 	`
 
-	row := dep.db.QueryRowContext(ctx, q, p.Firstname, p.Lastname, p.Email, p.ImageKey)
-	err := row.Scan(&p.ProfileId, &p.Firstname, &p.Lastname, &p.Email, &p.ImageKey)
+	row := dep.db.QueryRowContext(ctx, q, p.Firstname, p.Lastname, p.Email, p.Password, p.ImageKey)
+	err := row.Scan(&p.ProfileId, &p.Firstname, &p.Lastname, &p.Email, &p.Password, &p.ImageKey)
 
 	if err != nil {
 		dep.logger.Error(err.Error())

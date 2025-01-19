@@ -60,6 +60,7 @@ func preSaveStaff(ps profileStore.IProfileStore, st staffStore.IStaffStore) (*st
 	ctx := context.Background()
 
 	p := profile.Profile{
+		Password:  []byte("password"),
 		Firstname: "erp",
 		Lastname:  "erp",
 		Email:     "erp@email.com",

@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
@@ -41,7 +42,7 @@ func TestMain(m *testing.M) {
 	db = d
 
 	defer func(db *sql.DB) {
-		if err := db.Close(); err != nil {
+		if err = db.Close(); err != nil {
 			log.Printf("db connection did not close after tests")
 			return
 		}
@@ -50,17 +51,72 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func setupTest(t *testing.T) (*sql.Tx, func()) {
-	tx, err := db.Begin()
+func TestStaffHandler(t *testing.T) {
+	t.Cleanup(func() {
+		if err := handlers.DeleteAll(db); err != nil {
+			t.Errorf(err.Error())
+		}
+	})
+
+	mux := http.NewServeMux()
+	logger := utils.NewMockLogger()
+	prov := stores.NewTransactionProvider(logger, db)
+	adp := stores.NewAdapters(logger, db, prov)
+	jwtSer := auth.NewJwtService(logger, env)
+	m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
+	s := staff.NewStaffService(logger, adp)
+
+	// register routes
+	NewStaffHandler(mux, m, logger, s).Register()
+
+	// pre-save
+	saveStaff, err := preSaveStaff(adp)
 	if err != nil {
-		t.Fatalf("failed to start transaction: %v", err)
+		t.Error(err)
 	}
 
-	return tx, func() {
-		if err := tx.Rollback(); err != nil {
-			return
-		}
+	saveService, err := preSaveService(adp)
+	if err != nil {
+		t.Error(err)
 	}
+
+	t.Run("should link service to staff & also reject", func(t *testing.T) {
+		cred := []models.RolePermission{
+			{
+				Role:        models.STAFF,
+				Permissions: []models.PermissionEnum{models.WRITE},
+			},
+		}
+
+		obj, _ := jwtSer.GenerateJwt(
+			&models.JwtObj{
+				UserId:         saveStaff.UUID.String(),
+				AccessControls: cred,
+			},
+			utils.TwoDaysInSeconds,
+		)
+
+		for i := 0; i < 2; i++ {
+			url := fmt.Sprintf("/staff/service?service_name=%s", saveService.Name)
+			req := httptest.NewRequest(http.MethodPost, url, nil)
+			req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+			req.Header.Set("Content-Type", "application/json")
+			rr := httptest.NewRecorder()
+
+			mux.ServeHTTP(rr, req)
+
+			// assert
+			if i == 0 {
+				if rr.Code != http.StatusCreated {
+					t.Errorf("index %v expected status code %d, got %d", i, http.StatusCreated, rr.Code)
+				}
+			} else {
+				if rr.Code != http.StatusConflict {
+					t.Errorf("index %v expected status code %d, got %d", i, http.StatusBadRequest, rr.Code)
+				}
+			}
+		}
+	})
 }
 
 func preSaveStaff(a *stores.Adapters) (*model.Staff, error) {
@@ -70,6 +126,7 @@ func preSaveStaff(a *stores.Adapters) (*model.Staff, error) {
 		Firstname: "erp",
 		Lastname:  "erp",
 		Email:     "erp@email.com",
+		Password:  []byte("password"),
 	}
 
 	if err := a.ProfileStore.Save(ctx, &p); err != nil {
@@ -97,73 +154,4 @@ func preSaveService(a *stores.Adapters) (*service.ServiceTypeEntity, error) {
 	}
 	err := a.ServiceStore.Save(context.Background(), &s)
 	return &s, err
-}
-
-func TestStaffHandler(t *testing.T) {
-	t.Parallel()
-
-	logger := utils.NewMockLogger()
-
-	t.Run("should link service to staff & also reject", func(t *testing.T) {
-		t.Parallel()
-
-		tx, fn := setupTest(t)
-		defer fn()
-
-		// given
-		mux := http.NewServeMux()
-		prov := stores.MockLiveTransactionProvider(logger, tx)
-		adapters := stores.NewAdapters(logger, tx, prov)
-		jwtSer := auth.NewJwtService(logger, env)
-		m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
-		s := staff.NewStaffService(logger, adapters)
-
-		saveStaff, err := preSaveStaff(adapters)
-		if err != nil {
-			t.Error(err)
-		}
-
-		saveService, err := preSaveService(adapters)
-		if err != nil {
-			t.Error(err)
-		}
-
-		cred := []models.RolePermission{
-			{
-				Role:        models.STAFF,
-				Permissions: []models.PermissionEnum{models.WRITE},
-			},
-		}
-
-		obj, err := jwtSer.GenerateJwt(
-			&models.JwtObj{
-				UserId:         saveStaff.UUID.String(),
-				AccessControls: cred,
-			},
-			utils.TwoDaysInSeconds,
-		)
-
-		NewStaffHandler(mux, m, logger, s).Register()
-
-		for i := 0; i < 2; i++ {
-			url := fmt.Sprintf("/staff/service?service_name=%s", saveService.Name)
-			req := httptest.NewRequest(http.MethodPost, url, nil)
-			req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
-			req.Header.Set("Content-Type", "application/json")
-			rr := httptest.NewRecorder()
-
-			mux.ServeHTTP(rr, req)
-
-			// assert
-			if i == 0 {
-				if rr.Code != http.StatusCreated {
-					t.Errorf("index %v expected status code %d, got %d", i, http.StatusCreated, rr.Code)
-				}
-			} else {
-				if rr.Code != http.StatusConflict {
-					t.Errorf("index %v expected status code %d, got %d", i, http.StatusBadRequest, rr.Code)
-				}
-			}
-		}
-	})
 }

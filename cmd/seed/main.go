@@ -88,6 +88,7 @@ func staffs(ctx context.Context, a *stores.Adapters) [3]staff.Staff {
 			Firstname: fmt.Sprintf("staff-%v", i+1),
 			Lastname:  fmt.Sprintf("Lastname-%v", i+1),
 			Email:     fmt.Sprintf("staff-%v@email.com", i+1),
+			Password:  []byte("password"),
 		}
 
 		if err := a.ProfileStore.Save(ctx, &p); err != nil {

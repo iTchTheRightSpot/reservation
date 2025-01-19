@@ -72,6 +72,7 @@ func TestStaffStore(t *testing.T) {
 
 		// given
 		p := profile.Profile{
+			Password:  []byte("password"),
 			Firstname: "frog",
 			Lastname:  "lastname",
 			Email:     "frog@email.com",

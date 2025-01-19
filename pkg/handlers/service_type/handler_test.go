@@ -255,7 +255,7 @@ func TestServiceTypeHandler(t *testing.T) {
 }
 
 func preSave(t *testing.T, adapters *stores.Adapters, ctx context.Context) service.ServiceTypeEntity {
-	prof := profile.Profile{Firstname: "f", Lastname: "l", Email: uuid.NewString()}
+	prof := profile.Profile{Firstname: "f", Lastname: "l", Email: uuid.NewString(), Password: []byte("password")}
 	if err := adapters.ProfileStore.Save(ctx, &prof); err != nil {
 		t.Error(err.Error())
 	}

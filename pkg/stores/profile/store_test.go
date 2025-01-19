@@ -65,6 +65,7 @@ func TestProfileStore(t *testing.T) {
 			Lastname:  "lastname",
 			Email:     "frog@email.com",
 			ImageKey:  &key,
+			Password:  []byte("password"),
 		}
 
 		// method to test
@@ -87,6 +88,7 @@ func TestProfileStore(t *testing.T) {
 		p := profile.Profile{
 			Firstname: "frog",
 			Lastname:  "lastname",
+			Password:  []byte("password"),
 			Email:     "frog@email.com",
 		}
 
@@ -110,6 +112,7 @@ func TestProfileStore(t *testing.T) {
 		permissionRepo := NewPermissionStore(mockLog, con)
 
 		p := profile.Profile{
+			Password:  []byte("password"),
 			Firstname: "frog",
 			Lastname:  "lastname",
 			Email:     "frog@email.com",

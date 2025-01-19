@@ -22,6 +22,7 @@ func PreSaveStaff(ctx context.Context, a *stores.Adapters) (*staff.Staff, error)
 		Firstname: "reservation",
 		Lastname:  "reservation",
 		Email:     fmt.Sprintf("%s@email.com", uuid.NewString()),
+		Password:  []byte("password"),
 	}
 
 	if err := a.ProfileStore.Save(ctx, &p); err != nil {
