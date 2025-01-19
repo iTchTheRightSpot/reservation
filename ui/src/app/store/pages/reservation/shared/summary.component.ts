@@ -23,12 +23,21 @@ import { NgClass } from '@angular/common';
       <div class="w-full">
         <p-card>
           <div class="m-0 flex gap-3">
-            <p-avatar
-              [image]="staffImage()"
-              class="mr-2"
-              size="xlarge"
-              shape="circle"
-            />
+            @if (staffImage(); as img) {
+              <p-avatar
+                [image]="img"
+                class="mr-2"
+                size="xlarge"
+                shape="circle"
+              />
+            } @else {
+              <p-avatar
+                icon="pi pi-user"
+                class="mr-2"
+                size="large"
+                shape="circle"
+              />
+            }
 
             <div class="flex-1">
               <h4 class="capitalize font-semibold">{{ staffName() }}</h4>
@@ -72,7 +81,7 @@ import { NgClass } from '@angular/common';
 })
 export class SummaryComponent {
   services = input.required<ServiceTypeModel[]>();
-  staffImage = input.required<string>();
+  staffImage = input.required<string | null>();
   staffName = input.required<string>();
   bio = input.required<string>();
   displayHeader = input<boolean>(true);

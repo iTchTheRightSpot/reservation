@@ -1,7 +1,7 @@
 export interface StaffModel {
   staff_id: string;
   name: string;
-  image_key: string;
+  image_key: string | null;
   bio: string;
 }
 
