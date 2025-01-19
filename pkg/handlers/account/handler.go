@@ -5,6 +5,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/account"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"net/http"
 )
@@ -12,11 +13,12 @@ import (
 type AccountHandler struct {
 	mux     *http.ServeMux
 	logger  utils.ILogger
+	ps      auth.IPasswordService
 	service account.IAccountService
 }
 
-func NewAccountHandler(mux *http.ServeMux, l utils.ILogger, s account.IAccountService) *AccountHandler {
-	return &AccountHandler{mux: mux, logger: l, service: s}
+func NewAccountHandler(mux *http.ServeMux, l utils.ILogger, ps auth.IPasswordService, s account.IAccountService) *AccountHandler {
+	return &AccountHandler{mux: mux, logger: l, ps: ps, service: s}
 }
 
 func (dep *AccountHandler) Register() {
@@ -29,6 +31,11 @@ func (dep *AccountHandler) register(w http.ResponseWriter, r *http.Request) {
 	p, err := pkg.ReadBody[profile.ProfilePayload](r)
 	if err != nil {
 		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		return
+	}
+
+	if err = dep.ps.PasswordRegex(p.Password); err != nil {
 		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
 		return
 	}

@@ -23,12 +23,14 @@ type serviceRegistry struct {
 	StaffService       staff.IStaffService
 	ReservationService reservation.IReservationService
 	MailService        mail.IMailService
+	PasswordService    auth.IPasswordService
 	AccountService     account.IAccountService
 }
 
 func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *serviceRegistry {
 	a := stores.NewAdapters(l, s, stores.NewTransactionProvider(l, s))
 	m := mail.NewMailService(l, e)
+	p := auth.NewPasswordService(l)
 
 	return &serviceRegistry{
 		JwtService:      auth.NewJwtService(l, e),
@@ -41,7 +43,8 @@ func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *
 			pkg.NewInMemoryCache[string, []*model.ReservationTimeSlots](l, 30, 30),
 			m,
 		),
-		AccountService: account.NewAccountService(l, a, auth.NewPasswordService(l)),
-		MailService:    m,
+		AccountService:  account.NewAccountService(l, a, p),
+		PasswordService: p,
+		MailService:     m,
 	}
 }
