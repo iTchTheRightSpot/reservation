@@ -8,22 +8,22 @@ import (
 	"strings"
 )
 
-type IService interface {
+type IServiceType interface {
 	Create(ctx context.Context, p *service.ServiceTypePayload) error
-	Services(ctx context.Context) (interface{}, error)
-	StaffByServices(ctx context.Context, services *[]string) (interface{}, error)
+	ServiceTypes(ctx context.Context) (interface{}, error)
+	StaffsByServiceTypes(ctx context.Context, services *[]string) (interface{}, error)
 }
 
-type serviceImpl struct {
+type serviceTypeImpl struct {
 	logger   utils.ILogger
 	adapters *stores.Adapters
 }
 
-func NewServiceImpl(l utils.ILogger, a *stores.Adapters) IService {
-	return &serviceImpl{logger: l, adapters: a}
+func NewServiceImpl(l utils.ILogger, a *stores.Adapters) IServiceType {
+	return &serviceTypeImpl{logger: l, adapters: a}
 }
 
-func (dep *serviceImpl) Services(ctx context.Context) (interface{}, error) {
+func (dep *serviceTypeImpl) ServiceTypes(ctx context.Context) (interface{}, error) {
 	db, err := dep.adapters.ServiceStore.ServicesByStatus(ctx, true)
 	if err != nil {
 		dep.logger.Error(err.Error())
@@ -45,7 +45,7 @@ func (dep *serviceImpl) Services(ctx context.Context) (interface{}, error) {
 	return arr, nil
 }
 
-func (dep *serviceImpl) StaffByServices(ctx context.Context, services *[]string) (interface{}, error) {
+func (dep *serviceTypeImpl) StaffsByServiceTypes(ctx context.Context, services *[]string) (interface{}, error) {
 	stafs, err := dep.adapters.StaffStore.StaffsByServices(ctx, services)
 	if err != nil {
 		dep.logger.Error(err.Error())
@@ -77,7 +77,7 @@ func (dep *serviceImpl) StaffByServices(ctx context.Context, services *[]string)
 	return arr, nil
 }
 
-func (dep *serviceImpl) Create(ctx context.Context, p *service.ServiceTypePayload) error {
+func (dep *serviceTypeImpl) Create(ctx context.Context, p *service.ServiceTypePayload) error {
 	s := service.ServiceTypeEntity{
 		Name:          strings.TrimSpace(p.Name),
 		Price:         p.Price,

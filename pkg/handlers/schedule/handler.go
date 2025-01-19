@@ -103,7 +103,7 @@ func (dep *ScheduleHandler) otherStaffSchedules(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	schedules, err := dep.service.Schedules(r.Context(), &payload)
+	arr, err := dep.service.Schedules(r.Context(), &payload)
 	if err != nil {
 		dep.logger.Error(err.Error())
 		utils.ErrorResponse(w, err)
@@ -112,8 +112,8 @@ func (dep *ScheduleHandler) otherStaffSchedules(w http.ResponseWriter, r *http.R
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	response, _ := json.Marshal(schedules)
-	if _, err = w.Write(response); err != nil {
+
+	if err = json.NewEncoder(w).Encode(arr); err != nil {
 		dep.logger.Error(err.Error())
 	}
 }
@@ -163,7 +163,7 @@ func (dep *ScheduleHandler) schedules(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	schedules, err := dep.service.Schedules(r.Context(), &payload)
+	arr, err := dep.service.Schedules(r.Context(), &payload)
 	if err != nil {
 		dep.logger.Error(err.Error())
 		utils.ErrorResponse(w, err)
@@ -172,8 +172,8 @@ func (dep *ScheduleHandler) schedules(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	response, _ := json.Marshal(schedules)
-	if _, err = w.Write(response); err != nil {
+
+	if err = json.NewEncoder(w).Encode(arr); err != nil {
 		dep.logger.Error(err.Error())
 	}
 }

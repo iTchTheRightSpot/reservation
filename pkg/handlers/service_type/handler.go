@@ -11,15 +11,15 @@ import (
 	"net/http"
 )
 
-type ServiceHandler struct {
+type ServiceTypeHandler struct {
 	mux     *http.ServeMux
 	logger  utils.ILogger
-	service service_type.IService
+	service service_type.IServiceType
 	ware    *middleware.Middleware
 }
 
-func NewServiceHandler(mux *http.ServeMux, l utils.ILogger, s service_type.IService, w *middleware.Middleware) *ServiceHandler {
-	return &ServiceHandler{
+func NewServiceTypeHandler(mux *http.ServeMux, l utils.ILogger, s service_type.IServiceType, w *middleware.Middleware) *ServiceTypeHandler {
+	return &ServiceTypeHandler{
 		mux:     mux,
 		logger:  l,
 		service: s,
@@ -27,7 +27,7 @@ func NewServiceHandler(mux *http.ServeMux, l utils.ILogger, s service_type.IServ
 	}
 }
 
-func (dep *ServiceHandler) Register() {
+func (dep *ServiceTypeHandler) Register() {
 	rp := &models.RolePermission{
 		Role:        models.STAFF,
 		Permissions: []models.PermissionEnum{models.WRITE},
@@ -40,7 +40,7 @@ func (dep *ServiceHandler) Register() {
 	dep.mux.Handle("POST /service", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(m.RequestBody(http.HandlerFunc(dep.create)), rp)))
 }
 
-func (dep *ServiceHandler) create(w http.ResponseWriter, r *http.Request) {
+func (dep *ServiceTypeHandler) create(w http.ResponseWriter, r *http.Request) {
 	dto, err := pkg.ReadBody[model.ServiceTypePayload](r)
 	if err != nil {
 		dep.logger.Error(err.Error())
@@ -57,8 +57,8 @@ func (dep *ServiceHandler) create(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (dep *ServiceHandler) services(w http.ResponseWriter, r *http.Request) {
-	arr, err := dep.service.Services(r.Context())
+func (dep *ServiceTypeHandler) services(w http.ResponseWriter, r *http.Request) {
+	arr, err := dep.service.ServiceTypes(r.Context())
 	if err != nil {
 		dep.logger.Error(err.Error())
 		utils.ErrorResponse(w, err)
@@ -67,20 +67,19 @@ func (dep *ServiceHandler) services(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	response, _ := json.Marshal(arr)
-	if _, err = w.Write(response); err != nil {
+	if err = json.NewEncoder(w).Encode(arr); err != nil {
 		dep.logger.Error(err.Error())
 	}
 }
 
-func (dep *ServiceHandler) staffsByServices(w http.ResponseWriter, r *http.Request) {
-	services := r.URL.Query()["service"]
+func (dep *ServiceTypeHandler) staffsByServices(w http.ResponseWriter, r *http.Request) {
+	services := r.URL.Query()["name"]
 	if services == nil || len(services) < 1 {
 		utils.ErrorResponse(w, &utils.BadRequestError{Message: "bad request, missing services type(s)"})
 		return
 	}
 
-	arr, err := dep.service.StaffByServices(r.Context(), &services)
+	arr, err := dep.service.StaffsByServiceTypes(r.Context(), &services)
 	if err != nil {
 		dep.logger.Error(err.Error())
 		utils.ErrorResponse(w, err)
@@ -89,8 +88,7 @@ func (dep *ServiceHandler) staffsByServices(w http.ResponseWriter, r *http.Reque
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	response, _ := json.Marshal(arr)
-	if _, err = w.Write(response); err != nil {
+	if err = json.NewEncoder(w).Encode(arr); err != nil {
 		dep.logger.Error(err.Error())
 	}
 }

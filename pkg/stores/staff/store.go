@@ -48,7 +48,9 @@ func (dep *staffStore) StaffsByServices(ctx context.Context, s *[]string) ([]*st
     	INNER JOIN staff_service sts ON sts.staff_id = st.staff_id
 		INNER JOIN service_type s ON s.service_id = sts.service_id
     	WHERE s.name IN (%s)
-	`, placeholderStr)
+    	GROUP BY st.staff_id, st.uuid, p.firstname, p.image_key, st.bio
+    	HAVING COUNT(DISTINCT s.name) = %d
+	`, placeholderStr, len(*s))
 
 	// flatten the slice to pass it as individual arguments
 	args := make([]interface{}, len(*s))

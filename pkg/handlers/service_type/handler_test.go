@@ -54,7 +54,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func TestServiceHandler(t *testing.T) {
+func TestServiceTypeHandler(t *testing.T) {
 	t.Cleanup(func() {
 		if err := handlers.DeleteAll(db); err != nil {
 			t.Errorf(err.Error())
@@ -71,7 +71,7 @@ func TestServiceHandler(t *testing.T) {
 	s := service_type.NewServiceImpl(logger, adapters)
 
 	// register all routes
-	NewServiceHandler(mux, logger, s, m).Register()
+	NewServiceTypeHandler(mux, logger, s, m).Register()
 
 	t.Run("should create service", func(t *testing.T) {
 		arr := []models.RolePermission{
@@ -175,13 +175,20 @@ func TestServiceHandler(t *testing.T) {
 			}
 		})
 
-		t.Run("success", func(t *testing.T) {
-			// pre-save
-			ctx := context.Background()
-			serv1 := preSave(t, adapters, ctx)
-			serv2 := preSave(t, adapters, ctx)
+		// pre-save
+		ctx := context.Background()
+		serv1 := preSave(t, adapters, ctx)
+		serv2 := preSave(t, adapters, ctx)
 
-			url := fmt.Sprintf("/service/staffs?service=%s&service=%s", serv1.Name, serv2.Name)
+		type ui struct {
+			StaffId  string  `json:"staff_id"`
+			Name     string  `json:"name"`
+			ImageKey *string `json:"image_key"`
+			Bio      *string `json:"bio"`
+		}
+
+		t.Run("success. should be empty as all services are not for each staff", func(t *testing.T) {
+			url := fmt.Sprintf("/service/staffs?name=%s&name=%s", serv1.Name, serv2.Name)
 			req := httptest.NewRequest(http.MethodGet, url, nil)
 			rr := httptest.NewRecorder()
 			mux.ServeHTTP(rr, req)
@@ -192,11 +199,29 @@ func TestServiceHandler(t *testing.T) {
 				t.Errorf("%s", rr.Body.String())
 			}
 
-			type ui struct {
-				StaffId  string  `json:"staff_id"`
-				Name     string  `json:"name"`
-				ImageKey *string `json:"image_key"`
-				Bio      *string `json:"bio"`
+			var resp []*ui
+			if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
+				t.Errorf(err.Error())
+			}
+
+			// assert
+			size := len(resp)
+			if size >= 1 {
+				t.Errorf("expected size 0, got %d", size)
+				t.Errorf("%v", resp)
+			}
+		})
+
+		t.Run("success", func(t *testing.T) {
+			url := fmt.Sprintf("/service/staffs?name=%s", serv1.Name)
+			req := httptest.NewRequest(http.MethodGet, url, nil)
+			rr := httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+
+			// assert
+			if rr.Code != http.StatusOK {
+				t.Errorf("expected status code %d, got %d", http.StatusOK, rr.Code)
+				t.Errorf("%s", rr.Body.String())
 			}
 
 			var resp []*ui
@@ -206,7 +231,7 @@ func TestServiceHandler(t *testing.T) {
 
 			// assert
 			size := len(resp)
-			if size != 2 {
+			if size != 1 {
 				t.Errorf("expected size 1, got %d", size)
 				t.Errorf("%v", resp)
 			}

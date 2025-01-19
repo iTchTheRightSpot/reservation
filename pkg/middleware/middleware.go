@@ -55,6 +55,7 @@ func (dep *Middleware) timeout(next http.Handler) http.Handler {
 
 func (dep *Middleware) logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := dep.Logger.Date()
 		ip := dep.requestIP(r)
 		dep.Logger.Log(fmt.Sprintf(
 			"[Request] IP: %s | Method: %s | Path: %s", ip, r.Method, r.URL.Path,
@@ -64,9 +65,10 @@ func (dep *Middleware) logging(next http.Handler) http.Handler {
 			status:         http.StatusOK,
 		}
 		next.ServeHTTP(obj, r)
+		end := dep.Logger.Date()
 		dep.Logger.Log(fmt.Sprintf(
-			"[Response] IP: %s | Status: %d | Method: %s | Path: %s",
-			ip, obj.status, r.Method, r.URL.Path,
+			"[Response] IP: %s | Status: %d | Method: %s | Path: %s | Duration: %v seconds",
+			ip, obj.status, r.Method, r.URL.Path, end.Sub(start).Seconds(),
 		))
 	})
 }

@@ -98,9 +98,9 @@ func (dep *ReservationHandler) availableDates(w http.ResponseWriter, r *http.Req
 	}
 
 	p.StartDateTime = time.Date(p.Year, time.Month(p.Month), day, 0, 0, 0, 0, location)
-	p.EndDateTime = p.StartDateTime.AddDate(0, 1, -1)
+	p.EndDateTime = time.Date(p.StartDateTime.Year(), p.StartDateTime.Month()+1, 0, 23, 59, 59, 999999999, p.StartDateTime.Location())
 
-	arr, err := dep.service.AvailableDates(r.Context(), &p)
+	dates, err := dep.service.AvailableDates(r.Context(), &p)
 	if err != nil {
 		dep.logger.Error(err.Error())
 		utils.ErrorResponse(w, err)
@@ -109,8 +109,15 @@ func (dep *ReservationHandler) availableDates(w http.ResponseWriter, r *http.Req
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	response, _ := json.Marshal(arr)
-	if _, err = w.Write(response); err != nil {
+
+	if dates == nil || len(dates) < 1 {
+		if err = json.NewEncoder(w).Encode(make([]model.ReservationTimeSlots, 0)); err != nil {
+			dep.logger.Error(err.Error())
+		}
+		return
+	}
+
+	if err = json.NewEncoder(w).Encode(dates); err != nil {
 		dep.logger.Error(err.Error())
 	}
 }

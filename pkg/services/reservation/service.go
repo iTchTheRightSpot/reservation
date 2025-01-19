@@ -21,21 +21,21 @@ import (
 
 type IReservationService interface {
 	Create(ctx context.Context, p *reservation.ReservationPayload) error
-	AvailableDates(ctx context.Context, o *reservation.AvailableTimesPayload) (*[]reservation.ReservationTimeSlots, error)
+	AvailableDates(ctx context.Context, o *reservation.AvailableTimesPayload) ([]*reservation.ReservationTimeSlots, error)
 	Cancel(ctx context.Context, reservationId uint64) error
 }
 
 type reservationService struct {
 	logger   utils.ILogger
 	adapters *stores.Adapters
-	cache    pkg.ICache[string, []reservation.ReservationTimeSlots]
+	cache    pkg.ICache[string, []*reservation.ReservationTimeSlots]
 	mail     mail.IMailService
 }
 
 func NewReservationService(
 	l utils.ILogger,
 	a *stores.Adapters,
-	c pkg.ICache[string, []reservation.ReservationTimeSlots],
+	c pkg.ICache[string, []*reservation.ReservationTimeSlots],
 	m mail.IMailService,
 ) IReservationService {
 	return &reservationService{logger: l, adapters: a, cache: c, mail: m}
@@ -76,10 +76,10 @@ func (dep *reservationService) generateChunks(schedules []*schedule.Schedule, du
 	return arr
 }
 
-func (dep *reservationService) filterChunks(ctx context.Context, staffId uint64, duration int, chunks []*reservation.Chunks, location *time.Location) (*[]reservation.ReservationTimeSlots, error) {
+func (dep *reservationService) filterChunks(ctx context.Context, staffId uint64, duration int, chunks []*reservation.Chunks, location *time.Location) (*[]*reservation.ReservationTimeSlots, error) {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
-	var results []reservation.ReservationTimeSlots
+	var results []*reservation.ReservationTimeSlots
 	errChan := make(chan error, len(chunks))
 
 	for _, chunk := range chunks {
@@ -106,7 +106,7 @@ func (dep *reservationService) filterChunks(ctx context.Context, staffId uint64,
 
 			if len(validTimes) > 0 {
 				mu.Lock()
-				results = append(results, reservation.ReservationTimeSlots{
+				results = append(results, &reservation.ReservationTimeSlots{
 					Date:  fmt.Sprintf("%v", chunk.Start.In(location).UnixMilli()),
 					Times: validTimes,
 				})
@@ -121,11 +121,11 @@ func (dep *reservationService) filterChunks(ctx context.Context, staffId uint64,
 	return &results, <-errChan
 }
 
-func (dep *reservationService) AvailableDates(ctx context.Context, o *reservation.AvailableTimesPayload) (*[]reservation.ReservationTimeSlots, error) {
+func (dep *reservationService) AvailableDates(ctx context.Context, o *reservation.AvailableTimesPayload) ([]*reservation.ReservationTimeSlots, error) {
 	key := dep.createKey(o)
 	val := dep.cache.Get(key)
 	if val != nil {
-		return val, nil
+		return *val, nil
 	}
 
 	staf, err := dep.adapters.StaffStore.StaffByUUID(ctx, o.StaffId)
@@ -155,8 +155,7 @@ func (dep *reservationService) AvailableDates(ctx context.Context, o *reservatio
 	}
 
 	dep.cache.Put(key, *filter)
-
-	return filter, nil
+	return *filter, nil
 }
 
 func (dep *reservationService) matchStaffServices(ctx context.Context, requestedServices []string, staffObj *staff.Staff) ([]*service.ServiceTypeEntity, error) {

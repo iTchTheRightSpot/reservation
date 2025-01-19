@@ -18,7 +18,7 @@ import (
 type serviceRegistry struct {
 	JwtService         auth.IJwtService
 	ScheduleService    schedule.IScheduleService
-	ServiceImpl        service_type.IService
+	ServiceImpl        service_type.IServiceType
 	StaffService       staff.IStaffService
 	ReservationService reservation.IReservationService
 	MailService        mail.IMailService
@@ -27,6 +27,7 @@ type serviceRegistry struct {
 func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *serviceRegistry {
 	a := stores.NewAdapters(l, s, stores.NewTransactionProvider(l, s))
 	m := mail.NewMailService(l, e)
+
 	return &serviceRegistry{
 		JwtService:      auth.NewJwtService(l, e),
 		ScheduleService: schedule.NewScheduleService(l, a),
@@ -35,7 +36,7 @@ func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *
 		ReservationService: reservation.NewReservationService(
 			l,
 			a,
-			pkg.NewInMemoryCache[string, []model.ReservationTimeSlots](l, 30, 30),
+			pkg.NewInMemoryCache[string, []*model.ReservationTimeSlots](l, 30, 30),
 			m,
 		),
 		MailService: m,

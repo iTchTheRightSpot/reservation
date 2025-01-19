@@ -57,17 +57,20 @@ export class DatesService {
               state: ApiState.LOADED,
               data: arr
             })
-          : this.req(key, obj.staff!.staff_id, date)
+          : this.req(key, obj!.services!.map(o => o.name),  obj.staff!.staff_id, date)
       )
     );
   };
 
-  private readonly req = (key: string, staffId: string, date: Date) => {
+  private readonly req = (key: string, services: string[], staffId: string, date: Date) => {
     let params = new HttpParams();
     params = params.append('staff_id', staffId);
     params = params.append('day', date.getDate());
     params = params.append('month', 1 + date.getMonth());
     params = params.append('year', date.getFullYear());
+    services.forEach(
+      service => (params = params.append('service', service.trim()))
+    );
     params = params.append('timezone', TIMEZONE);
 
     return this.http

@@ -48,32 +48,46 @@ func main() {
 	schedules(ctx, l.Date(), a, &stafs)
 }
 
-func services(ctx context.Context, a *stores.Adapters) [10]service.ServiceTypeEntity {
-	arr := [10]service.ServiceTypeEntity{}
-	for i := 0; i < 10; i++ {
-		s := service.ServiceTypeEntity{
-			Name:        fmt.Sprintf("Service-%v-%s", i, uuid.New().String()),
-			Price:       float64(20 * (i + 1)),
-			IsVisible:   true,
-			Duration:    3600,
-			CleanUpTime: 30 * 60,
-		}
-		if err := a.ServiceStore.Save(ctx, &s); err != nil {
-			log.Fatal(err.Error())
-		}
-		arr[i] = s
+func services(ctx context.Context, a *stores.Adapters) [4]service.ServiceTypeEntity {
+	arr := [4]service.ServiceTypeEntity{}
+	s := service.ServiceTypeEntity{
+		Name:        "Men hair",
+		Price:       20.99,
+		IsVisible:   true,
+		Duration:    3600,
+		CleanUpTime: 30 * 60,
 	}
+	if err := a.ServiceStore.Save(ctx, &s); err != nil {
+		log.Fatal(err.Error())
+	}
+	arr[0] = s
+
+	s.Name = "Women hair"
+	s.Price = 52.99
+	_ = a.ServiceStore.Save(ctx, &s)
+	arr[1] = s
+
+	s.Name = "Pedicure"
+	s.Price = 10.99
+	_ = a.ServiceStore.Save(ctx, &s)
+	arr[2] = s
+
+	s.Name = "Manicure"
+	s.Price = 15.99
+	_ = a.ServiceStore.Save(ctx, &s)
+	arr[3] = s
+
 	return arr
 }
 
-func staffs(ctx context.Context, a *stores.Adapters) [6]staff.Staff {
-	arr := [6]staff.Staff{}
+func staffs(ctx context.Context, a *stores.Adapters) [3]staff.Staff {
+	arr := [3]staff.Staff{}
 
-	for i := 0; i < 6; i++ {
+	for i := 0; i < 3; i++ {
 		p := profile.Profile{
-			Firstname: fmt.Sprintf("Firstname-%v", i),
-			Lastname:  fmt.Sprintf("Lastname-%v", i),
-			Email:     fmt.Sprintf("firstname-%v-%s@email.com", i, uuid.New().String()),
+			Firstname: fmt.Sprintf("staff-%v", i+1),
+			Lastname:  fmt.Sprintf("Lastname-%v", i+1),
+			Email:     fmt.Sprintf("staff-%v@email.com", i+1),
 		}
 
 		if err := a.ProfileStore.Save(ctx, &p); err != nil {
@@ -122,8 +136,8 @@ func staffs(ctx context.Context, a *stores.Adapters) [6]staff.Staff {
 	return arr
 }
 
-func assignServices(ctx context.Context, a *stores.Adapters, s *[10]service.ServiceTypeEntity, st *[6]staff.Staff) {
-	windowSize := 3
+func assignServices(ctx context.Context, a *stores.Adapters, s *[4]service.ServiceTypeEntity, st *[3]staff.Staff) {
+	windowSize := 2
 	idx := 0
 
 	for _, staf := range st {
@@ -140,7 +154,7 @@ func assignServices(ctx context.Context, a *stores.Adapters, s *[10]service.Serv
 	}
 }
 
-func schedules(ctx context.Context, date time.Time, a *stores.Adapters, st *[6]staff.Staff) {
+func schedules(ctx context.Context, date time.Time, a *stores.Adapters, st *[3]staff.Staff) {
 	for _, staf := range st {
 		for j := 0; j < len(st); j++ {
 			date = date.Add(time.Duration(48*(j+1)) * time.Hour)

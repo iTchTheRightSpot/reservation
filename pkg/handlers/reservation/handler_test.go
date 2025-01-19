@@ -80,7 +80,7 @@ func TestReservationHandler(t *testing.T) {
 	jwtSer := auth.NewJwtService(logger, env)
 	ware := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
 	s := schedule.NewScheduleService(logger, adapters)
-	cache := pkg.NewInMemoryCache[string, []model.ReservationTimeSlots](logger, 30, 30)
+	cache := pkg.NewInMemoryCache[string, []*model.ReservationTimeSlots](logger, 30, 30)
 	mailService := &mail.MockMailService{}
 	rs := reservation.NewReservationService(logger, adapters, cache, mailService)
 
@@ -124,6 +124,31 @@ func TestReservationHandler(t *testing.T) {
 	t.Run("flow to creating a reservation", func(t *testing.T) {
 		// create staff schedule
 		createSchedule(t, jwtSer, staff1, d, mux)
+
+		t.Run("return valid reservation dates. validate response body is not nil", func(t *testing.T) {
+			url := fmt.Sprintf(
+				"/reservation?day=%v&month=%v&year=%v&staff_id=%s&service=%s&timezone=%s",
+				1, int(d.Month()), d.Year()+1, staff1.UUID.String(), serviceType1.Name, zone.String(),
+			)
+			req := httptest.NewRequest(http.MethodGet, url, nil)
+			req.Header.Set("Content-Type", "application/json")
+			rr := httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+
+			if rr.Code != http.StatusOK {
+				t.Errorf("expected status code %d, got %d", http.StatusOK, rr.Code)
+			}
+
+			body := strings.TrimSpace(rr.Body.String())
+
+			if body == "" {
+				t.Error("expected non-empty body, got nil or empty body")
+			}
+
+			if strings.Compare(body, "[]") != 0 {
+				t.Errorf("expected empty array, got: %s", body)
+			}
+		})
 
 		t.Run("success. create a reservation single service", func(t *testing.T) {
 			// retrieve reservation times
@@ -253,54 +278,56 @@ func TestReservationHandler(t *testing.T) {
 			}
 		})
 
-		first, err := firstReservation(ctx)
-		if err != nil {
-			t.Errorf(err.Error())
-		}
-
-		t.Run("success. cancel reservation", func(t *testing.T) {
-			url := fmt.Sprintf("/reservation/cancel/%v", first.ReservationId)
-			req := httptest.NewRequest(http.MethodPost, url, nil)
-			req.Header.Set("Content-Type", "application/json")
-			rr := httptest.NewRecorder()
-			mux.ServeHTTP(rr, req)
-
-			if rr.Code != http.StatusNoContent {
-				t.Errorf("expected status code %d, got %d", http.StatusNoContent, rr.Code)
-			}
-		})
-
-		t.Run("reject. already cancelled reservation", func(t *testing.T) {
-			url := fmt.Sprintf("/reservation/cancel/%v", first.ReservationId)
-			req := httptest.NewRequest(http.MethodPost, url, nil)
-			req.Header.Set("Content-Type", "application/json")
-			rr := httptest.NewRecorder()
-			mux.ServeHTTP(rr, req)
-
-			if rr.Code != http.StatusBadRequest {
-				t.Errorf("expected status code %d, got %d", http.StatusBadRequest, rr.Code)
-			}
-
-			var obj utils.Error
-			if err = json.NewDecoder(rr.Body).Decode(&obj); err != nil {
+		t.Run("should cancel reservation", func(t *testing.T) {
+			first, err := firstReservation(ctx)
+			if err != nil {
 				t.Errorf(err.Error())
 			}
 
-			str := "reservation already cancelled"
-			if !strings.Contains(str, obj.Message) {
-				t.Errorf("expected to contain %s given %s", str, obj.Message)
-			}
-		})
+			t.Run("success.", func(t *testing.T) {
+				url := fmt.Sprintf("/reservation/cancel/%v", first.ReservationId)
+				req := httptest.NewRequest(http.MethodPost, url, nil)
+				req.Header.Set("Content-Type", "application/json")
+				rr := httptest.NewRecorder()
+				mux.ServeHTTP(rr, req)
 
-		t.Run("reject reservation cancellation. invalid reservation id", func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodPost, "/reservation/cancel/0", nil)
-			req.Header.Set("Content-Type", "application/json")
-			rr := httptest.NewRecorder()
-			mux.ServeHTTP(rr, req)
+				if rr.Code != http.StatusNoContent {
+					t.Errorf("expected status code %d, got %d", http.StatusNoContent, rr.Code)
+				}
+			})
 
-			if rr.Code != http.StatusNotFound {
-				t.Errorf("expected status code %d, got %d", http.StatusNotFound, rr.Code)
-			}
+			t.Run("reject. already cancelled reservation", func(t *testing.T) {
+				url := fmt.Sprintf("/reservation/cancel/%v", first.ReservationId)
+				req := httptest.NewRequest(http.MethodPost, url, nil)
+				req.Header.Set("Content-Type", "application/json")
+				rr := httptest.NewRecorder()
+				mux.ServeHTTP(rr, req)
+
+				if rr.Code != http.StatusBadRequest {
+					t.Errorf("expected status code %d, got %d", http.StatusBadRequest, rr.Code)
+				}
+
+				var obj utils.Error
+				if err = json.NewDecoder(rr.Body).Decode(&obj); err != nil {
+					t.Errorf(err.Error())
+				}
+
+				str := "reservation already cancelled"
+				if !strings.Contains(str, obj.Message) {
+					t.Errorf("expected to contain %s given %s", str, obj.Message)
+				}
+			})
+
+			t.Run("reject. invalid reservation id", func(t *testing.T) {
+				req := httptest.NewRequest(http.MethodPost, "/reservation/cancel/0", nil)
+				req.Header.Set("Content-Type", "application/json")
+				rr := httptest.NewRecorder()
+				mux.ServeHTTP(rr, req)
+
+				if rr.Code != http.StatusNotFound {
+					t.Errorf("expected status code %d, got %d", http.StatusNotFound, rr.Code)
+				}
+			})
 		})
 	})
 }

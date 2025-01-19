@@ -36,7 +36,7 @@ func (dep *HandlerRegistry) Initialize() http.Handler {
 
 	// register handlers
 	schedule.NewScheduleHandler(v1, dep.ware, dep.logger, dep.services.ScheduleService).Register()
-	service_type.NewServiceHandler(v1, dep.logger, dep.services.ServiceImpl, dep.ware).Register()
+	service_type.NewServiceTypeHandler(v1, dep.logger, dep.services.ServiceImpl, dep.ware).Register()
 	staff.NewStaffHandler(v1, dep.ware, dep.logger, dep.services.StaffService).Register()
 	reservation.NewReservationHandler(v1, dep.logger, dep.services.ReservationService).Register()
 
