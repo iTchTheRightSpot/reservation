@@ -10,6 +10,7 @@ import (
 
 type IProfileStore interface {
 	Save(ctx context.Context, p *profile.Profile) error
+	ProfileByEmail(ctx context.Context, email string) (*profile.Profile, error)
 }
 
 type profileStore struct {
@@ -19,6 +20,20 @@ type profileStore struct {
 
 func NewProfileStore(l utils.ILogger, db pkg.Db) IProfileStore {
 	return &profileStore{logger: l, db: db}
+}
+
+func (dep *profileStore) ProfileByEmail(ctx context.Context, email string) (*profile.Profile, error) {
+	var p profile.Profile
+
+	row := dep.db.QueryRowContext(ctx, "SELECT * FROM profile WHERE email = $1", email)
+	err := row.Scan(&p.ProfileId, &p.Firstname, &p.Lastname, &p.Email, &p.Password, &p.ImageKey)
+
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return nil, errors.New("error retrieving profile by email")
+	}
+
+	return &p, nil
 }
 
 func (dep *profileStore) Save(ctx context.Context, p *profile.Profile) error {
@@ -37,7 +52,7 @@ func (dep *profileStore) Save(ctx context.Context, p *profile.Profile) error {
 
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return errors.New("exception saving to profile table")
+		return errors.New("error saving to profile table")
 	}
 
 	return nil

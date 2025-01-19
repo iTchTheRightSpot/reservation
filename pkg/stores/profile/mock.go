@@ -12,6 +12,10 @@ type MockProfileStore struct {
 	MockProfileSaveCalled bool
 }
 
+func (dep *MockProfileStore) ProfileByEmail(context.Context, string) (*profile.Profile, error) {
+	return nil, nil
+}
+
 func (dep *MockProfileStore) Save(context.Context, *profile.Profile) error {
 	dep.MockProfileSaveCalled = true
 	return dep.MockProfileSaveError

@@ -3,6 +3,7 @@ package account
 import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/account"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
@@ -12,19 +13,24 @@ import (
 
 type AccountHandler struct {
 	mux     *http.ServeMux
+	ware    *middleware.Middleware
 	logger  utils.ILogger
 	ps      auth.IPasswordService
 	service account.IAccountService
 }
 
-func NewAccountHandler(mux *http.ServeMux, l utils.ILogger, ps auth.IPasswordService, s account.IAccountService) *AccountHandler {
-	return &AccountHandler{mux: mux, logger: l, ps: ps, service: s}
+func NewAccountHandler(mux *http.ServeMux, w *middleware.Middleware, l utils.ILogger, ps auth.IPasswordService, s account.IAccountService) *AccountHandler {
+	return &AccountHandler{mux: mux, ware: w, logger: l, ps: ps, service: s}
 }
 
 func (dep *AccountHandler) Register() {
 	ware := middleware.RequestBodyMiddleware[profile.ProfilePayload]{Logger: dep.logger}
+	rp := &models.RolePermission{
+		Role:        models.STAFF,
+		Permissions: []models.PermissionEnum{models.WRITE},
+	}
 
-	dep.mux.Handle("POST /account/register", ware.RequestBody(http.HandlerFunc(dep.register)))
+	dep.mux.Handle("POST /account/register", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(ware.RequestBody(http.HandlerFunc(dep.register)), rp)))
 }
 
 func (dep *AccountHandler) register(w http.ResponseWriter, r *http.Request) {

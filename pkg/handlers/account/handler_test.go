@@ -8,6 +8,8 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/account"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
@@ -60,14 +62,28 @@ func TestAccountHandler(t *testing.T) {
 	l := utils.NewMockLogger()
 	prov := stores.NewTransactionProvider(l, db)
 	adp := stores.NewAdapters(l, db, prov)
+	jwtSer := auth.NewJwtService(l, env)
 	ps := auth.NewPasswordService(l)
 	acs := account.NewAccountService(l, adp, ps)
 
 	// register handler
-	NewAccountHandler(mux, l, ps, acs).Register()
+	m := &middleware.Middleware{Logger: l, Auth: jwtSer, Param: env.CookieParam}
+	NewAccountHandler(mux, m, l, ps, acs).Register()
 
 	t.Run("should register a user", func(t *testing.T) {
 		name := uuid.NewString()
+		cred := []models.RolePermission{
+			{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
+		}
+
+		obj, err := jwtSer.GenerateJwt(
+			&models.JwtObj{
+				UserId:         name,
+				AccessControls: cred,
+			},
+			utils.TwoDaysInSeconds,
+		)
+
 		pl, err := json.Marshal(profile.ProfilePayload{
 			Firstname: name,
 			Lastname:  name,
@@ -81,6 +97,7 @@ func TestAccountHandler(t *testing.T) {
 		}
 
 		req := httptest.NewRequest(http.MethodPost, "/account/register", bytes.NewBuffer(pl))
+		req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
 		req.Header.Set("Content-Type", "application/json")
 
 		rr := httptest.NewRecorder()
