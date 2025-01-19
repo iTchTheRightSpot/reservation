@@ -60,9 +60,11 @@ func TestAccountHandler(t *testing.T) {
 	l := utils.NewMockLogger()
 	prov := stores.NewTransactionProvider(l, db)
 	adp := stores.NewAdapters(l, db, prov)
+	ps := auth.NewPasswordService(l)
+	acs := account.NewAccountService(l, adp, ps)
 
 	// register handler
-	NewAccountHandler(mux, l, account.NewAccountService(l, adp, auth.NewPasswordService(l))).Register()
+	NewAccountHandler(mux, l, ps, acs).Register()
 
 	t.Run("should register a user", func(t *testing.T) {
 		name := uuid.NewString()
