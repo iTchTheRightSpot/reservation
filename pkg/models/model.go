@@ -6,6 +6,7 @@ type ProfileEntity struct {
 	Lastname  string  `json:"lastname"`
 	Email     string  `json:"email"`
 	Password  string  `json:"password"`
+	Locked    bool    `json:"locked"`
 	ImageKey  *string `json:"image_key"`
 }
 

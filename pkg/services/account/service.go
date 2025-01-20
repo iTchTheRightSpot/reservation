@@ -54,6 +54,10 @@ func (dep *accountService) Login(ctx context.Context, obj *models.Login) (*model
 		return nil, &utils.NotFoundError{Message: "invalid email or password"}
 	}
 
+	if prp.Profile.Locked {
+		return nil, &utils.AuthenticationError{Message: "account locked. Please reset your password"}
+	}
+
 	if err = dep.ps.Validate([]byte(prp.Profile.Password), []byte(obj.Password)); err != nil {
 		dep.logger.Error(err.Error())
 		return nil, &utils.NotFoundError{Message: "invalid email or password"}

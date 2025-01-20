@@ -118,13 +118,13 @@ func (dep *profileStore) Save(ctx context.Context, p *models.ProfileEntity) erro
 	}
 
 	q := `
-		INSERT INTO profile (firstname, lastname, email, password, image_key)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING profile_id, firstname, lastname, email, password, image_key
+		INSERT INTO profile (firstname, lastname, email, password, locked, image_key)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING profile_id, firstname, lastname, email, password, locked, image_key
 	`
 
-	row := dep.db.QueryRowContext(ctx, q, p.Firstname, p.Lastname, p.Email, p.Password, p.ImageKey)
-	err := row.Scan(&p.ProfileId, &p.Firstname, &p.Lastname, &p.Email, &p.Password, &p.ImageKey)
+	row := dep.db.QueryRowContext(ctx, q, p.Firstname, p.Lastname, p.Email, p.Password, p.Locked, p.ImageKey)
+	err := row.Scan(&p.ProfileId, &p.Firstname, &p.Lastname, &p.Email, &p.Password, &p.Locked, &p.ImageKey)
 
 	if err != nil {
 		dep.logger.Error(err.Error())
