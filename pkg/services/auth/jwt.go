@@ -130,7 +130,7 @@ func (dep *jwtService) Decode(str string) (*models.JwtObj, error) {
 	}
 
 	if credentials, ok := obj["access_controls"].([]interface{}); ok {
-		parsedRoles := make([]models.RolePermission, len(credentials))
+		parsedRoles := make([]models.RolePermissionEnum, len(credentials))
 
 		for i, cred := range credentials {
 			if rolePermission, ok := cred.(map[string]interface{}); ok {
@@ -143,7 +143,7 @@ func (dep *jwtService) Decode(str string) (*models.JwtObj, error) {
 					}
 				}
 
-				parsedRoles[i] = models.RolePermission{
+				parsedRoles[i] = models.RolePermissionEnum{
 					Role:        role,
 					Permissions: permissions,
 				}

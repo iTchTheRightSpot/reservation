@@ -10,7 +10,6 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
@@ -81,7 +80,7 @@ func TestStaffHandler(t *testing.T) {
 	}
 
 	t.Run("should link service to staff & also reject", func(t *testing.T) {
-		cred := []models.RolePermission{
+		cred := []models.RolePermissionEnum{
 			{
 				Role:        models.STAFF,
 				Permissions: []models.PermissionEnum{models.WRITE},
@@ -122,11 +121,11 @@ func TestStaffHandler(t *testing.T) {
 func preSaveStaff(a *stores.Adapters) (*model.Staff, error) {
 	ctx := context.Background()
 
-	p := profile.Profile{
+	p := models.ProfileEntity{
 		Firstname: "erp",
 		Lastname:  "erp",
 		Email:     "erp@email.com",
-		Password:  []byte("password"),
+		Password:  "password",
 	}
 
 	if err := a.ProfileStore.Save(ctx, &p); err != nil {

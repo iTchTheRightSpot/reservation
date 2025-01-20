@@ -87,7 +87,7 @@ func TestTransactionProvider(t *testing.T) {
 			staffId = s.StaffId
 
 			// save role with profile id that does not exist
-			if err := adapters.RoleStore.Save(ctx, &models.Role{Role: models.STAFF, ProfileId: 0}); err != nil {
+			if err := adapters.RoleStore.Save(ctx, &models.RoleEntity{Role: models.STAFF, ProfileId: 0}); err != nil {
 				return err
 			}
 

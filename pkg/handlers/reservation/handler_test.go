@@ -376,7 +376,7 @@ func reservationTimes(t *testing.T, d time.Time, staff1 *staff.Staff, serviceTyp
 }
 
 func createSchedule(t *testing.T, jwtSer auth.IJwtService, staff1 *staff.Staff, d time.Time, mux *http.ServeMux) {
-	cred := []models.RolePermission{
+	cred := []models.RolePermissionEnum{
 		{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 	}
 

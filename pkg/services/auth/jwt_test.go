@@ -22,12 +22,12 @@ func TestJwtService(t *testing.T) {
 
 		s := NewJwtService(utils.NewMockLogger(), con)
 
-		cred := make([]models.RolePermission, 2)
-		cred[0] = models.RolePermission{
+		cred := make([]models.RolePermissionEnum, 2)
+		cred[0] = models.RolePermissionEnum{
 			Role:        models.STAFF,
 			Permissions: []models.PermissionEnum{models.READ, models.DELETE},
 		}
-		cred[1] = models.RolePermission{
+		cred[1] = models.RolePermissionEnum{
 			Role:        models.DEVELOPER,
 			Permissions: []models.PermissionEnum{models.READ, models.DELETE},
 		}

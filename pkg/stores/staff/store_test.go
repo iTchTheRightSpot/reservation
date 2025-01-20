@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	profileStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -71,8 +71,8 @@ func TestStaffStore(t *testing.T) {
 		profileRepo := profileStore.NewProfileStore(mockLog, con)
 
 		// given
-		p := profile.Profile{
-			Password:  []byte("password"),
+		p := models.ProfileEntity{
+			Password:  "password",
 			Firstname: "frog",
 			Lastname:  "lastname",
 			Email:     "frog@email.com",

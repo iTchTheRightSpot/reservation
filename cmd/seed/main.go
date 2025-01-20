@@ -7,7 +7,6 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
@@ -84,18 +83,18 @@ func staffs(ctx context.Context, a *stores.Adapters) [3]staff.Staff {
 	arr := [3]staff.Staff{}
 
 	for i := 0; i < 3; i++ {
-		p := profile.Profile{
+		p := models.ProfileEntity{
 			Firstname: fmt.Sprintf("staff-%v", i+1),
 			Lastname:  fmt.Sprintf("Lastname-%v", i+1),
 			Email:     fmt.Sprintf("staff-%v@email.com", i+1),
-			Password:  []byte("password"),
+			Password:  "password",
 		}
 
 		if err := a.ProfileStore.Save(ctx, &p); err != nil {
 			log.Fatal(err.Error())
 		}
 
-		r := models.Role{
+		r := models.RoleEntity{
 			Role:      models.STAFF,
 			ProfileId: p.ProfileId,
 		}
@@ -104,7 +103,7 @@ func staffs(ctx context.Context, a *stores.Adapters) [3]staff.Staff {
 			log.Fatal(err.Error())
 		}
 
-		if err := a.PermissionStore.Save(ctx, &models.Permission{
+		if err := a.PermissionStore.Save(ctx, &models.PermissionEntity{
 			Permission: models.READ,
 			RoleId:     r.RoleId,
 		}); err != nil {
@@ -112,7 +111,7 @@ func staffs(ctx context.Context, a *stores.Adapters) [3]staff.Staff {
 		}
 
 		if i%2 == 0 {
-			if err := a.PermissionStore.Save(ctx, &models.Permission{
+			if err := a.PermissionStore.Save(ctx, &models.PermissionEntity{
 				Permission: models.WRITE,
 				RoleId:     r.RoleId,
 			}); err != nil {

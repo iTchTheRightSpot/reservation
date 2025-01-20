@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 )
@@ -18,11 +18,11 @@ func DeleteAll(db *sql.DB) error {
 }
 
 func PreSaveStaff(ctx context.Context, a *stores.Adapters) (*staff.Staff, error) {
-	p := profile.Profile{
+	p := models.ProfileEntity{
 		Firstname: "reservation",
 		Lastname:  "reservation",
 		Email:     fmt.Sprintf("%s@email.com", uuid.NewString()),
-		Password:  []byte("password"),
+		Password:  "password",
 	}
 
 	if err := a.ProfileStore.Save(ctx, &p); err != nil {

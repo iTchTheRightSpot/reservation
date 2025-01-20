@@ -5,7 +5,6 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/account"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -26,12 +25,12 @@ func NewAccountHandler(mux *http.ServeMux, w *middleware.Middleware, l utils.ILo
 }
 
 func (dep *AccountHandler) Register() {
-	rp := &models.RolePermission{
+	rp := &models.RolePermissionEnum{
 		Role:        models.STAFF,
 		Permissions: []models.PermissionEnum{models.WRITE},
 	}
 
-	ware1 := middleware.RequestBodyMiddleware[profile.ProfilePayload]{Logger: dep.logger}
+	ware1 := middleware.RequestBodyMiddleware[models.ProfilePayload]{Logger: dep.logger}
 	dep.mux.Handle("POST /account/register", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(ware1.RequestBody(http.HandlerFunc(dep.register)), rp)))
 
 	ware2 := middleware.RequestBodyMiddleware[models.Login]{Logger: dep.logger}
@@ -39,7 +38,7 @@ func (dep *AccountHandler) Register() {
 }
 
 func (dep *AccountHandler) register(w http.ResponseWriter, r *http.Request) {
-	p, err := pkg.ReadBody[profile.ProfilePayload](r)
+	p, err := pkg.ReadBody[models.ProfilePayload](r)
 	if err != nil {
 		dep.logger.Error(err.Error())
 		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})

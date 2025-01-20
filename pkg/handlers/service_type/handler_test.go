@@ -12,7 +12,6 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
@@ -74,7 +73,7 @@ func TestServiceTypeHandler(t *testing.T) {
 	NewServiceTypeHandler(mux, logger, s, m).Register()
 
 	t.Run("should create service", func(t *testing.T) {
-		arr := []models.RolePermission{
+		arr := []models.RolePermissionEnum{
 			{
 				Role:        models.STAFF,
 				Permissions: []models.PermissionEnum{models.WRITE},
@@ -255,7 +254,7 @@ func TestServiceTypeHandler(t *testing.T) {
 }
 
 func preSave(t *testing.T, adapters *stores.Adapters, ctx context.Context) service.ServiceTypeEntity {
-	prof := profile.Profile{Firstname: "f", Lastname: "l", Email: uuid.NewString(), Password: []byte("password")}
+	prof := models.ProfileEntity{Firstname: "f", Lastname: "l", Email: uuid.NewString(), Password: "password"}
 	if err := adapters.ProfileStore.Save(ctx, &prof); err != nil {
 		t.Error(err.Error())
 	}

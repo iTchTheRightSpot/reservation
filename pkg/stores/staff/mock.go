@@ -23,6 +23,10 @@ func (dep *MockStaffStore) Save(context.Context, *staff.Staff) error {
 	return dep.StaffSaveError
 }
 
+func (dep *MockStaffStore) StaffByProfileId(context.Context, uint64) (*staff.Staff, error) {
+	panic("implement me")
+}
+
 func (dep *MockStaffStore) StaffByUUID(context.Context, string) (*staff.Staff, error) {
 	dep.StaffByUUIDCalled = true
 	return dep.StaffByUUIDReturn, dep.StaffByUUIDError

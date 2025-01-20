@@ -27,7 +27,7 @@ func NewScheduleHandler(mux *http.ServeMux, w *middleware.Middleware, l utils.IL
 
 func (dep *ScheduleHandler) Register() {
 	m := middleware.RequestBodyMiddleware[model.SchedulePayload]{Logger: dep.logger}
-	rp := &models.RolePermission{
+	rp := &models.RolePermissionEnum{
 		Role:        models.STAFF,
 		Permissions: []models.PermissionEnum{models.WRITE},
 	}

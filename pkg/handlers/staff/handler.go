@@ -23,7 +23,7 @@ func NewStaffHandler(mux *http.ServeMux, w *middleware.Middleware, l utils.ILogg
 func (dep *StaffHandler) Register() {
 	mux := http.NewServeMux()
 	role := models.STAFF
-	rp := &models.RolePermission{
+	rp := &models.RolePermissionEnum{
 		Role:        role,
 		Permissions: []models.PermissionEnum{models.WRITE},
 	}

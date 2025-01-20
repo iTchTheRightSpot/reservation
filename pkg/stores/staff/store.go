@@ -15,6 +15,7 @@ type IStaffStore interface {
 	Save(ctx context.Context, r *staff.Staff) error
 	StaffByUUID(ctx context.Context, staffUUID string) (*staff.Staff, error)
 	StaffsByServices(ctx context.Context, s *[]string) ([]*staff.StaffStoreFrontDb, error)
+	StaffByProfileId(ctx context.Context, id uint64) (*staff.Staff, error)
 }
 
 type staffStore struct {
@@ -24,6 +25,16 @@ type staffStore struct {
 
 func NewStaffStore(l utils.ILogger, db pkg.Db) IStaffStore {
 	return &staffStore{logger: l, db: db}
+}
+
+func (dep *staffStore) StaffByProfileId(ctx context.Context, profileId uint64) (*staff.Staff, error) {
+	var r staff.Staff
+	row := dep.db.QueryRowContext(ctx, "SELECT * FROM staff WHERE profile_id = $1", profileId)
+	if err := row.Scan(&r.StaffId, &r.UUID, &r.Bio, &r.ProfileId); err != nil {
+		dep.logger.Error(err.Error())
+		return nil, fmt.Errorf("no staff with id %v", profileId)
+	}
+	return &r, nil
 }
 
 func (dep *staffStore) StaffsByServices(ctx context.Context, s *[]string) ([]*staff.StaffStoreFrontDb, error) {
@@ -74,7 +85,6 @@ func (dep *staffStore) StaffsByServices(ctx context.Context, s *[]string) ([]*st
 		if err = rows.Scan(&sb.UUID, &sb.Name, &sb.ImageKey, &sb.Bio); err != nil {
 			dep.logger.Error(err)
 			return nil, errors.New("exception scanning staffs by services")
-
 		}
 
 		arr = append(arr, &sb)

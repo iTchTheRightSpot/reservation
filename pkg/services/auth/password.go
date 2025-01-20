@@ -53,9 +53,18 @@ func (dep *passwordService) PasswordRegex(str string) error {
 }
 
 func (dep *passwordService) Encode(str string) ([]byte, error) {
-	return bcrypt.GenerateFromPassword([]byte(str), bcrypt.DefaultCost)
+	ps, err := bcrypt.GenerateFromPassword([]byte(str), bcrypt.DefaultCost)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return nil, errors.New("error encoding password")
+	}
+	return ps, nil
 }
 
 func (dep *passwordService) Validate(hash, str []byte) error {
-	return bcrypt.CompareHashAndPassword(hash, str)
+	if err := bcrypt.CompareHashAndPassword(hash, str); err != nil {
+		dep.logger.Error(err.Error())
+		return errors.New("passwords do not match")
+	}
+	return nil
 }

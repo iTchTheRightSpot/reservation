@@ -28,7 +28,7 @@ func NewServiceTypeHandler(mux *http.ServeMux, l utils.ILogger, s service_type.I
 }
 
 func (dep *ServiceTypeHandler) Register() {
-	rp := &models.RolePermission{
+	rp := &models.RolePermissionEnum{
 		Role:        models.STAFF,
 		Permissions: []models.PermissionEnum{models.WRITE},
 	}

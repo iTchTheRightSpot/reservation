@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
@@ -59,8 +59,8 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 func preSaveStaff(ps profileStore.IProfileStore, st staffStore.IStaffStore) (*staff.Staff, error) {
 	ctx := context.Background()
 
-	p := profile.Profile{
-		Password:  []byte("password"),
+	p := models.ProfileEntity{
+		Password:  "password",
 		Firstname: "erp",
 		Lastname:  "erp",
 		Email:     "erp@email.com",

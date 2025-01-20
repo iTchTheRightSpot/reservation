@@ -101,7 +101,7 @@ func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 
 		isLogout := strings.HasSuffix(r.URL.Path, "/logout")
 		if !isLogout && isTokenExpiringSoon(dep.Logger.Date(), *obj.ExpireAt, utils.TwoDaysInSeconds) {
-			if o, err := dep.Auth.GenerateJwt(obj, utils.TwoDaysInSeconds); err != nil {
+			if o, err := dep.Auth.Encode(obj, utils.TwoDaysInSeconds); err != nil {
 				dep.Logger.Error(fmt.Sprintf("failed to refresh token %s", err))
 			} else {
 				cookie.Value = o.Token
@@ -130,7 +130,7 @@ func (dep *Middleware) HasRole(next http.Handler, role *models.RoleEnum) http.Ha
 			return
 		}
 
-		contains := slices.ContainsFunc(obj.AccessControls, func(access models.RolePermission) bool {
+		contains := slices.ContainsFunc(obj.AccessControls, func(access models.RolePermissionEnum) bool {
 			return access.Role == *role
 		})
 		if !contains {
@@ -157,7 +157,7 @@ func (dep *Middleware) HasPermission(next http.Handler, permission *models.Permi
 			return
 		}
 
-		contains := slices.ContainsFunc(obj.AccessControls, func(rp models.RolePermission) bool {
+		contains := slices.ContainsFunc(obj.AccessControls, func(rp models.RolePermissionEnum) bool {
 			return slices.ContainsFunc(rp.Permissions, func(enum models.PermissionEnum) bool {
 				return reflect.DeepEqual(enum, *permission)
 			})
@@ -173,7 +173,7 @@ func (dep *Middleware) HasPermission(next http.Handler, permission *models.Permi
 	})
 }
 
-func (dep *Middleware) HasRoleAndPermissions(next http.Handler, cred *models.RolePermission) http.Handler {
+func (dep *Middleware) HasRoleAndPermissions(next http.Handler, cred *models.RolePermissionEnum) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if cred == nil {
 			dep.Logger.Error("HasRoleAndPermissions: cred cannot be nil")
@@ -198,8 +198,8 @@ func (dep *Middleware) HasRoleAndPermissions(next http.Handler, cred *models.Rol
 	})
 }
 
-func (dep *Middleware) validateRoleAndPermissions(arr []models.RolePermission, param *models.RolePermission) bool {
-	return slices.ContainsFunc(arr, func(obj models.RolePermission) bool {
+func (dep *Middleware) validateRoleAndPermissions(arr []models.RolePermissionEnum, param *models.RolePermissionEnum) bool {
+	return slices.ContainsFunc(arr, func(obj models.RolePermissionEnum) bool {
 		if obj.Role == param.Role {
 			if len(param.Permissions) < 1 {
 				return false

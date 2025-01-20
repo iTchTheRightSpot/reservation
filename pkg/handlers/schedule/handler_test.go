@@ -90,7 +90,7 @@ func TestScheduleHandler(t *testing.T) {
 	t.Run("flow of application", func(t *testing.T) {
 
 		t.Run("success. create schedule", func(t *testing.T) {
-			cred := []models.RolePermission{
+			cred := []models.RolePermissionEnum{
 				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 			}
 
@@ -159,7 +159,7 @@ func TestScheduleHandler(t *testing.T) {
 		})
 
 		t.Run("success. staff accessing his/her schedule", func(t *testing.T) {
-			cred := []models.RolePermission{
+			cred := []models.RolePermissionEnum{
 				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.READ}},
 			}
 
@@ -197,7 +197,7 @@ func TestScheduleHandler(t *testing.T) {
 		})
 
 		t.Run("reject. staff without WRITE permission trying to view another staffs schedule", func(t *testing.T) {
-			cred := []models.RolePermission{
+			cred := []models.RolePermissionEnum{
 				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.READ}},
 			}
 
@@ -225,7 +225,7 @@ func TestScheduleHandler(t *testing.T) {
 		})
 
 		t.Run("success. staff with WRITE permission trying to see another staffs schedule", func(t *testing.T) {
-			cred := []models.RolePermission{
+			cred := []models.RolePermissionEnum{
 				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 			}
 
@@ -271,7 +271,7 @@ func TestScheduleHandler(t *testing.T) {
 		var statusArr []int
 		var errArr []string
 
-		cred := []models.RolePermission{
+		cred := []models.RolePermissionEnum{
 			{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 		}
 
@@ -351,7 +351,7 @@ func TestScheduleHandler(t *testing.T) {
 	t.Run("reject. CREATE schedule bleeds into the next day", func(t *testing.T) {
 		staff1, _ = handlers.PreSaveStaff(ctx, adapters)
 
-		cred := []models.RolePermission{
+		cred := []models.RolePermissionEnum{
 			{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 		}
 

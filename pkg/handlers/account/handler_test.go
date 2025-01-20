@@ -10,7 +10,6 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/account"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
@@ -72,7 +71,7 @@ func TestAccountHandler(t *testing.T) {
 
 	// given
 	name := uuid.NewString()
-	p := profile.ProfilePayload{
+	p := models.ProfilePayload{
 		Firstname: name,
 		Lastname:  name,
 		Email:     name + "@email.com",
@@ -80,7 +79,7 @@ func TestAccountHandler(t *testing.T) {
 	}
 
 	t.Run("should register a user", func(t *testing.T) {
-		cred := []models.RolePermission{
+		cred := []models.RolePermissionEnum{
 			{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 		}
 

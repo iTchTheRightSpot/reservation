@@ -9,7 +9,7 @@ import (
 )
 
 type IRoleStore interface {
-	Save(ctx context.Context, r *models.Role) error
+	Save(ctx context.Context, r *models.RoleEntity) error
 }
 
 type roleStore struct {
@@ -21,7 +21,7 @@ func NewRoleStore(l utils.ILogger, db pkg.Db) IRoleStore {
 	return &roleStore{logger: l, db: db}
 }
 
-func (dep *roleStore) Save(ctx context.Context, r *models.Role) error {
+func (dep *roleStore) Save(ctx context.Context, r *models.RoleEntity) error {
 	if r == nil {
 		return errors.New("role object is nil")
 	}
