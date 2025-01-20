@@ -14,7 +14,7 @@ import {
   switchMap,
   tap
 } from 'rxjs';
-import { ApiResponse, ApiState, TIMEZONE } from '@root/app.util';
+import { ApiResponse, ApiState } from '@root/app.model';
 import { DateModel } from '@store/pages/reservation/pages/dates/dates.model';
 import { FormsModule } from '@angular/forms';
 import {
@@ -28,11 +28,12 @@ import { Skeleton } from 'primeng/skeleton';
 import { Message } from 'primeng/message';
 import moment from 'moment-timezone';
 import { Router } from '@angular/router';
-import { STORE_FRONT_RESERVATION_ROUTE } from '@store/store.routes';
+import { RESERVATION_ROUTE } from '@store/store.routes';
 import { CONFIRM_ROUTE } from '@store/pages/reservation/reservation.routes';
 import { Button } from 'primeng/button';
 import { PrimeTemplate } from 'primeng/api';
 import { Sidebar } from 'primeng/sidebar';
+import { TIMEZONE } from '@root/app.util';
 
 @Component({
   selector: 'app-dates',
@@ -167,8 +168,6 @@ export class DatesComponent {
 
   protected readonly updateParent = async (dt: string) => {
     this.service1.setDateTime(dt);
-    await this.router.navigate([
-      `${STORE_FRONT_RESERVATION_ROUTE}/${CONFIRM_ROUTE}`
-    ]);
+    await this.router.navigate([`${RESERVATION_ROUTE}/${CONFIRM_ROUTE}`]);
   };
 }

@@ -8,8 +8,9 @@
     "paths": {
       "@root/*": ["src/app/*"],
       "@env/*": ["src/environments/*"],
-      "@store/*": ["src/app/store/*"],
-      "@staff/*": ["src/app/staff/*"],
+      "@pages/*": ["src/app/pages/*"],
+      "@store/*": ["src/app/pages/core/store/*"],
+      "@staff/*": ["src/app/pages/staff/*"],
       "@shared/*": ["src/app/shared/*"],
       "@404/*": ["src/app/shared/pages/*"]
     },

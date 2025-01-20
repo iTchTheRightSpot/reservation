@@ -7,12 +7,12 @@ import {
 } from '@angular/router';
 import { Breadcrumb } from 'primeng/breadcrumb';
 import { MenuItem } from 'primeng/api';
-import { STORE_FRONT_RESERVATION_ROUTE } from '@store/store.routes';
+import { RESERVATION_ROUTE } from '@store/store.routes';
 import {
   CONFIRM_ROUTE,
   DATES_ROUTE,
   SERVICE_TYPE_ROUTE,
-  STAFF_ROUTE
+  STORE_STAFF_ROUTE
 } from '@store/pages/reservation/reservation.routes';
 import { NgClass } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -51,31 +51,31 @@ export class ReservationComponent {
       map(event => event.url),
       startWith(this.router.url)
     ),
-    { initialValue: `/${STORE_FRONT_RESERVATION_ROUTE}/${SERVICE_TYPE_ROUTE}` }
+    { initialValue: `/${RESERVATION_ROUTE}/${SERVICE_TYPE_ROUTE}` }
   );
 
   protected readonly items: MenuItem[] = [
     {
       label: 'services',
-      route: `/${STORE_FRONT_RESERVATION_ROUTE}/${SERVICE_TYPE_ROUTE}`
+      route: `/${RESERVATION_ROUTE}/${SERVICE_TYPE_ROUTE}`
     },
     {
       label: 'staffs',
-      route: `/${STORE_FRONT_RESERVATION_ROUTE}/${STAFF_ROUTE}`
+      route: `/${RESERVATION_ROUTE}/${STORE_STAFF_ROUTE}`
     },
     {
       label: 'dates',
-      route: `/${STORE_FRONT_RESERVATION_ROUTE}/${DATES_ROUTE}`
+      route: `/${RESERVATION_ROUTE}/${DATES_ROUTE}`
     },
     {
       label: 'confirm',
-      route: `/${STORE_FRONT_RESERVATION_ROUTE}/${CONFIRM_ROUTE}`
+      route: `/${RESERVATION_ROUTE}/${CONFIRM_ROUTE}`
     }
   ];
 
   protected readonly home: MenuItem = {
     label: 'reservation',
     icon: 'pi pi-shopping-bag',
-    routerLink: `/${STORE_FRONT_RESERVATION_ROUTE}/${SERVICE_TYPE_ROUTE}`
+    routerLink: `/${RESERVATION_ROUTE}/${SERVICE_TYPE_ROUTE}`
   };
 }

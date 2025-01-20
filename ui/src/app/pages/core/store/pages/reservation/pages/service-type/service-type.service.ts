@@ -3,7 +3,8 @@ import { environment } from '@env/environment';
 import { HttpClient } from '@angular/common/http';
 import { DummyServiceTypes, ServiceTypeModel } from './service-type.model';
 import { BehaviorSubject, catchError, map, of, switchMap, tap } from 'rxjs';
-import { ApiResponse, ApiState, err } from '@root/app.util';
+import { ApiResponse, ApiState } from '@root/app.model';
+import { err } from '@root/app.util';
 
 @Injectable({
   providedIn: 'root'
@@ -11,23 +12,26 @@ import { ApiResponse, ApiState, err } from '@root/app.util';
 export class ServiceTypeService {
   private readonly http = inject(HttpClient);
 
-  private readonly cache = new BehaviorSubject<ServiceTypeModel[] | undefined>(undefined);
+  private readonly cache = new BehaviorSubject<ServiceTypeModel[] | undefined>(
+    undefined
+  );
 
-  readonly services = () => !environment.production
-    ? of<ApiResponse<ServiceTypeModel[]>>({
-      data: DummyServiceTypes,
-      state: ApiState.LOADED
-    })
-    : this.cache.asObservable().pipe(
-      switchMap(arr =>
-        arr
-          ? of<ApiResponse<ServiceTypeModel[]>>({
-            data: arr,
-            state: ApiState.LOADED
-          })
-          : this.req$()
-      )
-    );
+  readonly services = () =>
+    !environment.production
+      ? of<ApiResponse<ServiceTypeModel[]>>({
+          data: DummyServiceTypes,
+          state: ApiState.LOADED
+        })
+      : this.cache.asObservable().pipe(
+          switchMap(arr =>
+            arr
+              ? of<ApiResponse<ServiceTypeModel[]>>({
+                  data: arr,
+                  state: ApiState.LOADED
+                })
+              : this.req$()
+          )
+        );
 
   private readonly req$ = () =>
     this.http

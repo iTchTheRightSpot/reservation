@@ -7,15 +7,15 @@ import { FormsModule } from '@angular/forms';
   imports: [ToggleSwitch, FormsModule],
   template: `
     <div class="flex gap-1">
+      <p-toggleswitch
+        [ngModel]="isDarkMode()"
+        (ngModelChange)="toggleDarkMode()"
+      />
       @if (isDarkMode()) {
         🌚
       } @else {
         🌞
       }
-      <p-toggleswitch
-        [ngModel]="isDarkMode()"
-        (ngModelChange)="toggleDarkMode()"
-      />
     </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -45,8 +45,6 @@ func (dep *accountService) accessControls(o *models.ProfileRolePermissionEntity)
 	return &arr
 }
 
-// Login TODO implement logic to temporary lock account on brute force
-// TODO validate account is not locked
 func (dep *accountService) Login(ctx context.Context, obj *models.Login) (*models.JwtResponse, error) {
 	prp, err := dep.adp.ProfileStore.ProfileRolesAndPermissionByEmail(ctx, obj.Email)
 	if err != nil {

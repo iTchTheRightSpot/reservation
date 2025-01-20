@@ -44,7 +44,12 @@
                       shape="circle"
                     />
                   } @else {
-                    <p-avatar icon="pi pi-user" class="mr-2" size="large" shape="circle" />
+                    <p-avatar
+                      icon="pi pi-user"
+                      class="mr-2"
+                      size="large"
+                      shape="circle"
+                    />
                   }
                   <div class="flex-1">
                     <h4 class="capitalize font-semibold">{{ s.name }}</h4>
@@ -63,7 +68,9 @@
               </p-card>
             </li>
           } @empty {
-            <p class="font-semibold">No staff(s) available for the service(s)</p>
+            <p class="font-semibold">
+              No staff(s) available for the service(s)
+            </p>
           }
         </ul>
         <div class="w-full mt-4 text-right" [ngClass]="{ hidden: !staff() }">

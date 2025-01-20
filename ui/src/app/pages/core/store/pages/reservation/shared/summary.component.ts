@@ -4,8 +4,8 @@ import { Avatar } from 'primeng/avatar';
 import { ServiceTypeModel } from '@store/pages/reservation/pages/service-type/service-type.model';
 import { ToggleButton } from 'primeng/togglebutton';
 import { FormsModule } from '@angular/forms';
-import { FORMAT_SECONDS } from '@root/app.util';
 import { NgClass } from '@angular/common';
+import { FORMAT_SECONDS } from '@root/app.util';
 
 @Component({
   selector: 'app-summary',

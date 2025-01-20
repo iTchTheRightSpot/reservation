@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { ReservationService } from '@store/pages/reservation/reservation.service';
 import { Router } from '@angular/router';
-import { ApiResponse, ApiState } from '@root/app.util';
+import { ApiResponse, ApiState } from '@root/app.model';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { StaffService } from './staff.service';
 import { StaffModel } from './staff.model';
@@ -15,7 +15,7 @@ import { Skeleton } from 'primeng/skeleton';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
 import { NgClass } from '@angular/common';
-import { STORE_FRONT_RESERVATION_ROUTE } from '@store/store.routes';
+import { RESERVATION_ROUTE } from '@store/store.routes';
 import { DATES_ROUTE } from '@store/pages/reservation/reservation.routes';
 import { Avatar } from 'primeng/avatar';
 import { RadioButton } from 'primeng/radiobutton';
@@ -59,8 +59,6 @@ export class StaffComponent {
     const staff = this.staff();
     if (!staff) return;
     this.service1.setStaff(staff);
-    await this.router.navigate([
-      `/${STORE_FRONT_RESERVATION_ROUTE}/${DATES_ROUTE}`
-    ]);
+    await this.router.navigate([`/${RESERVATION_ROUTE}/${DATES_ROUTE}`]);
   };
 }

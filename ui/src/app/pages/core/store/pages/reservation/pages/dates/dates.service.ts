@@ -14,8 +14,9 @@ import {
   timer
 } from 'rxjs';
 import { DateModel, DummyDates } from './dates.model';
-import { ApiResponse, ApiState, err, TIMEZONE } from '@root/app.util';
-import { Cache } from '@root/cache';
+import { ApiResponse, ApiState } from '@root/app.model';
+import { Cache } from '@shared/data-access/cache';
+import { err, TIMEZONE } from '@root/app.util';
 
 @Injectable({
   providedIn: 'root'
@@ -57,12 +58,22 @@ export class DatesService {
               state: ApiState.LOADED,
               data: arr
             })
-          : this.req(key, obj!.services!.map(o => o.name),  obj.staff!.staff_id, date)
+          : this.req(
+              key,
+              obj!.services!.map(o => o.name),
+              obj.staff!.staff_id,
+              date
+            )
       )
     );
   };
 
-  private readonly req = (key: string, services: string[], staffId: string, date: Date) => {
+  private readonly req = (
+    key: string,
+    services: string[],
+    staffId: string,
+    date: Date
+  ) => {
     let params = new HttpParams();
     params = params.append('staff_id', staffId);
     params = params.append('day', date.getDate());

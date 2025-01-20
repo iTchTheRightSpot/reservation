@@ -1,11 +1,12 @@
 import { inject, Injectable } from '@angular/core';
 import { ReservationService } from '@store/pages/reservation/reservation.service';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Cache } from '@root/cache';
+import { Cache } from '@shared/data-access/cache';
 import { DummyStaffModels, StaffModel } from './staff.model';
 import { environment } from '@env/environment';
 import { catchError, map, of, switchMap, tap } from 'rxjs';
-import { ApiResponse, ApiState, err } from '@root/app.util';
+import { ApiResponse, ApiState } from '@root/app.model';
+import { err } from '@root/app.util';
 
 @Injectable({
   providedIn: 'root'

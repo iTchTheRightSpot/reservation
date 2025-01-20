@@ -1,13 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { NavigationComponent } from '@store/ui/navigation.component';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
-import { NgClass } from '@angular/common';
-import { filter, map, startWith } from 'rxjs';
+import { NavigationComponent } from '@store/ui/navigation.component';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map, startWith } from 'rxjs';
+import { NgClass } from '@angular/common';
+import { AuthService } from '@shared/data-access/auth.service';
 
 @Component({
-  selector: 'app-store-front',
-  imports: [NavigationComponent, RouterOutlet, NgClass],
+  selector: 'app-core',
+  imports: [RouterOutlet, NavigationComponent, NgClass],
   styles: [
     `
       .pos {
@@ -25,17 +26,18 @@ import { toSignal } from '@angular/core/rxjs-interop';
   ],
   template: `
     <div
-      class="w-full xl:w-cx-50 m-auto z-10"
+      class="w-full xl:w-cx-50 m-auto z-20"
       [ngClass]="{ pos: url(), pos1: !url() }"
     >
-      <app-navigation />
+      <app-navigation [imageKey]="service.activeUser()?.image_key" />
     </div>
     <router-outlet />
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StoreComponent {
+export class CoreComponent {
   protected readonly router = inject(Router);
+  protected readonly service = inject(AuthService);
 
   protected readonly url = toSignal(
     this.router.events.pipe(

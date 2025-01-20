@@ -1,17 +1,6 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import * as moment from 'moment-timezone';
-
-export enum ApiState {
-  LOADING = 'LOADING',
-  LOADED = 'LOADED',
-  ERROR = 'ERROR'
-}
-
-export interface ApiResponse<T> {
-  data?: T;
-  state: ApiState;
-  message?: string;
-}
+import { HttpErrorResponse } from '@angular/common/http';
+import { ApiResponse, ApiState } from '@root/app.model';
 
 export const err = <T>(e: HttpErrorResponse): ApiResponse<T> => ({
   state: ApiState.ERROR,
