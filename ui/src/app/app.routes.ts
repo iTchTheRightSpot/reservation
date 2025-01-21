@@ -1,7 +1,8 @@
 import { Routes } from '@angular/router';
+import { crmGuard } from '@root/app.guard';
 
 export const CORE_ROUTE = '';
-export const STAFF_ROUTE = 'staff';
+export const CRM_ROUTE = 'crm';
 export const NOTFOUND = '404';
 
 export const routes: Routes = [
@@ -13,11 +14,12 @@ export const routes: Routes = [
       import('@root/pages/core/core.routes').then(m => m.routes)
   },
   {
-    path: STAFF_ROUTE,
+    path: CRM_ROUTE,
+    canActivate: [crmGuard],
+    canActivateChild: [crmGuard],
     loadComponent: () =>
-      import('@root/pages/staff/staff.component').then(m => m.StaffComponent),
-    loadChildren: () =>
-      import('@root/pages/staff/staff.routes').then(m => m.routes)
+      import('@pages/crm/crm.component').then(m => m.CrmComponent),
+    loadChildren: () => import('@pages/crm/crm.routes').then(m => m.routes)
   },
   {
     path: NOTFOUND,

@@ -5,7 +5,7 @@ import { RESERVATION_ROUTE } from '@store/store.routes';
 import {
   CONFIRM_ROUTE,
   SERVICE_TYPE_ROUTE,
-  STORE_STAFF_ROUTE
+  STAFF_ROUTE
 } from './reservation.routes';
 
 export const reservationStaffGuard = async () => {
@@ -27,9 +27,7 @@ export const datesGuard = async () => {
     !service.services || service.services.length < 1 || !service.staff;
 
   if (bool) {
-    await inject(Router).navigate([
-      `${RESERVATION_ROUTE}/${STORE_STAFF_ROUTE}`
-    ]);
+    await inject(Router).navigate([`${RESERVATION_ROUTE}/${STAFF_ROUTE}`]);
     return false;
   }
 

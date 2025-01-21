@@ -22,6 +22,13 @@ export interface LoginModel {
   password: string;
 }
 
+export interface RegisterModel {
+  firstname: string;
+  lastname: string;
+  email: string;
+  password: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -66,7 +73,34 @@ export class AuthService {
     environment.production
       ? this.http
           .post<any>(`${environment.domain}account/login`, obj, {
-            observe: 'response',
+            withCredentials: true
+          })
+          .pipe(
+            switchMap(() =>
+              this.req().pipe(
+                map(() => ({ state: ApiState.LOADED }) as ApiResponse<any>)
+              )
+            ),
+            startWith({ state: ApiState.LOADING } as ApiResponse<any>),
+            catchError(e => of(err<any>(e)))
+          )
+      : of(obj).pipe(
+          concatMap(() =>
+            concat(
+              of<ApiResponse<any>>({ state: ApiState.LOADING }),
+              timer(2000).pipe(
+                concatMap(() =>
+                  of<ApiResponse<any>>({ state: ApiState.LOADED })
+                )
+              )
+            )
+          )
+        );
+
+  readonly register = (obj: RegisterModel) =>
+    environment.production
+      ? this.http
+          .post<any>(`${environment.domain}account/register`, obj, {
             withCredentials: true
           })
           .pipe(
@@ -74,7 +108,7 @@ export class AuthService {
             startWith({ state: ApiState.LOADING } as ApiResponse<any>),
             catchError(e => of(err<any>(e)))
           )
-      : of(obj).pipe(
+      : of('register').pipe(
           concatMap(() =>
             concat(
               of<ApiResponse<any>>({ state: ApiState.LOADING }),

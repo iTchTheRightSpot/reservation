@@ -15,8 +15,7 @@ import { Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Subject, switchMap, tap } from 'rxjs';
 import { ApiResponse, ApiState } from '@root/app.model';
-import { STAFF_ROUTE } from '@root/app.routes';
-import { ProgressSpinner } from 'primeng/progressspinner';
+import { CRM_ROUTE } from '@root/app.routes';
 import { AuthService, LoginModel } from '@shared/data-access/auth.service';
 
 @Component({
@@ -28,8 +27,7 @@ import { AuthService, LoginModel } from '@shared/data-access/auth.service';
     FormsModule,
     Button,
     Message,
-    ReactiveFormsModule,
-    ProgressSpinner
+    ReactiveFormsModule
   ],
   templateUrl: 'login.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -51,7 +49,7 @@ export class LoginComponent {
       switchMap(obj => this.service.login(obj)),
       tap(obj => {
         if (obj.state === ApiState.LOADED)
-          this.router.navigate([`${STAFF_ROUTE}`]);
+          this.router.navigate([`${CRM_ROUTE}`]);
       })
     ),
     { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }

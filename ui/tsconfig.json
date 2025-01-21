@@ -10,7 +10,7 @@
       "@env/*": ["src/environments/*"],
       "@pages/*": ["src/app/pages/*"],
       "@store/*": ["src/app/pages/core/store/*"],
-      "@staff/*": ["src/app/pages/staff/*"],
+      "@crm/*": ["src/app/pages/crm/*"],
       "@shared/*": ["src/app/shared/*"],
       "@404/*": ["src/app/shared/pages/*"]
     },

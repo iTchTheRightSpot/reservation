@@ -12,7 +12,7 @@ import {
   CONFIRM_ROUTE,
   DATES_ROUTE,
   SERVICE_TYPE_ROUTE,
-  STORE_STAFF_ROUTE
+  STAFF_ROUTE
 } from '@store/pages/reservation/reservation.routes';
 import { NgClass } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -61,7 +61,7 @@ export class ReservationComponent {
     },
     {
       label: 'staffs',
-      route: `/${RESERVATION_ROUTE}/${STORE_STAFF_ROUTE}`
+      route: `/${RESERVATION_ROUTE}/${STAFF_ROUTE}`
     },
     {
       label: 'dates',

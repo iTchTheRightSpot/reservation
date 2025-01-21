@@ -12,7 +12,7 @@ import { Button } from 'primeng/button';
 import { NgClass } from '@angular/common';
 import { Router } from '@angular/router';
 import { RESERVATION_ROUTE } from '@store/store.routes';
-import { STORE_STAFF_ROUTE } from '@store/pages/reservation/reservation.routes';
+import { STAFF_ROUTE } from '@store/pages/reservation/reservation.routes';
 import { ReservationService } from '@store/pages/reservation/reservation.service';
 import { FORMAT_SECONDS } from '@root/app.util';
 
@@ -65,6 +65,6 @@ export class ServiceTypeComponent {
 
   protected readonly submit = async () => {
     this.service1.setServiceTypes(this.selectedServices);
-    await this.router.navigate([`/${RESERVATION_ROUTE}/${STORE_STAFF_ROUTE}`]);
+    await this.router.navigate([`/${RESERVATION_ROUTE}/${STAFF_ROUTE}`]);
   };
 }

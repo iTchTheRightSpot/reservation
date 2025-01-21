@@ -6,7 +6,7 @@ import {
 } from './reservation.guard';
 
 export const SERVICE_TYPE_ROUTE = 'service';
-export const STORE_STAFF_ROUTE = 'staff';
+export const STAFF_ROUTE = 'staff';
 export const DATES_ROUTE = 'dates';
 export const CONFIRM_ROUTE = 'confirm';
 
@@ -19,7 +19,7 @@ export const routes: Routes = [
       ).then(m => m.ServiceTypeComponent)
   },
   {
-    path: STORE_STAFF_ROUTE,
+    path: STAFF_ROUTE,
     canActivate: [reservationStaffGuard],
     loadComponent: () =>
       import('@store/pages/reservation/pages/staff/staff.component').then(
