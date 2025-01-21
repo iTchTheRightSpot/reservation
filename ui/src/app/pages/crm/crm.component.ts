@@ -8,10 +8,10 @@ import { AuthService } from '@shared/data-access/auth.service';
   imports: [RouterOutlet, CrmNavBarComponent],
   template: `
     <div class="w-full xl:w-cx-50 m-auto flex flex-col">
-      <div class="sticky top-0">
+      <div class="sticky top-0 z-10">
         <app-crm-nav-bar [imageKey]="service.activeUser()?.image_key" />
       </div>
-      <div class="w-full p-3 flex-1">
+      <div class="w-full py-3 px-2 xl:px-0 flex-1">
         <router-outlet />
       </div>
     </div>

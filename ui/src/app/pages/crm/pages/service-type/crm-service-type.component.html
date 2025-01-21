@@ -1,0 +1,66 @@
+<div class="mb-4">
+  <p-button
+    type="button"
+    icon="pi pi-chevron-left"
+    (click)="first = first - rows"
+    [disabled]="models().data || [] ? first === 0 : true"
+    text
+  />
+  <p-button type="button" icon="pi pi-refresh" (click)="first = 0" text />
+  <p-button
+    type="button"
+    icon="pi pi-chevron-right"
+    (click)="first = first + rows"
+    [disabled]="
+      models().data || [] ? first + rows >= (models().data?.length || 0) : true
+    "
+    text
+  />
+</div>
+<div class="card">
+  <p-table
+    [value]="models().data || []"
+    [paginator]="true"
+    [rows]="10"
+    [first]="first"
+    [showCurrentPageReport]="true"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+    (onPage)="pageChange($event)"
+    [rowsPerPageOptions]="[10, 20]"
+  >
+    <ng-template #header>
+      <tr>
+        <th style="width: 25%">Name</th>
+        <th style="width: 25%">Price</th>
+        <th style="width: 25%">Visible</th>
+        <th style="width: 25%">Reoccurring</th>
+        <th style="width: 25%">Duration</th>
+        <th style="width: 25%">Clean up</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-model>
+      <tr class="cursor-pointer hover:bg-primary hover:text-primary-contrast">
+        <td>{{ model.name }}</td>
+        <td>₦{{ model.price }}</td>
+        <td>
+          <p-badge
+            [value]="model.is_visible"
+            [severity]="model.is_visible ? 'success' : 'danger'"
+          />
+        </td>
+        <td>
+          <p-badge
+            [value]="model.is_reoccurring"
+            [severity]="model.is_reoccurring ? 'success' : 'danger'"
+          />
+        </td>
+        <td>{{ model.duration }}</td>
+        <td>{{ model.clean_up_time }}</td>
+      </tr>
+    </ng-template>
+    <ng-template #paginatorleft>
+      <p-button type="button" icon="pi pi-plus" text />
+    </ng-template>
+  </p-table>
+</div>

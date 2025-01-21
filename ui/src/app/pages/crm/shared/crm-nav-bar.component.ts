@@ -7,7 +7,11 @@ import {
   REGISTER_ROUTE,
   SETTINGS_ROUTE
 } from '@crm/pages/account/account.routes';
-import { ACCOUNT_ROUTE, DASHBOARD_ROUTE } from '@crm/crm.routes';
+import {
+  ACCOUNT_ROUTE,
+  CRM_SERVICE_TYPE_ROUTE,
+  DASHBOARD_ROUTE
+} from '@crm/crm.routes';
 import { CRM_ROUTE } from '@root/app.routes';
 
 @Component({
@@ -40,7 +44,8 @@ export class CrmNavBarComponent {
     },
     {
       label: 'Services',
-      icon: 'pi pi-shop'
+      icon: 'pi pi-shop',
+      routerLink: `/${CRM_ROUTE}/${CRM_SERVICE_TYPE_ROUTE}`
     },
     {
       label: 'Staffs',

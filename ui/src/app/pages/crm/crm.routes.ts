@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 export const DASHBOARD_ROUTE = 'dashboard';
+export const CRM_SERVICE_TYPE_ROUTE = 'service';
 export const ACCOUNT_ROUTE = 'account';
 
 export const routes: Routes = [
@@ -12,13 +13,18 @@ export const routes: Routes = [
       )
   },
   {
+    path: CRM_SERVICE_TYPE_ROUTE,
+    loadComponent: () =>
+      import('./pages/service-type/crm-service-type.component').then(
+        m => m.CRMServiceTypeComponent
+      )
+  },
+  {
     path: ACCOUNT_ROUTE,
     loadComponent: () =>
-      import('@crm/pages/account/account.component').then(
-        m => m.AccountComponent
-      ),
+      import('./pages/account/account.component').then(m => m.AccountComponent),
     loadChildren: () =>
-      import('@crm/pages/account/account.routes').then(m => m.routes)
+      import('./pages/account/account.routes').then(m => m.routes)
   },
   {
     path: '',
