@@ -84,13 +84,14 @@
         [staffName]="obj.staff.name"
         [bio]="obj.staff.bio"
         [services]="obj.services"
+        [datetime]="service1.reservationState().dateTime"
       />
     }
   </div>
 
   <div class="w-full block md:hidden fixed left-0 right-0 bottom-0">
     <p-sidebar
-      styleClass="p-sidebar-lg bg-red-600"
+      styleClass="p-sidebar-lg"
       [(visible)]="sidebarVisible4"
       position="down"
       [dismissible]="false"
@@ -106,6 +107,7 @@
             [staffName]="obj.staff.name"
             [bio]="obj.staff.bio"
             [services]="obj.services"
+            [datetime]="service1.reservationState().dateTime"
             [displayHeader]="false"
           />
         </ng-template>

@@ -1,6 +1,8 @@
 import { Router } from '@angular/router';
 import { inject } from '@angular/core';
 import { ReservationService } from './reservation.service';
+import { CORE_ROUTE } from '@root/app.routes';
+import { STORE_ROUTE } from '@pages/core/core.routes';
 import { RESERVATION_ROUTE } from '@store/store.routes';
 import {
   CONFIRM_ROUTE,
@@ -13,7 +15,7 @@ export const reservationStaffGuard = async () => {
 
   if (!obj || obj.length < 1) {
     await inject(Router).navigate([
-      `${RESERVATION_ROUTE}/${SERVICE_TYPE_ROUTE}`
+      `${CORE_ROUTE}/${STORE_ROUTE}/${RESERVATION_ROUTE}/${SERVICE_TYPE_ROUTE}`
     ]);
     return false;
   }
@@ -27,7 +29,7 @@ export const datesGuard = async () => {
     !service.services || service.services.length < 1 || !service.staff;
 
   if (bool) {
-    await inject(Router).navigate([`${RESERVATION_ROUTE}/${STAFF_ROUTE}`]);
+    await inject(Router).navigate([`${CORE_ROUTE}/${STORE_ROUTE}/${RESERVATION_ROUTE}/${STAFF_ROUTE}`]);
     return false;
   }
 
@@ -43,7 +45,7 @@ export const confirmGuard = async () => {
     !service.dateTime;
 
   if (bool) {
-    await inject(Router).navigate([`${RESERVATION_ROUTE}/${CONFIRM_ROUTE}`]);
+    await inject(Router).navigate([`${CORE_ROUTE}/${STORE_ROUTE}/${RESERVATION_ROUTE}/${CONFIRM_ROUTE}`]);
     return false;
   }
 

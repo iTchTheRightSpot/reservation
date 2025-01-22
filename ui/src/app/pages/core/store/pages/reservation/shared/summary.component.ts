@@ -21,7 +21,7 @@ import { FORMAT_SECONDS } from '@root/app.util';
       }
 
       <div class="w-full">
-        <p-card>
+        <p-card [header]="datetime() ? fm(datetime()!!) : ''">
           <div class="m-0 flex gap-3">
             @if (staffImage(); as img) {
               <p-avatar
@@ -83,6 +83,7 @@ export class SummaryComponent {
   services = input.required<ServiceTypeModel[]>();
   staffImage = input.required<string | null>();
   staffName = input.required<string>();
+  datetime = input.required<string | undefined>()
   bio = input.required<string>();
   displayHeader = input<boolean>(true);
 
@@ -90,4 +91,14 @@ export class SummaryComponent {
 
   protected readonly formatSeconds = (seconds: number) =>
     FORMAT_SECONDS(seconds);
+
+  protected readonly fm = (d: string) => new Date(Number(d)).toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour12: true,
+    hour: 'numeric',
+    minute: 'numeric'
+  })
 }

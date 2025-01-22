@@ -34,6 +34,8 @@ import { Button } from 'primeng/button';
 import { PrimeTemplate } from 'primeng/api';
 import { Sidebar } from 'primeng/sidebar';
 import { TIMEZONE } from '@root/app.util';
+import { CORE_ROUTE } from '@root/app.routes';
+import { STORE_ROUTE } from '@pages/core/core.routes';
 
 @Component({
   selector: 'app-dates',
@@ -168,6 +170,6 @@ export class DatesComponent {
 
   protected readonly updateParent = async (dt: string) => {
     this.service1.setDateTime(dt);
-    await this.router.navigate([`${RESERVATION_ROUTE}/${CONFIRM_ROUTE}`]);
+    await this.router.navigate([`${CORE_ROUTE}/${STORE_ROUTE}/${RESERVATION_ROUTE}/${CONFIRM_ROUTE}`]);
   };
 }

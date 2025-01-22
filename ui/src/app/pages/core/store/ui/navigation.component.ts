@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { Menubar } from 'primeng/menubar';
 import { MenuItem } from 'primeng/api';
 import { LightDarkModeComponent } from '@shared/ui/light-dark-mode.component';
-import { ABOUT_ROUTE, RESERVATION_ROUTE } from '@store/store.routes';
+import { ABOUT_ROUTE, HOME_ROUTE, RESERVATION_ROUTE } from '@store/store.routes';
 import { CORE_ROUTE, CRM_ROUTE } from '@root/app.routes';
 import { Avatar } from 'primeng/avatar';
 import { LOGIN_ROUTE, STORE_ROUTE } from '@pages/core/core.routes';
@@ -42,7 +42,7 @@ export class NavigationComponent {
     {
       label: 'Home',
       icon: 'pi pi-home',
-      routerLink: `/${CORE_ROUTE}/${STORE_ROUTE}/${STORE_ROUTE}`
+      routerLink: `/${CORE_ROUTE}/${STORE_ROUTE}/${HOME_ROUTE}`
     },
     {
       label: 'Book',
