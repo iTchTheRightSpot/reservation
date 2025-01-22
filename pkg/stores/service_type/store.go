@@ -68,7 +68,7 @@ func (dep *serviceTypeStore) Save(ctx context.Context, s *service.ServiceTypeEnt
 
 	q := `
 		INSERT INTO service_type (name, price, is_visible, duration, clean_up_time)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING service_id, name, price, is_visible, duration, clean_up_time
 	`
 
@@ -88,7 +88,7 @@ func (dep *serviceTypeStore) ServiceByName(ctx context.Context, name string) (*s
 
 	var q = `
 		SELECT
-		    service_id, name, price, is_visible, is_reoccurring, duration, clean_up_time
+		    service_id, name, price, is_visible, duration, clean_up_time
 		FROM service_type WHERE name = $1
 	`
 
