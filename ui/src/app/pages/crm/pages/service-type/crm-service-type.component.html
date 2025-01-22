@@ -17,9 +17,10 @@
     text
   />
 </div>
+
 <div class="card">
   <p-table
-    [value]="models().data || []"
+    [value]="tabData(models())"
     [paginator]="true"
     [rows]="10"
     [first]="first"
@@ -31,36 +32,82 @@
   >
     <ng-template #header>
       <tr>
-        <th style="width: 25%">Name</th>
-        <th style="width: 25%">Price</th>
-        <th style="width: 25%">Visible</th>
-        <th style="width: 25%">Reoccurring</th>
-        <th style="width: 25%">Duration</th>
-        <th style="width: 25%">Clean up</th>
+        @for (h of thead; track h) {
+          <th style="width: 25%">{{ h }}</th>
+        }
       </tr>
     </ng-template>
+
     <ng-template #body let-model>
-      <tr class="cursor-pointer hover:bg-primary hover:text-primary-contrast">
-        <td>{{ model.name }}</td>
-        <td>₦{{ model.price }}</td>
-        <td>
-          <p-badge
-            [value]="model.is_visible"
-            [severity]="model.is_visible ? 'success' : 'danger'"
-          />
-        </td>
-        <td>
-          <p-badge
-            [value]="model.is_reoccurring"
-            [severity]="model.is_reoccurring ? 'success' : 'danger'"
-          />
-        </td>
-        <td>{{ model.duration }}</td>
-        <td>{{ model.clean_up_time }}</td>
-      </tr>
+      @switch (models().state) {
+        @case (state.LOADING) {
+          <tr>
+            @for (h of thead; track h) {
+              <td><p-skeleton /></td>
+            }
+          </tr>
+        }
+        @case (state.ERROR) {
+          <tr>
+            <td>{{ models().message }}</td>
+          </tr>
+        }
+        @case (state.LOADED) {
+          <tr
+            class="cursor-pointer hover:bg-primary hover:text-primary-contrast"
+            (click)="
+              toggleEditServiceTypeView = !toggleEditServiceTypeView;
+              clickedServiceType.set(model)
+            "
+          >
+            <td>{{ model.name }}</td>
+            <td>₦{{ model.price }}</td>
+            <td>
+              <p-badge
+                [value]="model.is_visible"
+                [severity]="model.is_visible ? 'success' : 'danger'"
+              />
+            </td>
+            <td>{{ model.duration }}</td>
+            <td>{{ model.clean_up_time }}</td>
+          </tr>
+        }
+      }
     </ng-template>
     <ng-template #paginatorleft>
-      <p-button type="button" icon="pi pi-plus" text />
+      <p-button
+        type="button"
+        icon="pi pi-plus"
+        text
+        (click)="toggleNewServiceTypeView = !toggleNewServiceTypeView"
+      />
     </ng-template>
   </p-table>
 </div>
+
+<p-dialog
+  header="New Service"
+  [modal]="true"
+  [(visible)]="toggleNewServiceTypeView"
+  [style]="{ width: '25rem' }"
+>
+  <app-new-service-type
+    [(visible)]="toggleNewServiceTypeView"
+    [apiState]="createApiState().state"
+    (emitter)="create.next($event)"
+  />
+</p-dialog>
+
+<p-dialog
+  header="Edit Service"
+  [modal]="true"
+  [(visible)]="toggleEditServiceTypeView"
+  [style]="{ width: '25rem' }"
+>
+  <app-edit-service-type
+    [(visible)]="toggleEditServiceTypeView"
+    [service]="clickedServiceType()"
+    [apiState]="updateApiState().state"
+    (emitter)="update.next($event)"
+  />
+</p-dialog>

@@ -17,16 +17,16 @@ type IServiceTypeStore interface {
 	ServicesByStatus(ctx context.Context, b bool) ([]*service.ServiceTypeEntity, error)
 }
 
-type serviceStore struct {
+type serviceTypeStore struct {
 	logger utils.ILogger
 	db     pkg.Db
 }
 
 func NewServiceTypeStore(l utils.ILogger, db pkg.Db) IServiceTypeStore {
-	return &serviceStore{logger: l, db: db}
+	return &serviceTypeStore{logger: l, db: db}
 }
 
-func (dep *serviceStore) ServicesByStatus(ctx context.Context, b bool) ([]*service.ServiceTypeEntity, error) {
+func (dep *serviceTypeStore) ServicesByStatus(ctx context.Context, b bool) ([]*service.ServiceTypeEntity, error) {
 	var arr []*service.ServiceTypeEntity
 
 	q := "SELECT * FROM service_type WHERE is_visible = $1"
@@ -42,7 +42,7 @@ func (dep *serviceStore) ServicesByStatus(ctx context.Context, b bool) ([]*servi
 	for rows.Next() {
 		var s service.ServiceTypeEntity
 
-		err = rows.Scan(&s.ServiceId, &s.Name, &s.Price, &s.IsVisible, &s.IsReoccurring, &s.Duration, &s.CleanUpTime)
+		err = rows.Scan(&s.ServiceId, &s.Name, &s.Price, &s.IsVisible, &s.Duration, &s.CleanUpTime)
 
 		if err != nil {
 			dep.logger.Error(err)
@@ -61,19 +61,19 @@ func (dep *serviceStore) ServicesByStatus(ctx context.Context, b bool) ([]*servi
 	return arr, err
 }
 
-func (dep *serviceStore) Save(ctx context.Context, s *service.ServiceTypeEntity) error {
+func (dep *serviceTypeStore) Save(ctx context.Context, s *service.ServiceTypeEntity) error {
 	if s == nil {
 		return errors.New("service type entity is nil")
 	}
 
 	q := `
-		INSERT INTO service_type (name, price, is_visible, is_reoccurring, duration, clean_up_time)
+		INSERT INTO service_type (name, price, is_visible, duration, clean_up_time)
 		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING service_id, name, price, is_visible, is_reoccurring, duration, clean_up_time
+		RETURNING service_id, name, price, is_visible, duration, clean_up_time
 	`
 
-	row := dep.db.QueryRowContext(ctx, q, s.Name, s.Price, s.IsVisible, s.IsReoccurring, s.Duration, s.CleanUpTime)
-	err := row.Scan(&s.ServiceId, &s.Name, &s.Price, &s.IsVisible, &s.IsReoccurring, &s.Duration, &s.CleanUpTime)
+	row := dep.db.QueryRowContext(ctx, q, s.Name, s.Price, s.IsVisible, s.Duration, s.CleanUpTime)
+	err := row.Scan(&s.ServiceId, &s.Name, &s.Price, &s.IsVisible, &s.Duration, &s.CleanUpTime)
 
 	if err != nil {
 		dep.logger.Error(err)
@@ -83,7 +83,7 @@ func (dep *serviceStore) Save(ctx context.Context, s *service.ServiceTypeEntity)
 	return nil
 }
 
-func (dep *serviceStore) ServiceByName(ctx context.Context, name string) (*service.ServiceTypeEntity, error) {
+func (dep *serviceTypeStore) ServiceByName(ctx context.Context, name string) (*service.ServiceTypeEntity, error) {
 	var s service.ServiceTypeEntity
 
 	var q = `
@@ -93,7 +93,7 @@ func (dep *serviceStore) ServiceByName(ctx context.Context, name string) (*servi
 	`
 
 	row := dep.db.QueryRowContext(ctx, q, name)
-	err := row.Scan(&s.ServiceId, &s.Name, &s.Price, &s.IsVisible, &s.IsReoccurring, &s.Duration, &s.CleanUpTime)
+	err := row.Scan(&s.ServiceId, &s.Name, &s.Price, &s.IsVisible, &s.Duration, &s.CleanUpTime)
 
 	if err != nil {
 		dep.logger.Error(err)
@@ -103,7 +103,7 @@ func (dep *serviceStore) ServiceByName(ctx context.Context, name string) (*servi
 	return &s, nil
 }
 
-func (dep *serviceStore) ServicesByStaffId(ctx context.Context, staffId uint64, visible bool) ([]*service.ServiceTypeEntity, error) {
+func (dep *serviceTypeStore) ServicesByStaffId(ctx context.Context, staffId uint64, visible bool) ([]*service.ServiceTypeEntity, error) {
 	var arr []*service.ServiceTypeEntity
 
 	var q = `
@@ -123,7 +123,7 @@ func (dep *serviceStore) ServicesByStaffId(ctx context.Context, staffId uint64, 
 	for rows.Next() {
 		var s service.ServiceTypeEntity
 
-		err = rows.Scan(&s.ServiceId, &s.Name, &s.Price, &s.IsVisible, &s.IsReoccurring, &s.Duration, &s.CleanUpTime)
+		err = rows.Scan(&s.ServiceId, &s.Name, &s.Price, &s.IsVisible, &s.Duration, &s.CleanUpTime)
 
 		if err != nil {
 			dep.logger.Error(err)

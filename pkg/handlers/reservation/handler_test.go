@@ -423,12 +423,11 @@ func createSchedule(t *testing.T, jwtSer auth.IJwtService, staff1 *staff.Staff, 
 
 func preSaveService(ctx context.Context, a *stores.Adapters) (*service.ServiceTypeEntity, error) {
 	s := service.ServiceTypeEntity{
-		Name:          uuid.New().String(),
-		Price:         19.56,
-		Duration:      3600,
-		CleanUpTime:   30 * 60,
-		IsVisible:     true,
-		IsReoccurring: false,
+		Name:        uuid.New().String(),
+		Price:       19.56,
+		Duration:    3600,
+		CleanUpTime: 30 * 60,
+		IsVisible:   true,
 	}
 	err := a.ServiceStore.Save(ctx, &s)
 	return &s, err

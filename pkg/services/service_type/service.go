@@ -79,12 +79,11 @@ func (dep *serviceTypeImpl) StaffsByServiceTypes(ctx context.Context, services *
 
 func (dep *serviceTypeImpl) Create(ctx context.Context, p *service.ServiceTypePayload) error {
 	s := service.ServiceTypeEntity{
-		Name:          strings.TrimSpace(p.Name),
-		Price:         p.Price,
-		IsVisible:     p.IsVisible,
-		IsReoccurring: p.IsReoccurring,
-		Duration:      p.Duration,
-		CleanUpTime:   p.CleanUpTime,
+		Name:        strings.TrimSpace(p.Name),
+		Price:       p.Price,
+		IsVisible:   p.IsVisible,
+		Duration:    p.Duration,
+		CleanUpTime: p.CleanUpTime,
 	}
 
 	if err := dep.adapters.ServiceStore.Save(ctx, &s); err != nil {

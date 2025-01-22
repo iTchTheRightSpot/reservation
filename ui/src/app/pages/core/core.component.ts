@@ -5,10 +5,12 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
 import { NgClass } from '@angular/common';
 import { AuthService } from '@shared/data-access/auth.service';
+import { LoadingService } from '@shared/data-access/loading.service';
+import { ProgressBar } from 'primeng/progressbar';
 
 @Component({
   selector: 'app-core',
-  imports: [RouterOutlet, NavigationComponent, NgClass],
+  imports: [RouterOutlet, NavigationComponent, NgClass, ProgressBar],
   styles: [
     `
       .pos {
@@ -29,7 +31,10 @@ import { AuthService } from '@shared/data-access/auth.service';
       class="w-full xl:w-cx-50 m-auto z-20"
       [ngClass]="{ pos: url(), pos1: !url() }"
     >
-      <app-navigation [imageKey]="service.activeUser()?.image_key" />
+      @if (loading.state()) {
+        <p-progressbar mode="indeterminate" [style]="{ height: '6px' }" />
+      }
+      <app-navigation [imageKey]="auth.activeUser()?.image_key" />
     </div>
     <router-outlet />
   `,
@@ -37,7 +42,8 @@ import { AuthService } from '@shared/data-access/auth.service';
 })
 export class CoreComponent {
   protected readonly router = inject(Router);
-  protected readonly service = inject(AuthService);
+  protected readonly auth = inject(AuthService);
+  protected readonly loading = inject(LoadingService);
 
   protected readonly url = toSignal(
     this.router.events.pipe(

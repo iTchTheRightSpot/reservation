@@ -1,13 +1,12 @@
 package service
 
 type ServiceTypeEntity struct {
-	ServiceId     uint64  `json:"service_id"`
-	Name          string  `json:"name"`
-	Price         float64 `json:"price"`
-	IsVisible     bool    `json:"is_visible"`
-	IsReoccurring bool    `json:"is_reoccurring"`
-	Duration      int     `json:"duration"`
-	CleanUpTime   int     `json:"clean_up_time"`
+	ServiceId   uint64  `json:"service_id"`
+	Name        string  `json:"name"`
+	Price       float64 `json:"price"`
+	IsVisible   bool    `json:"is_visible"`
+	Duration    int     `json:"duration"`
+	CleanUpTime int     `json:"clean_up_time"`
 }
 
 type ServiceTypePayload struct {

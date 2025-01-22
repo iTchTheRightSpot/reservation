@@ -4,7 +4,7 @@ import { ApiResponse, ApiState } from '@root/app.model';
 
 export const err = <T>(e: HttpErrorResponse): ApiResponse<T> => ({
   state: ApiState.ERROR,
-  message: (e.error ? e.error.message : e.message) as string
+  message: e.message
 });
 
 export const FORMAT_SECONDS = (seconds: number) =>

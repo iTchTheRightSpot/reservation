@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { crmGuard } from '@root/app.guard';
+import { crmGuard } from './app.guard';
 
 export const CORE_ROUTE = '';
 export const CRM_ROUTE = 'crm';
