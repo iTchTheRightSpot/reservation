@@ -66,7 +66,7 @@ func (dep *serviceTypeImpl) StaffsByServiceTypes(ctx context.Context, services *
 		str.Reset()
 
 		if staf.Bio == nil {
-			str.WriteString("Ready to put a smile on your face 🌞")
+			str.WriteString("Ready to put a smile on your face🌞")
 		} else {
 			str.WriteString(*staf.Bio)
 		}

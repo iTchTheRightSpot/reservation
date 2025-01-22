@@ -3,7 +3,7 @@ CREATE TYPE reservationenum AS ENUM ('CONFIRMED', 'CANCELLED');
 CREATE TABLE IF NOT EXISTS reservation
 (
     reservation_id BIGSERIAL        NOT NULL UNIQUE PRIMARY KEY,
-    name           VARCHAR(100)     NOT NULL,
+    name           VARCHAR(50)      NOT NULL,
     email          VARCHAR(320)     NOT NULL,
     description    VARCHAR(255)     DEFAULT NULL,
     phone          VARCHAR(20)      DEFAULT NULL,

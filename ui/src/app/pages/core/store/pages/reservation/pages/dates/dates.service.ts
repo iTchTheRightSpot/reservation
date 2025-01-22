@@ -27,6 +27,8 @@ export class DatesService {
   private readonly http = inject(HttpClient);
   private readonly service = inject(ReservationService);
 
+  readonly clearCache = () => DatesService.cache.clear();
+
   readonly dates = (date: Date) => {
     if (!environment.production) {
       const loading = of<ApiResponse<DateModel[]>>({ state: ApiState.LOADING });

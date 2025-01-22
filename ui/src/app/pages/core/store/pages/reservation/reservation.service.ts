@@ -10,29 +10,36 @@ export class ReservationService {
   readonly reservationState = signal<ReservationModel>({
     services: undefined,
     staff: undefined,
-    dateTime: undefined
+    datetime: undefined
   });
 
   readonly setServiceTypes = (services: ServiceTypeModel[]) =>
     this.reservationState.set({
       services: services,
       staff: undefined,
-      dateTime: undefined
+      datetime: undefined
     });
 
   readonly setStaff = (staff: StaffModel) =>
     this.reservationState.set({
       services: this.reservationState().services,
       staff: staff,
-      dateTime: undefined
+      datetime: undefined
     });
 
-  readonly setDateTime = (date: string) => {
+  readonly setDateTime = (date: string | undefined) => {
     const model = this.reservationState();
     this.reservationState.set({
       services: model.services,
       staff: model.staff,
-      dateTime: date
+      datetime: date
     });
   };
+
+  readonly clear = () =>
+    this.reservationState.set({
+      services: undefined,
+      staff: undefined,
+      datetime: undefined
+    });
 }

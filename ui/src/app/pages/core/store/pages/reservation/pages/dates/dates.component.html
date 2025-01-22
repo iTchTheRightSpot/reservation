@@ -22,11 +22,23 @@
       </ng-template>
     </p-date-picker>
 
-    <div class="w-full p-3">
+    <div class="w-full">
       <div class="w-full">
-        <p class="text-center">
-          Times are shown in <strong>{{ tz }}</strong>
-        </p>
+        <div class="w-full pt-2 flex items-center justify-between">
+          <p class="">
+            Times are shown in <strong>{{ tz }}</strong>
+          </p>
+          <p-button
+            (onClick)="
+              service.clearCache();
+              reservationService.setDateTime(undefined);
+              selected.next(this.selected.getValue())
+            "
+            type="button"
+            icon="pi pi-refresh"
+            text
+          />
+        </div>
         <h3 class="my-6 text-xl">
           <strong>
             {{ selected.getValue().toLocaleDateString('en-US', timeformat) }}
@@ -77,49 +89,12 @@
     </div>
   </div>
 
-  <div class="w-full hidden md:block">
-    @if (check(service1.reservationState()); as obj) {
-      <app-summary
-        [staffImage]="obj.staff.image_key"
-        [staffName]="obj.staff.name"
-        [bio]="obj.staff.bio"
-        [services]="obj.services"
-        [datetime]="service1.reservationState().dateTime"
+  <div class="w-full">
+    @if (check(reservationService.reservationState()); as obj) {
+      <app-summary-holder
+        [obj]="obj"
+        [datetime]="reservationService.reservationState().datetime"
       />
     }
-  </div>
-
-  <div class="w-full block md:hidden fixed left-0 right-0 bottom-0">
-    <p-sidebar
-      styleClass="p-sidebar-lg"
-      [(visible)]="sidebarVisible4"
-      position="down"
-      [dismissible]="false"
-    >
-      <ng-template pTemplate="header">
-        <span class="font-semibold text-xl">Appointment Summary</span>
-      </ng-template>
-
-      @if (check(service1.reservationState()); as obj) {
-        <ng-template pTemplate="content">
-          <app-summary
-            [staffImage]="obj.staff.image_key"
-            [staffName]="obj.staff.name"
-            [bio]="obj.staff.bio"
-            [services]="obj.services"
-            [datetime]="service1.reservationState().dateTime"
-            [displayHeader]="false"
-          />
-        </ng-template>
-      }
-    </p-sidebar>
-
-    <div class="w-full p-2 text-right">
-      <p-button
-        type="button"
-        icon="pi pi-arrow-right"
-        (onClick)="sidebarVisible4 = true"
-      />
-    </div>
   </div>
 </div>

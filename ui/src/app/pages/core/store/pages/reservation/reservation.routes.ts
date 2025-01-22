@@ -5,21 +5,21 @@ import {
   reservationStaffGuard
 } from './reservation.guard';
 
-export const SERVICE_TYPE_ROUTE = 'service';
-export const STAFF_ROUTE = 'staff';
+export const SERVICE_TYPES_ROUTE = 'services';
+export const STAFFS_ROUTE = 'staffs';
 export const DATES_ROUTE = 'dates';
 export const CONFIRM_ROUTE = 'confirm';
 
 export const routes: Routes = [
   {
-    path: SERVICE_TYPE_ROUTE,
+    path: SERVICE_TYPES_ROUTE,
     loadComponent: () =>
       import(
         '@store/pages/reservation/pages/service-type/service-type.component'
       ).then(m => m.ServiceTypeComponent)
   },
   {
-    path: STAFF_ROUTE,
+    path: STAFFS_ROUTE,
     canActivate: [reservationStaffGuard],
     loadComponent: () =>
       import('@store/pages/reservation/pages/staff/staff.component').then(
@@ -44,7 +44,7 @@ export const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: SERVICE_TYPE_ROUTE,
+    redirectTo: SERVICE_TYPES_ROUTE,
     pathMatch: 'full'
   }
 ];

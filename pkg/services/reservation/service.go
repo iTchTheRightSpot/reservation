@@ -229,7 +229,7 @@ func (dep *reservationService) createReservation(ctx context.Context, p *reserva
 			StaffId:      s.StaffId,
 			Name:         strings.TrimSpace(p.Name),
 			Email:        strings.TrimSpace(p.Email),
-			Description:  &p.Description,
+			Description:  p.Description,
 			Phone:        &p.Phone,
 			Price:        priceSum,
 			Status:       reservation.CONFIRMED,

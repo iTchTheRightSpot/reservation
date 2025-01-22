@@ -5,9 +5,9 @@ import { CORE_ROUTE } from '@root/app.routes';
 import { STORE_ROUTE } from '@pages/core/core.routes';
 import { RESERVATION_ROUTE } from '@store/store.routes';
 import {
-  CONFIRM_ROUTE,
-  SERVICE_TYPE_ROUTE,
-  STAFF_ROUTE
+  DATES_ROUTE,
+  SERVICE_TYPES_ROUTE,
+  STAFFS_ROUTE
 } from './reservation.routes';
 
 export const reservationStaffGuard = async () => {
@@ -15,7 +15,7 @@ export const reservationStaffGuard = async () => {
 
   if (!obj || obj.length < 1) {
     await inject(Router).navigate([
-      `${CORE_ROUTE}/${STORE_ROUTE}/${RESERVATION_ROUTE}/${SERVICE_TYPE_ROUTE}`
+      `${CORE_ROUTE}/${STORE_ROUTE}/${RESERVATION_ROUTE}/${SERVICE_TYPES_ROUTE}`
     ]);
     return false;
   }
@@ -29,7 +29,9 @@ export const datesGuard = async () => {
     !service.services || service.services.length < 1 || !service.staff;
 
   if (bool) {
-    await inject(Router).navigate([`${CORE_ROUTE}/${STORE_ROUTE}/${RESERVATION_ROUTE}/${STAFF_ROUTE}`]);
+    await inject(Router).navigate([
+      `${CORE_ROUTE}/${STORE_ROUTE}/${RESERVATION_ROUTE}/${STAFFS_ROUTE}`
+    ]);
     return false;
   }
 
@@ -42,10 +44,12 @@ export const confirmGuard = async () => {
     !service.services ||
     service.services.length < 1 ||
     !service.staff ||
-    !service.dateTime;
+    !service.datetime;
 
   if (bool) {
-    await inject(Router).navigate([`${CORE_ROUTE}/${STORE_ROUTE}/${RESERVATION_ROUTE}/${CONFIRM_ROUTE}`]);
+    await inject(Router).navigate([
+      `${CORE_ROUTE}/${STORE_ROUTE}/${RESERVATION_ROUTE}/${DATES_ROUTE}`
+    ]);
     return false;
   }
 

@@ -3,40 +3,26 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { NavigationComponent } from '@store/ui/navigation.component';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
-import { NgClass } from '@angular/common';
 import { AuthService } from '@shared/data-access/auth.service';
 import { LoadingService } from '@shared/data-access/loading.service';
 import { ProgressBar } from 'primeng/progressbar';
 
 @Component({
   selector: 'app-core',
-  imports: [RouterOutlet, NavigationComponent, NgClass, ProgressBar],
-  styles: [
-    `
-      .pos {
-        position: fixed;
-        left: 0;
-        top: 0;
-        right: 0;
-      }
-
-      .pos1 {
-        position: sticky;
-        top: 0;
-      }
-    `
-  ],
+  imports: [RouterOutlet, NavigationComponent, ProgressBar],
   template: `
-    <div
-      class="w-full xl:w-cx-50 m-auto z-20"
-      [ngClass]="{ pos: url(), pos1: !url() }"
-    >
-      @if (loading.state()) {
-        <p-progressbar mode="indeterminate" [style]="{ height: '6px' }" />
-      }
-      <app-navigation [imageKey]="auth.activeUser()?.image_key" />
+    <div class="w-full xl:max-w-7xl m-auto">
+      <div class="w-full sticky top-0 z-20">
+        @if (loading.state()) {
+          <p-progressbar mode="indeterminate" [style]="{ height: '6px' }" />
+        }
+        <app-navigation [imageKey]="auth.activeUser()?.image_key" />
+      </div>
+
+      <div class="pb-2 px-1">
+        <router-outlet />
+      </div>
     </div>
-    <router-outlet />
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
 })

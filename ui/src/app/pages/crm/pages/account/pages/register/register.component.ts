@@ -3,7 +3,6 @@ import { Button } from 'primeng/button';
 import {
   FormBuilder,
   FormControl,
-  FormsModule,
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
@@ -20,7 +19,6 @@ import { Subject, switchMap, tap } from 'rxjs';
   selector: 'app-register',
   imports: [
     Button,
-    FormsModule,
     IconField,
     InputIcon,
     InputText,

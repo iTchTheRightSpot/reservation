@@ -41,8 +41,8 @@ import { FORMAT_SECONDS } from '@root/app.util';
 
             <div class="flex-1">
               <h4 class="capitalize font-semibold">{{ staffName() }}</h4>
-              <div class="mt2 flex justify-between">
-                <p>{{ bio() }}</p>
+              <div class="mt-2 flex justify-between">
+                <p class="">{{ bio() }}</p>
                 <p-toggle-button
                   [(ngModel)]="toggle"
                   onIcon="pi pi-chevron-up"
@@ -83,7 +83,7 @@ export class SummaryComponent {
   services = input.required<ServiceTypeModel[]>();
   staffImage = input.required<string | null>();
   staffName = input.required<string>();
-  datetime = input.required<string | undefined>()
+  datetime = input.required<string | undefined>();
   bio = input.required<string>();
   displayHeader = input<boolean>(true);
 
@@ -92,13 +92,14 @@ export class SummaryComponent {
   protected readonly formatSeconds = (seconds: number) =>
     FORMAT_SECONDS(seconds);
 
-  protected readonly fm = (d: string) => new Date(Number(d)).toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour12: true,
-    hour: 'numeric',
-    minute: 'numeric'
-  })
+  protected readonly fm = (d: string) =>
+    new Date(Number(d)).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour12: true,
+      hour: 'numeric',
+      minute: 'numeric'
+    });
 }
