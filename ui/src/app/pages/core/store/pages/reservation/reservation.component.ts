@@ -84,7 +84,7 @@ export class ReservationComponent {
   ];
 
   protected readonly home: MenuItem = {
-    label: 'reservation',
+    label: 'book',
     icon: 'pi pi-shopping-bag',
     routerLink: `/${CORE_ROUTE}/${STORE_ROUTE}/${RESERVATION_ROUTE}/${SERVICE_TYPES_ROUTE}`
   };

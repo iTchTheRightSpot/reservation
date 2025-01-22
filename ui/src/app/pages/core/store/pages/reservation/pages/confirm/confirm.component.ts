@@ -27,6 +27,7 @@ import { CORE_ROUTE } from '@root/app.routes';
 import { STORE_ROUTE } from '@pages/core/core.routes';
 import { SERVICE_TYPES_ROUTE } from '@store/pages/reservation/reservation.routes';
 import { RESERVATION_ROUTE } from '@store/store.routes';
+import { ServiceTypeModel } from '@store/pages/reservation/pages/service-type/service-type.model';
 
 @Component({
   selector: 'app-confirm',
@@ -76,9 +77,11 @@ export class ConfirmComponent {
       ? undefined
       : { services: o.services, staff: o.staff };
 
+  protected readonly subtotal = (s: ServiceTypeModel[] | undefined) =>
+    !s ? 0 : s.map(s => s.price).reduce((acc, curr) => acc + curr, 0)
+
   protected readonly emit = new Subject<ConfirmModel>();
 
-  // TODO show subtotal
   protected readonly req = toSignal(
     this.emit.asObservable().pipe(
       switchMap(o =>

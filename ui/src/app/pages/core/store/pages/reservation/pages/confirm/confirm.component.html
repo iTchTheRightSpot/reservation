@@ -138,5 +138,20 @@
         [datetime]="reservationService.reservationState().datetime"
       />
     }
+
+    <div class="w-full mt-3 py-2">
+      <div class="mb-3 flex items-center justify-between">
+        <span class="text-sm font-medium">Subtotal</span>
+        <span class="font-medium">₦{{ subtotal(reservationService.reservationState().services) }}</span>
+      </div>
+      <div class="mb-3 flex gap-3 items-center justify-between">
+        <span class="text-sm font-medium">VAT(5%)</span>
+        <span class="font-medium text-primary">Free</span>
+      </div>
+      <div class="mb-3 flex gap-3 items-center justify-between">
+        <span class="text-sm font-medium">Total</span>
+        <span class="font-medium">₦{{ subtotal(reservationService.reservationState().services) }}</span>
+      </div>
+    </div>
   </div>
 </div>
