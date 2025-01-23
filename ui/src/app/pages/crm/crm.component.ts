@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { CrmNavBarComponent } from '@crm/shared/crm-nav-bar.component';
+import { CrmNavBarComponent } from '@crm/shared/ui/crm-nav-bar.component';
 import { AuthService } from '@shared/data-access/auth.service';
 import { ProgressBar } from 'primeng/progressbar';
 import { LoadingService } from '@shared/data-access/loading.service';

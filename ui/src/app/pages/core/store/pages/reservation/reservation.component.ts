@@ -23,25 +23,27 @@ import { STORE_ROUTE } from '@pages/core/core.routes';
 @Component({
   selector: 'app-reservation',
   imports: [RouterOutlet, Breadcrumb, RouterLink, NgClass],
-  template: ` <div class="w-full">
-    <div class="mt-3">
-      <p-breadcrumb [model]="items" [home]="home">
-        <ng-template #item let-item>
-          <a [routerLink]="item.route" class="p-breadcrumb-item-link">
-            <span
-              class="text-primary font-semibold"
-              [ngClass]="{ 'text-primary': endsWith(url(), item.route) }"
-              >{{ item.label }}</span
-            >
-          </a>
-        </ng-template>
-      </p-breadcrumb>
-    </div>
+  template: `
+    <div class="w-full">
+      <div class="mt-3">
+        <p-breadcrumb [model]="items" [home]="home">
+          <ng-template #item let-item>
+            <a [routerLink]="item.route" class="p-breadcrumb-item-link">
+              <span
+                class="text-primary font-semibold"
+                [ngClass]="{ 'text-primary': endsWith(url(), item.route) }"
+                >{{ item.label }}</span
+              >
+            </a>
+          </ng-template>
+        </p-breadcrumb>
+      </div>
 
-    <div class="pb-3 xl:pb-0 px-3 xl:px-0">
-      <router-outlet />
+      <div class="pb-3 xl:pb-0 px-3 xl:px-0">
+        <router-outlet />
+      </div>
     </div>
-  </div>`,
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ReservationComponent {

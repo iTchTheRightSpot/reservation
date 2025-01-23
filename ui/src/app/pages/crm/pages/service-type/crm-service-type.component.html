@@ -3,7 +3,7 @@
     type="button"
     icon="pi pi-chevron-left"
     (click)="first = first - rows"
-    [disabled]="models().data || [] ? first === 0 : true"
+    [disabled]="models().data ? first === 0 : true"
     text
   />
   <p-button type="button" icon="pi pi-refresh" (click)="first = 0" text />
@@ -12,7 +12,7 @@
     icon="pi pi-chevron-right"
     (click)="first = first + rows"
     [disabled]="
-      models().data || [] ? first + rows >= (models().data?.length || 0) : true
+      models().data ? first + rows >= (models().data?.length || 0) : true
     "
     text
   />
@@ -20,15 +20,15 @@
 
 <div class="card">
   <p-table
-    [value]="tabData(models())"
+    [value]="data(models())"
     [paginator]="true"
-    [rows]="10"
+    [rows]="rows"
     [first]="first"
     [showCurrentPageReport]="true"
     [tableStyle]="{ 'min-width': '50rem' }"
     currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
     (onPage)="pageChange($event)"
-    [rowsPerPageOptions]="[10, 20]"
+    [rowsPerPageOptions]="[5, 10, 20]"
   >
     <ng-template #header>
       <tr>
@@ -37,7 +37,6 @@
         }
       </tr>
     </ng-template>
-
     <ng-template #body let-model>
       @switch (models().state) {
         @case (state.LOADING) {

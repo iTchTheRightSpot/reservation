@@ -17,6 +17,7 @@ import { EditServiceTypeComponent } from './ui/edit-service-type.component';
 import { Skeleton } from 'primeng/skeleton';
 import { Subject, switchMap } from 'rxjs';
 import { FORMAT_SECONDS } from '@root/app.util';
+import { tabledata } from '@crm/shared/data-access/crm.util';
 
 @Component({
   selector: 'app-crm-service-type',
@@ -36,7 +37,7 @@ export class CRMServiceTypeComponent {
   protected readonly service = inject(CRMServiceTypeService);
 
   protected first = 0;
-  protected rows = 10;
+  protected rows = 5;
   protected readonly state = ApiState;
   protected readonly thead = [
     'Name',
@@ -72,13 +73,8 @@ export class CRMServiceTypeComponent {
     { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
   );
 
-  protected readonly tabData = (m: ApiResponse<CRM_ServiceTypeModel[]>) => {
-    if (m.state === ApiState.LOADING)
-      return Array.from({ length: 10 }).map(() => ({}));
-    else if (m.state === ApiState.ERROR)
-      return Array.from({ length: 1 }).map(() => ({}));
-    return m.data!!;
-  };
+  protected readonly data = (m: ApiResponse<CRM_ServiceTypeModel[]>) =>
+    tabledata<CRM_ServiceTypeModel[]>(m);
 
   protected readonly pageChange = (event: TablePageEvent) => {
     this.first = event.first;
