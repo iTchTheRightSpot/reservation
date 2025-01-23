@@ -68,8 +68,8 @@
                 [severity]="model.is_visible ? 'success' : 'danger'"
               />
             </td>
-            <td>{{ model.duration }}</td>
-            <td>{{ model.clean_up_time }}</td>
+            <td>{{ formatseconds(model.duration) }}</td>
+            <td>{{ formatseconds(model.clean_up_time) }}</td>
           </tr>
         }
       }
@@ -99,7 +99,7 @@
 </p-dialog>
 
 <p-dialog
-  header="Edit Service"
+  header="Edit {{ clickedServiceType()?.name }}"
   [modal]="true"
   [(visible)]="toggleEditServiceTypeView"
   [style]="{ width: '25rem' }"

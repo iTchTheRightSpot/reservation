@@ -78,7 +78,7 @@ export class ConfirmComponent {
       : { services: o.services, staff: o.staff };
 
   protected readonly subtotal = (s: ServiceTypeModel[] | undefined) =>
-    !s ? 0 : s.map(s => s.price).reduce((acc, curr) => acc + curr, 0)
+    !s ? 0 : s.map(s => s.price).reduce((acc, curr) => acc + curr, 0);
 
   protected readonly emit = new Subject<ConfirmModel>();
 

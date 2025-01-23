@@ -16,6 +16,7 @@ import { NewServiceTypeComponent } from './ui/new-service-type.component';
 import { EditServiceTypeComponent } from './ui/edit-service-type.component';
 import { Skeleton } from 'primeng/skeleton';
 import { Subject, switchMap } from 'rxjs';
+import { FORMAT_SECONDS } from '@root/app.util';
 
 @Component({
   selector: 'app-crm-service-type',
@@ -56,6 +57,8 @@ export class CRMServiceTypeComponent {
       CRM_ServiceTypeModel[]
     >
   });
+
+  protected readonly formatseconds = (secs: number) => FORMAT_SECONDS(secs);
 
   protected readonly create = new Subject<CRM_ServiceTypeModel>();
   protected readonly createApiState = toSignal(

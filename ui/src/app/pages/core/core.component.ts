@@ -14,12 +14,12 @@ import { ProgressBar } from 'primeng/progressbar';
     <div class="w-full xl:max-w-7xl m-auto">
       <div class="w-full sticky top-0 z-20">
         @if (loading.state()) {
-          <p-progressbar mode="indeterminate" [style]="{ height: '6px' }" />
+          <p-progress-bar mode="indeterminate" [style]="{ height: '6px' }" />
         }
         <app-navigation [imageKey]="auth.activeUser()?.image_key" />
       </div>
 
-      <div class="pb-2 px-1">
+      <div class="w-full pb-2 px-1">
         <router-outlet />
       </div>
     </div>

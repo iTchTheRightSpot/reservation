@@ -13,9 +13,6 @@ import { ServiceTypeFormComponent } from './shared/service-type-form.component';
   selector: 'app-edit-service-type',
   imports: [ServiceTypeFormComponent],
   template: `
-    <span class="p-text-secondary block mb-8"
-      >Update {{ service()?.name }}</span
-    >
     <app-service-type-form
       [form]="form"
       [isLoading]="apiState() === state.LOADING"

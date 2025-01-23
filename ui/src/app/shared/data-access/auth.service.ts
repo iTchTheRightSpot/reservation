@@ -39,7 +39,7 @@ export class AuthService {
     undefined
   );
 
-  private readonly req = () =>
+  private readonly activeUserRequest = () =>
     !environment.production
       ? of<ActiveUser>({
           user_id: '1',
@@ -65,7 +65,7 @@ export class AuthService {
   readonly activeUser = toSignal(
     this.cache
       .asObservable()
-      .pipe(switchMap(o => (o ? of<ActiveUser>(o) : this.req()))),
+      .pipe(switchMap(o => (o ? of<ActiveUser>(o) : this.activeUserRequest()))),
     { initialValue: undefined }
   );
 
@@ -77,7 +77,7 @@ export class AuthService {
           })
           .pipe(
             switchMap(() =>
-              this.req().pipe(
+              this.activeUserRequest().pipe(
                 map(() => ({ state: ApiState.LOADED }) as ApiResponse<any>)
               )
             ),

@@ -9,14 +9,14 @@ import { LoadingService } from '@shared/data-access/loading.service';
   selector: 'app-staff',
   imports: [RouterOutlet, CrmNavBarComponent, ProgressBar],
   template: `
-    <div class="w-full xl:w-cx-50 m-auto flex flex-col">
+    <div class="w-full xl:max-w-7xl m-auto flex flex-col">
       <div class="sticky top-0 z-10">
         @if (loading.state()) {
-          <p-progressbar mode="indeterminate" [style]="{ height: '6px' }" />
+          <p-progress-bar mode="indeterminate" [style]="{ height: '6px' }" />
         }
         <app-crm-nav-bar [imageKey]="auth.activeUser()?.image_key" />
       </div>
-      <div class="w-full py-3 px-2 xl:px-0 flex-1">
+      <div class="py-3 px-2 xl:px-0 flex-1">
         <router-outlet />
       </div>
     </div>
