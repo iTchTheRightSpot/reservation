@@ -6,7 +6,7 @@
     [loading]="models().state === state.LOADING"
     [value]="models().data || []"
     [paginator]="true"
-    [first]="10"
+    [first]="first"
     [rows]="rows"
     [tableStyle]="{ 'min-width': '50rem' }"
     [showCurrentPageReport]="true"
@@ -49,7 +49,7 @@
     </ng-template>
 
     <ng-template #body let-model>
-      <tr>
+      <tr class="cursor-pointer">
         <td>{{ fm(model.from) }}</td>
         <td>{{ fm(model.to) }}</td>
         <td>
