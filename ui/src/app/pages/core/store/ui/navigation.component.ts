@@ -50,12 +50,12 @@ export class NavigationComponent {
     },
     {
       label: 'Book',
-      icon: 'pi pi-shopping-bag',
+      icon: 'pi pi-calendar',
       routerLink: `/${CORE_ROUTE}/${STORE_ROUTE}/${RESERVATION_ROUTE}`
     },
     {
       label: 'About',
-      icon: 'pi pi-file',
+      icon: 'pi pi-search',
       routerLink: `/${CORE_ROUTE}/${STORE_ROUTE}/${ABOUT_ROUTE}`
     },
     {

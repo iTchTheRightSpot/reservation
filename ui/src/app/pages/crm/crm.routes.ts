@@ -1,7 +1,9 @@
 import { Routes } from '@angular/router';
 
 export const DASHBOARD_ROUTE = 'dashboard';
-export const CRM_SERVICE_TYPE_ROUTE = 'service';
+export const CRM_SERVICE_TYPES_ROUTE = 'services';
+export const BOOKINGS_ROUTE = 'bookings';
+export const CRM_STAFFS_ROUTE = 'staffs';
 export const ACCOUNT_ROUTE = 'account';
 
 export const routes: Routes = [
@@ -13,11 +15,23 @@ export const routes: Routes = [
       )
   },
   {
-    path: CRM_SERVICE_TYPE_ROUTE,
+    path: BOOKINGS_ROUTE,
+    loadComponent: () =>
+      import('./pages/bookings/bookings.component').then(
+        m => m.BookingsComponent
+      )
+  },
+  {
+    path: CRM_SERVICE_TYPES_ROUTE,
     loadComponent: () =>
       import('./pages/service-type/crm-service-type.component').then(
         m => m.CRMServiceTypeComponent
       )
+  },
+  {
+    path: CRM_STAFFS_ROUTE,
+    loadComponent: () =>
+      import('./pages/staff/crm-staff.component').then(m => m.CrmStaffComponent)
   },
   {
     path: ACCOUNT_ROUTE,

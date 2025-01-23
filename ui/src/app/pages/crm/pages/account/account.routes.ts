@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 
 export const REGISTER_ROUTE = 'register';
 export const SETTINGS_ROUTE = 'settings';
+export const SCHEDULE_ROUTE = 'schedule';
 
 export const routes: Routes = [
   {
@@ -9,6 +10,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/register/register.component').then(
         m => m.RegisterComponent
+      )
+  },
+  {
+    path: SCHEDULE_ROUTE,
+    loadComponent: () =>
+      import('./pages/schedule/schedule.component').then(
+        m => m.ScheduleComponent
       )
   },
   {

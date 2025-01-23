@@ -5,11 +5,14 @@ import { MenuItem } from 'primeng/api';
 import { Menubar } from 'primeng/menubar';
 import {
   REGISTER_ROUTE,
+  SCHEDULE_ROUTE,
   SETTINGS_ROUTE
 } from '@crm/pages/account/account.routes';
 import {
   ACCOUNT_ROUTE,
-  CRM_SERVICE_TYPE_ROUTE,
+  BOOKINGS_ROUTE,
+  CRM_SERVICE_TYPES_ROUTE,
+  CRM_STAFFS_ROUTE,
   DASHBOARD_ROUTE
 } from '@crm/crm.routes';
 import { CRM_ROUTE } from '@root/app.routes';
@@ -43,18 +46,29 @@ export class CrmNavBarComponent {
       routerLink: `/${CRM_ROUTE}/${DASHBOARD_ROUTE}`
     },
     {
+      label: 'Bookings',
+      icon: 'pi pi-calendar-clock',
+      routerLink: `/${CRM_ROUTE}/${BOOKINGS_ROUTE}`
+    },
+    {
       label: 'Services',
       icon: 'pi pi-shop',
-      routerLink: `/${CRM_ROUTE}/${CRM_SERVICE_TYPE_ROUTE}`
+      routerLink: `/${CRM_ROUTE}/${CRM_SERVICE_TYPES_ROUTE}`
     },
     {
       label: 'Staffs',
-      icon: 'pi pi-users'
+      icon: 'pi pi-users',
+      routerLink: `/${CRM_ROUTE}/${CRM_STAFFS_ROUTE}`
     },
     {
       label: 'Account',
       icon: 'pi pi-home',
       items: [
+        {
+          label: 'Schedule',
+          icon: 'pi pi-calendar-clock',
+          routerLink: `/${CRM_ROUTE}/${ACCOUNT_ROUTE}/${SCHEDULE_ROUTE}`
+        },
         {
           label: 'Register',
           icon: 'pi pi-user-plus',
