@@ -9,10 +9,12 @@ import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { ServiceTypeSelectVisibilityModel } from '@crm/pages/service-type/ui/shared.model';
+import { KeyFilter } from 'primeng/keyfilter';
+import { InputNumber } from 'primeng/inputnumber';
 
 @Component({
   selector: 'app-service-type-form',
-  imports: [Button, FormsModule, InputText, ReactiveFormsModule, Select],
+  imports: [Button, FormsModule, InputText, ReactiveFormsModule, Select, KeyFilter, InputNumber],
   template: `
     <form [formGroup]="form()">
       <div class="flex items-center gap-4 mb-4">
@@ -26,33 +28,26 @@ import { ServiceTypeSelectVisibilityModel } from '@crm/pages/service-type/ui/sha
         />
       </div>
       <div class="flex items-center gap-4 mb-8">
-        <label for="number" class="font-semibold w-24">Price (₦)</label>
-        <input
-          pInputText
-          id="number"
-          type="number"
-          class="flex-auto"
-          formControlName="price"
-          autocomplete="off"
-        />
+        <label for="price" class="font-semibold w-24">Price (₦)</label>
+        <p-input-number id="price" formControlName="price" inputId="minmaxfraction" mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="2" />
       </div>
       <div class="flex items-center gap-4 mb-8">
-        <label for="number" class="font-semibold w-24">Duration</label>
+        <label for="duration" class="font-semibold w-24">Duration(in seconds)</label>
         <input
           pInputText
-          id="number"
-          type="number"
+          id="duration"
+          pKeyFilter="int"
           class="flex-auto"
           formControlName="duration"
           autocomplete="off"
         />
       </div>
       <div class="flex items-center gap-4 mb-8">
-        <label for="number" class="font-semibold w-24">Clean up</label>
+        <label for="clean_up" class="font-semibold w-24">Clean up(in seconds)</label>
         <input
           pInputText
-          id="number"
-          type="number"
+          id="clean_up"
+          pKeyFilter="int"
           formControlName="clean_up_time"
           class="flex-auto"
           autocomplete="off"

@@ -53,31 +53,26 @@
 
   <h1 class="text-lg font-semibold underline">Booking Details</h1>
 
-  <!-- status & services -->
-  <div
-    class="w-full flex gap-2 flex-col md:flex-row items-center justify-center"
-  >
-    <div class="w-full">
-      <p-floatlabel class="w-full" variant="on">
-        <p-select
-          id="on_label"
-          inputId="on_label"
-          [options]="services(booking().services)"
-          optionLabel="name"
-          class="w-full"
-        />
-        <label for="on_label">On Label</label>
-      </p-floatlabel>
-    </div>
+  <!-- status -->
+  <div class="w-full flex flex-col gap-2">
+    <p-badge
+      [value]="booking().status"
+      [severity]="booking().status === state.CONFIRMED ? 'success' : 'danger'"
+    />
+  </div>
 
-    <div class="w-full flex flex-col gap-2">
-      <span>Status</span>
-      <p-badge
+  <!-- services -->
+  <div class="w-full">
+    <p-floatlabel class="w-full" variant="on">
+      <p-select
+        id="on_label"
+        inputId="on_label"
+        [options]="services(booking().services)"
+        optionLabel="name"
         class="w-full"
-        [value]="booking().status"
-        [severity]="booking().status === state.CONFIRMED ? 'success' : 'danger'"
       />
-    </div>
+      <label for="on_label">Services</label>
+    </p-floatlabel>
   </div>
 
   <!-- description -->
