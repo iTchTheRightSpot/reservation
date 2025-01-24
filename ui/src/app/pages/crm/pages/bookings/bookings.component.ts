@@ -20,6 +20,7 @@ import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { Avatar } from 'primeng/avatar';
 import { Drawer } from 'primeng/drawer';
+import { BookingDetailComponent } from '@crm/pages/bookings/ui/detail/booking-detail.component';
 
 @Component({
   selector: 'app-bookings',
@@ -32,7 +33,8 @@ import { Drawer } from 'primeng/drawer';
     Select,
     FormsModule,
     Avatar,
-    Drawer
+    Drawer,
+    BookingDetailComponent
   ],
   templateUrl: './bookings.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -68,6 +70,7 @@ export class BookingsComponent {
   protected readonly thead = ['Name', 'From', 'To', 'Status'];
 
   protected selectedStaff: CRMStaffModel | undefined;
+  protected selectedBooking: BookingsModel | undefined;
 
   protected readonly staffs = toSignal(this.staffService.staffs(), {
     initialValue: { state: ApiState.LOADING } as ApiResponse<CRMStaffModel[]>

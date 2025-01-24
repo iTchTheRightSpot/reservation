@@ -14,6 +14,8 @@ import { ApiResponse, ApiState } from '@root/app.model';
 import { AuthService, RegisterModel } from '@shared/data-access/auth.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Subject, switchMap, tap } from 'rxjs';
+import { Password } from 'primeng/password';
+import { FloatLabel } from 'primeng/floatlabel';
 
 @Component({
   selector: 'app-register',
@@ -23,7 +25,9 @@ import { Subject, switchMap, tap } from 'rxjs';
     InputIcon,
     InputText,
     Message,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    Password,
+    FloatLabel
   ],
   templateUrl: './register.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -66,7 +70,6 @@ export class RegisterComponent {
   });
 
   protected readonly state = ApiState;
-  protected viewPassword = false;
 
   private readonly sub = new Subject<RegisterModel>();
 

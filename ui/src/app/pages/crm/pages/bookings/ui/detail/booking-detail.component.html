@@ -1,0 +1,99 @@
+<div class="w-full flex flex-col gap-8">
+  <h1 class="text-lg font-semibold underline">Contact Details</h1>
+
+  <!-- phone -->
+  <div>
+    <p-iconfield styleClass="mb-0">
+      <p-inputicon styleClass="pi pi-phone" />
+      <input
+        class="w-full"
+        type="number"
+        [value]="booking().phone"
+        pInputText
+        placeholder="(999) 999-9999*"
+        [disabled]="true"
+      />
+    </p-iconfield>
+  </div>
+
+  <!-- name & email -->
+  <div
+    class="w-full flex flex-col md:flex-row items-center justify-center gap-2"
+  >
+    <div class="w-full">
+      <p-iconfield styleClass="mb-0">
+        <p-inputicon styleClass="pi pi-user" />
+        <input
+          [disabled]="true"
+          [value]="booking().name"
+          type="text"
+          class="w-full"
+          pInputText
+          placeholder="name*"
+        />
+      </p-iconfield>
+    </div>
+
+    <div class="w-full">
+      <p-iconfield styleClass="mb-0">
+        <p-inputicon styleClass="pi pi-envelope" />
+        <input
+          [disabled]="true"
+          [value]="booking().email"
+          class="w-full"
+          type="text"
+          pInputText
+          placeholder="email*"
+        />
+      </p-iconfield>
+    </div>
+  </div>
+
+  <p-divider />
+
+  <h1 class="text-lg font-semibold underline">Booking Details</h1>
+
+  <!-- status & services -->
+  <div
+    class="w-full flex gap-2 flex-col md:flex-row items-center justify-center"
+  >
+    <div class="w-full">
+      <p-floatlabel class="w-full" variant="on">
+        <p-select
+          id="on_label"
+          inputId="on_label"
+          [options]="services(booking().services)"
+          optionLabel="name"
+          class="w-full"
+        />
+        <label for="on_label">On Label</label>
+      </p-floatlabel>
+    </div>
+
+    <div class="w-full flex flex-col gap-2">
+      <span>Status</span>
+      <p-badge
+        class="w-full"
+        [value]="booking().status"
+        [severity]="booking().status === state.CONFIRMED ? 'success' : 'danger'"
+      />
+    </div>
+  </div>
+
+  <!-- description -->
+  <div>
+    <p-floatlabel variant="on">
+      <textarea
+        [disabled]="true"
+        pTextarea
+        id="over_label"
+        [value]="booking().description"
+        rows="5"
+        cols="30"
+        style="resize: none"
+        class="h-full w-full"
+      ></textarea>
+      <label for="over_label">appointment note</label>
+    </p-floatlabel>
+  </div>
+</div>

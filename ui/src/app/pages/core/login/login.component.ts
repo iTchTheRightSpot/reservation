@@ -17,6 +17,8 @@ import { Subject, switchMap, tap } from 'rxjs';
 import { ApiResponse, ApiState } from '@root/app.model';
 import { CRM_ROUTE } from '@root/app.routes';
 import { AuthService, LoginModel } from '@shared/data-access/auth.service';
+import { FloatLabel } from 'primeng/floatlabel';
+import { Password } from 'primeng/password';
 
 @Component({
   selector: 'app-login',
@@ -27,7 +29,9 @@ import { AuthService, LoginModel } from '@shared/data-access/auth.service';
     FormsModule,
     Button,
     Message,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    FloatLabel,
+    Password
   ],
   templateUrl: 'login.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush

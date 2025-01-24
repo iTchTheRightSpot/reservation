@@ -30,7 +30,7 @@
 
 <div class="pt-10 min-h-screen flex justify-center">
   <div
-    class="max-w-xl h-fit px-10 md:px-20 py-7 flex flex-col item-center justify-center rounded-md border shadow-2xl"
+    class="max-w-2xl h-fit px-10 md:px-20 py-7 flex flex-col item-center justify-center rounded-md border shadow-2xl"
   >
     <div class="text-left mb-4">
       <p class="mb-2 text-xl md:text-2xl font-bold">Register</p>
@@ -108,20 +108,17 @@
           </div>
         </div>
 
-        <div
-          class="w-full flex flex-col md:flex-row items-center justify-center gap-2"
-        >
+        <div class="w-full grid gap-2 grid-cols-1 md:grid-cols-2">
           <div class="w-full">
-            <p-iconfield>
-              <p-inputicon styleClass="pi pi-lock" />
-              <input
-                class="w-full"
-                [type]="viewPassword ? 'text' : 'password'"
+            <p-floatlabel variant="on">
+              <p-password
                 formControlName="password"
-                pInputText
-                placeholder="Password"
+                [toggleMask]="true"
+                id="on_label"
+                inputId="on_label"
               />
-            </p-iconfield>
+              <label for="on_label">Password</label>
+            </p-floatlabel>
             @if (
               form.controls['password'].invalid &&
               !form.controls['password'].untouched
@@ -137,20 +134,15 @@
           </div>
 
           <div class="w-full">
-            <p-iconfield>
-              <p-inputicon styleClass="pi pi-lock" />
-              <input
-                class="w-full"
-                [type]="viewPassword ? 'text' : 'password'"
+            <p-floatlabel variant="on">
+              <p-password
                 formControlName="confirm_password"
-                pInputText
-                placeholder="Confirm Password"
+                [toggleMask]="true"
+                id="c_on_label"
+                inputId="c_on_label"
               />
-              <p-inputicon
-                [styleClass]="viewPassword ? 'pi pi-eye' : 'pi pi-eye-slash'"
-                (click)="viewPassword = !viewPassword"
-              />
-            </p-iconfield>
+              <label for="c_on_label">Confirm password</label>
+            </p-floatlabel>
             @if (
               form.controls['confirm_password'].invalid &&
               !form.controls['confirm_password'].untouched

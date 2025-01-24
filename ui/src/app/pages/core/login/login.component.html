@@ -44,7 +44,7 @@
       <div
         class="w-full flex flex-col md:flex-row items-center justify-center gap-4"
       >
-        <div class="">
+        <div>
           <p-iconfield styleClass="mb-0">
             <p-inputicon styleClass="pi pi-envelope" />
             <input
@@ -63,16 +63,16 @@
           }
         </div>
 
-        <div class="">
-          <p-iconfield>
-            <p-inputicon styleClass="pi pi-lock" />
-            <input
-              type="password"
+        <div>
+          <p-floatlabel variant="on">
+            <p-password
               formControlName="password"
-              pInputText
-              placeholder="Password"
+              [toggleMask]="true"
+              id="on_label"
+              inputId="on_label"
             />
-          </p-iconfield>
+            <label for="on_label">Password</label>
+          </p-floatlabel>
           @if (
             form.controls['password'].invalid &&
             !form.controls['password'].untouched
