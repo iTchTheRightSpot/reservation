@@ -59,7 +59,7 @@ export class BookingsComponent {
   private readonly staffService = inject(CRMStaffsService);
   protected readonly authService = inject(AuthService);
 
-  protected toggleDetails = false
+  protected toggleDetails = false;
   protected first = 0;
   protected rows = 10;
   protected date = new Date();

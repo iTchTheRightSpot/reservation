@@ -41,7 +41,11 @@
               <ng-template #selectedItem let-sel>
                 <div class="flex items-center gap-2">
                   @if (sel.image_key?.length > 0) {
-                    <p-avatar [image]="sel.image_key" class="mr-2" shape="circle" />
+                    <p-avatar
+                      [image]="sel.image_key"
+                      class="mr-2"
+                      shape="circle"
+                    />
                   } @else {
                     <p-avatar icon="pi pi-user" class="mr-2" shape="circle" />
                   }
@@ -51,7 +55,11 @@
               <ng-template let-staff #item>
                 <div class="flex items-center gap-2">
                   @if (staff.image_key?.length > 0) {
-                    <p-avatar [image]="staff.image_key" class="mr-2" shape="circle" />
+                    <p-avatar
+                      [image]="staff.image_key"
+                      class="mr-2"
+                      shape="circle"
+                    />
                   } @else {
                     <p-avatar icon="pi pi-user" class="mr-2" shape="circle" />
                   }
@@ -97,10 +105,16 @@
   </p-table>
 </div>
 
-<p-drawer header="Right Drawer" [(visible)]="toggleDetails" position="right" styleClass="!w-full md:!w-[40rem] lg:!w-[50rem]">
+<p-drawer
+  header="Right Drawer"
+  [(visible)]="toggleDetails"
+  position="right"
+  styleClass="!w-full md:!w-[40rem] lg:!w-[50rem]"
+>
   <p>
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
-    et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-    aliquip ex ea commodo consequat.
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+    tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+    quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+    consequat.
   </p>
 </p-drawer>

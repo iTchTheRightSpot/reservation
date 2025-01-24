@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { Button } from 'primeng/button';
 import { PrimeTemplate } from 'primeng/api';
-import { Sidebar } from 'primeng/sidebar';
 import { SummaryComponent } from './summary.component';
 import { SummaryHolderModel } from './summary-holder.model';
+import { Drawer } from 'primeng/drawer';
 
 @Component({
   selector: 'app-summary-holder',
-  imports: [Button, PrimeTemplate, Sidebar, SummaryComponent],
+  imports: [Button, PrimeTemplate, SummaryComponent, Drawer],
   template: `
     <div class="w-full hidden md:block">
       <app-summary
@@ -20,10 +20,10 @@ import { SummaryHolderModel } from './summary-holder.model';
     </div>
 
     <div class="w-full block md:hidden fixed left-0 right-0 bottom-0">
-      <p-sidebar
-        styleClass="p-sidebar-lg"
+      <p-drawer
+        styleClass="!h-[30rem]"
         [(visible)]="sidebarVisible4"
-        position="down"
+        position="bottom"
         [dismissible]="false"
       >
         <ng-template pTemplate="header">
@@ -40,12 +40,12 @@ import { SummaryHolderModel } from './summary-holder.model';
             [displayHeader]="false"
           />
         </ng-template>
-      </p-sidebar>
+      </p-drawer>
 
       <div class="w-full p-2 text-right">
         <p-button
           type="button"
-          icon="pi pi-arrow-right"
+          icon="pi pi-arrow-up"
           (onClick)="sidebarVisible4 = true"
         />
       </div>
