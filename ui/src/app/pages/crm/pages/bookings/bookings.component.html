@@ -40,9 +40,8 @@
             >
               <ng-template #selectedItem let-sel>
                 <div class="flex items-center gap-2">
-                  @if (sel.imake_key; as i) {
-                    is i
-                    <p-avatar [image]="i" class="mr-2" shape="circle" />
+                  @if (sel.image_key?.length > 0) {
+                    <p-avatar [image]="sel.image_key" class="mr-2" shape="circle" />
                   } @else {
                     <p-avatar icon="pi pi-user" class="mr-2" shape="circle" />
                   }
@@ -51,8 +50,8 @@
               </ng-template>
               <ng-template let-staff #item>
                 <div class="flex items-center gap-2">
-                  @if (staff.imake_key; as i) {
-                    <p-avatar [image]="i" class="mr-2" shape="circle" />
+                  @if (staff.image_key?.length > 0) {
+                    <p-avatar [image]="staff.image_key" class="mr-2" shape="circle" />
                   } @else {
                     <p-avatar icon="pi pi-user" class="mr-2" shape="circle" />
                   }

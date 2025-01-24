@@ -41,18 +41,12 @@ export class BookingsComponent {
       .pipe(
         tap(() => {
           const u = this.authService.activeUser();
-          if (u) {
-            this.selectedStaff = {
-              user_id: u.user_id,
-              firstname: u.firstname,
-              image_key: u.image_key
-            } as CRMStaffModel
+          if (u)
             this.emitter.next({
               user_id: u.user_id,
               page: this.first,
               size: this.rows
             });
-          }
         }),
         takeWhile(() => !this.authService.activeUser())
       )
