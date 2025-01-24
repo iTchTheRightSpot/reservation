@@ -16,6 +16,7 @@ import {
 import { ActiveUser, ApiResponse, ApiState } from '@root/app.model';
 import { err } from '@root/app.util';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { Permission, Role } from '@crm/pages/staff/crm-staff.model';
 
 export interface LoginModel {
   email: string;
@@ -45,7 +46,12 @@ export class AuthService {
           user_id: '1',
           firstname: 'test user',
           image_key: null,
-          roles_permission: []
+          access_controls: [
+            {
+              role: Role.STAFF,
+              permissions: [Permission.READ, Permission.WRITE]
+            }
+          ]
         })
       : this.http
           .get<ActiveUser>(`${environment.domain}active`, {

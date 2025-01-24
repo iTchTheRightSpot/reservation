@@ -1,3 +1,5 @@
+import { RolePermissionEntity } from '@crm/pages/staff/crm-staff.model';
+
 export enum ApiState {
   LOADING = 'LOADING',
   LOADED = 'LOADED',
@@ -14,5 +16,5 @@ export interface ActiveUser {
   user_id: string;
   firstname: string;
   image_key: string | null;
-  roles_permission: [];
+  access_controls: RolePermissionEntity[];
 }

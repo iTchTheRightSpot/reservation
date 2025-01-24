@@ -1,1 +1,99 @@
-<p>bookings works!</p>
+<div class="card mt-3">
+  <p-table
+    #dt1
+    selectionMode="single"
+    dataKey="id"
+    [loading]="bookings().state === apiState.LOADING"
+    [value]="bookings().data || []"
+    [paginator]="true"
+    [first]="first"
+    [rows]="rows"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+    [rowsPerPageOptions]="[5, 10, 20]"
+  >
+    <ng-template #caption>
+      <div class="flex items-center justify-between">
+        <div class="flex gap-2">
+          <p-floatlabel variant="on">
+            <p-date-picker
+              size="small"
+              id="over_label"
+              inputId="over_label"
+              showIcon
+              iconDisplay="input"
+              view="month"
+              dateFormat="mm/yy"
+            />
+            <label for="over_label">Date</label>
+          </p-floatlabel>
+
+          <p-floatlabel class="w-full md:w-56" variant="on">
+            <p-select
+              id="on_label"
+              [loading]="staffs().state === apiState.LOADING"
+              [options]="staffs().data"
+              [(ngModel)]="selectedStaff"
+              optionLabel="firstname"
+              class="w-full md:w-56"
+            >
+              <ng-template #selectedItem let-sel>
+                <div class="flex items-center gap-2">
+                  @if (sel.imake_key; as i) {
+                    is i
+                    <p-avatar [image]="i" class="mr-2" shape="circle" />
+                  } @else {
+                    <p-avatar icon="pi pi-user" class="mr-2" shape="circle" />
+                  }
+                  <div>{{ sel.firstname }}</div>
+                </div>
+              </ng-template>
+              <ng-template let-staff #item>
+                <div class="flex items-center gap-2">
+                  @if (staff.imake_key; as i) {
+                    <p-avatar [image]="i" class="mr-2" shape="circle" />
+                  } @else {
+                    <p-avatar icon="pi pi-user" class="mr-2" shape="circle" />
+                  }
+                  <div>{{ staff.firstname }}</div>
+                </div>
+              </ng-template>
+            </p-select>
+            <label for="on_label">Staff</label>
+          </p-floatlabel>
+        </div>
+
+        <p-button type="button" icon="pi pi-refresh" (click)="first = 0" text />
+      </div>
+    </ng-template>
+
+    <ng-template #header>
+      <tr>
+        @for (h of thead; track h) {
+          <th style="width: 25%">{{ h }}</th>
+        }
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-model>
+      <tr class="cursor-pointer">
+        <td>{{ model.name }}</td>
+        <td>{{ fm(model.scheduled_for) }}</td>
+        <td>{{ fm(model.expire_at) }}</td>
+        <td>
+          <p-badge
+            [value]="model.status"
+            [severity]="
+              model.status === bookingState.CONFIRMED ? 'success' : 'danger'
+            "
+          />
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #paginatorleft>
+      <p-button type="button" icon="pi pi-plus" text />
+    </ng-template>
+  </p-table>
+</div>
