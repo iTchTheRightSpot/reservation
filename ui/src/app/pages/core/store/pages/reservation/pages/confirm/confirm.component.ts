@@ -28,6 +28,7 @@ import { STORE_ROUTE } from '@pages/core/core.routes';
 import { SERVICE_TYPES_ROUTE } from '@store/pages/reservation/reservation.routes';
 import { RESERVATION_ROUTE } from '@store/store.routes';
 import { ServiceTypeModel } from '@store/pages/reservation/pages/service-type/service-type.model';
+import { Divider } from 'primeng/divider';
 
 @Component({
   selector: 'app-confirm',
@@ -40,7 +41,8 @@ import { ServiceTypeModel } from '@store/pages/reservation/pages/service-type/se
     Message,
     ReactiveFormsModule,
     FloatLabel,
-    Textarea
+    Textarea,
+    Divider
   ],
   templateUrl: './confirm.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush

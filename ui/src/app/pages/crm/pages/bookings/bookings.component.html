@@ -76,7 +76,7 @@
     </ng-template>
 
     <ng-template #body let-model>
-      <tr class="cursor-pointer">
+      <tr class="cursor-pointer" (click)="toggleDetails = !toggleDetails">
         <td>{{ model.name }}</td>
         <td>{{ fm(model.scheduled_for) }}</td>
         <td>{{ fm(model.expire_at) }}</td>
@@ -96,3 +96,11 @@
     </ng-template>
   </p-table>
 </div>
+
+<p-drawer header="Right Drawer" [(visible)]="toggleDetails" position="right" styleClass="!w-full md:!w-[40rem] lg:!w-[50rem]">
+  <p>
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
+    et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+    aliquip ex ea commodo consequat.
+  </p>
+</p-drawer>

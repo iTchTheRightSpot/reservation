@@ -19,6 +19,7 @@ import { interval, Subject, switchMap, takeWhile, tap } from 'rxjs';
 import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { Avatar } from 'primeng/avatar';
+import { Drawer } from 'primeng/drawer';
 
 @Component({
   selector: 'app-bookings',
@@ -30,7 +31,8 @@ import { Avatar } from 'primeng/avatar';
     TableModule,
     Select,
     FormsModule,
-    Avatar
+    Avatar,
+    Drawer
   ],
   templateUrl: './bookings.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -57,6 +59,7 @@ export class BookingsComponent {
   private readonly staffService = inject(CRMStaffsService);
   protected readonly authService = inject(AuthService);
 
+  protected toggleDetails = false
   protected first = 0;
   protected rows = 10;
   protected date = new Date();
