@@ -87,7 +87,7 @@ func TestServiceStore(t *testing.T) {
 			t.Errorf("expect id to be >= 1 given %v", s.ServiceId)
 		}
 
-		find, err := store.ServiceByName(ctx, "name")
+		find, err := store.ServiceTypeByName(ctx, "name")
 		if err != nil {
 			t.Error(err)
 		}
@@ -131,7 +131,7 @@ func TestServiceStore(t *testing.T) {
 		}
 
 		// method to test
-		arr, err := store.ServicesByStaffId(ctx, se.StaffId, false)
+		arr, err := store.ServiceTypesByStaffId(ctx, se.StaffId, false)
 
 		// assert
 		if err != nil {

@@ -17,7 +17,7 @@ type MockServiceTypeStore struct {
 	ServicesByStaffIdCalled bool
 }
 
-func (dep *MockServiceTypeStore) ServicesByStatus(context.Context, bool) ([]*service_type.ServiceTypeEntity, error) {
+func (dep *MockServiceTypeStore) ServiceTypes(context.Context) ([]*service_type.ServiceTypeEntity, error) {
 	return nil, nil
 }
 
@@ -26,12 +26,12 @@ func (dep *MockServiceTypeStore) Save(context.Context, *service_type.ServiceType
 	return dep.ServiceSaveError
 }
 
-func (dep *MockServiceTypeStore) ServiceByName(context.Context, string) (*service_type.ServiceTypeEntity, error) {
+func (dep *MockServiceTypeStore) ServiceTypeByName(context.Context, string) (*service_type.ServiceTypeEntity, error) {
 	dep.ServiceByNameCalled = true
 	return dep.ServiceByNameReturn, dep.ServiceByNameError
 }
 
-func (dep *MockServiceTypeStore) ServicesByStaffId(context.Context, uint64, bool) ([]*service_type.ServiceTypeEntity, error) {
+func (dep *MockServiceTypeStore) ServiceTypesByStaffId(context.Context, uint64, bool) ([]*service_type.ServiceTypeEntity, error) {
 	dep.ServicesByStaffIdCalled = true
 	return dep.ServicesByStaffIdReturn, dep.ServicesByStaffIdError
 }

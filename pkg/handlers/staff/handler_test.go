@@ -23,6 +23,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"slices"
+	"strings"
 	"testing"
 )
 
@@ -73,66 +74,87 @@ func TestStaffHandler(t *testing.T) {
 	NewStaffHandler(mux, m, logger, s).Register()
 
 	t.Run("should return all staffs", func(t *testing.T) {
-		size := 10
-
-		// pre-save
-		for i := 0; i < size; i++ {
-			_, err := preSaveStaff(context.Background(), adp)
-			if err != nil {
-				t.Error(err.Error())
-			}
-		}
-		cred := []models.RolePermissionEnum{
-			{
-				Role:        models.STAFF,
-				Permissions: []models.PermissionEnum{models.WRITE},
-			},
-		}
-
 		obj, _ := jwtSer.Encode(
 			&models.JwtObj{
-				UserId:         "uuid",
-				AccessControls: cred,
+				UserId: "uuid",
+				AccessControls: []models.RolePermissionEnum{
+					{
+						Role:        models.STAFF,
+						Permissions: []models.PermissionEnum{models.WRITE},
+					},
+				},
 			},
 			utils.TwoDaysInSeconds,
 		)
 
-		// route to test
-		req := httptest.NewRequest(http.MethodGet, "/staffs", nil)
-		req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
-		req.Header.Set("Content-Type", "application/json")
-		rr := httptest.NewRecorder()
+		t.Run("empty array", func(t *testing.T) {
+			// route to test
+			req := httptest.NewRequest(http.MethodGet, "/staffs", nil)
+			req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+			req.Header.Set("Content-Type", "application/json")
+			rr := httptest.NewRecorder()
 
-		mux.ServeHTTP(rr, req)
+			mux.ServeHTTP(rr, req)
 
-		// assert
-		if rr.Code != http.StatusOK {
-			t.Errorf("expected status code %d, received %d", http.StatusOK, rr.Code)
-			t.Error(rr.Body.String())
-		}
-
-		var arr []model.AllStaffsEntity
-
-		if err := json.NewDecoder(rr.Body).Decode(&arr); err != nil {
-			t.Error(err.Error())
-		}
-
-		if len(arr) != size {
-			t.Errorf("expect size %d given %v", size, len(arr))
-		}
-
-		var temp = make([]model.AllStaffsEntity, len(arr))
-		for i, stf := range arr {
-			b := slices.ContainsFunc(temp, func(entity model.AllStaffsEntity) bool {
-				return stf.Email == entity.Email
-			})
-
-			if b {
-				t.Error(" array contains duplicate")
-				break
+			// assert
+			if rr.Code != http.StatusOK {
+				t.Errorf("expected status code %d, received %d", http.StatusOK, rr.Code)
+				t.Error(rr.Body.String())
 			}
-			temp[i] = stf
-		}
+
+			if strings.TrimSpace(rr.Body.String()) != "[]" {
+				t.Errorf("expect [], given %s", rr.Body.String())
+			}
+		})
+
+		t.Run("not empty array", func(t *testing.T) {
+			size := 10
+
+			// pre-save
+			for i := 0; i < size; i++ {
+				_, err := preSaveStaff(context.Background(), adp)
+				if err != nil {
+					t.Error(err.Error())
+				}
+			}
+
+			// route to test
+			req := httptest.NewRequest(http.MethodGet, "/staffs", nil)
+			req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+			req.Header.Set("Content-Type", "application/json")
+			rr := httptest.NewRecorder()
+
+			mux.ServeHTTP(rr, req)
+
+			// assert
+			if rr.Code != http.StatusOK {
+				t.Errorf("expected status code %d, received %d", http.StatusOK, rr.Code)
+				t.Error(rr.Body.String())
+			}
+
+			var arr []model.AllStaffsEntity
+
+			if err := json.NewDecoder(rr.Body).Decode(&arr); err != nil {
+				t.Error(err.Error())
+			}
+
+			if len(arr) != size {
+				t.Errorf("expect size %d given %v", size, len(arr))
+			}
+
+			var temp = make([]model.AllStaffsEntity, len(arr))
+			for i, stf := range arr {
+				b := slices.ContainsFunc(temp, func(entity model.AllStaffsEntity) bool {
+					return stf.Email == entity.Email
+				})
+
+				if b {
+					t.Error(" array contains duplicate")
+					break
+				}
+				temp[i] = stf
+			}
+		})
 	})
 
 	t.Run("should link service to staff & also reject", func(t *testing.T) {

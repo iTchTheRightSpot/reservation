@@ -12,9 +12,9 @@ import (
 
 type IServiceTypeStore interface {
 	Save(ctx context.Context, s *service_type.ServiceTypeEntity) error
-	ServiceByName(ctx context.Context, name string) (*service_type.ServiceTypeEntity, error)
-	ServicesByStaffId(ctx context.Context, staffId uint64, visible bool) ([]*service_type.ServiceTypeEntity, error)
-	ServicesByStatus(ctx context.Context, b bool) ([]*service_type.ServiceTypeEntity, error)
+	ServiceTypeByName(ctx context.Context, name string) (*service_type.ServiceTypeEntity, error)
+	ServiceTypesByStaffId(ctx context.Context, staffId uint64, visible bool) ([]*service_type.ServiceTypeEntity, error)
+	ServiceTypes(ctx context.Context) ([]*service_type.ServiceTypeEntity, error)
 }
 
 type serviceTypeStore struct {
@@ -26,12 +26,10 @@ func NewServiceTypeStore(l utils.ILogger, db pkg.Db) IServiceTypeStore {
 	return &serviceTypeStore{logger: l, db: db}
 }
 
-func (dep *serviceTypeStore) ServicesByStatus(ctx context.Context, b bool) ([]*service_type.ServiceTypeEntity, error) {
+func (dep *serviceTypeStore) ServiceTypes(ctx context.Context) ([]*service_type.ServiceTypeEntity, error) {
 	var arr []*service_type.ServiceTypeEntity
 
-	q := "SELECT * FROM service_type WHERE is_visible = $1"
-
-	rows, err := dep.db.QueryContext(ctx, q, b)
+	rows, err := dep.db.QueryContext(ctx, "SELECT * FROM service_type")
 	if err != nil {
 		dep.logger.Error(err.Error())
 		return nil, errors.New("exception retrieving services by status")
@@ -83,7 +81,7 @@ func (dep *serviceTypeStore) Save(ctx context.Context, s *service_type.ServiceTy
 	return nil
 }
 
-func (dep *serviceTypeStore) ServiceByName(ctx context.Context, name string) (*service_type.ServiceTypeEntity, error) {
+func (dep *serviceTypeStore) ServiceTypeByName(ctx context.Context, name string) (*service_type.ServiceTypeEntity, error) {
 	var s service_type.ServiceTypeEntity
 
 	var q = `
@@ -97,13 +95,13 @@ func (dep *serviceTypeStore) ServiceByName(ctx context.Context, name string) (*s
 
 	if err != nil {
 		dep.logger.Error(err)
-		return nil, fmt.Errorf("exception retrieving ServiceByName %s", name)
+		return nil, fmt.Errorf("exception retrieving ServiceTypeByName %s", name)
 	}
 
 	return &s, nil
 }
 
-func (dep *serviceTypeStore) ServicesByStaffId(ctx context.Context, staffId uint64, visible bool) ([]*service_type.ServiceTypeEntity, error) {
+func (dep *serviceTypeStore) ServiceTypesByStaffId(ctx context.Context, staffId uint64, visible bool) ([]*service_type.ServiceTypeEntity, error) {
 	var arr []*service_type.ServiceTypeEntity
 
 	var q = `

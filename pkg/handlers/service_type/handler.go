@@ -96,5 +96,16 @@ func (dep *ServiceTypeHandler) staffsByServices(w http.ResponseWriter, r *http.R
 }
 
 func (dep *ServiceTypeHandler) crmServices(w http.ResponseWriter, r *http.Request) {
+	arr, err := dep.service.CRMServiceTypes(r.Context())
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, err)
+		return
+	}
 
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err = json.NewEncoder(w).Encode(arr); err != nil {
+		dep.logger.Error(err.Error())
+	}
 }

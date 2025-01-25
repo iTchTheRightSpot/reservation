@@ -159,7 +159,7 @@ func (dep *reservationService) AvailableDates(ctx context.Context, o *reservatio
 }
 
 func (dep *reservationService) matchStaffServices(ctx context.Context, requestedServices []string, staffObj *staff.Staff) ([]*service_type.ServiceTypeEntity, error) {
-	serviceEntities, err := dep.adapters.ServiceStore.ServicesByStaffId(ctx, staffObj.StaffId, true)
+	serviceEntities, err := dep.adapters.ServiceStore.ServiceTypesByStaffId(ctx, staffObj.StaffId, true)
 	if err != nil {
 		return nil, &utils.NotFoundError{Message: "invalid service for staff"}
 	}

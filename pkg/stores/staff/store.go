@@ -99,7 +99,7 @@ func (dep *staffStore) AllStaffs(ctx context.Context) ([]*staff.AllStaffsEntity,
 		return nil, errors.New("error iterating through all staffs rows")
 	}
 
-	return result, nil
+	return result, err
 }
 
 func (dep *staffStore) StaffByProfileId(ctx context.Context, profileId uint64) (*staff.Staff, error) {

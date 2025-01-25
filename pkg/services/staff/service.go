@@ -16,8 +16,8 @@ type IStaffService interface {
 type staffService struct {
 	logger   utils.ILogger
 	adapters *stores.Adapters
-	cache pkg.ICache[string, []*staff.AllStaffsEntity]
-	key string
+	cache    pkg.ICache[string, []*staff.AllStaffsEntity]
+	key      string
 }
 
 func NewStaffService(l utils.ILogger, a *stores.Adapters, c pkg.ICache[string, []*staff.AllStaffsEntity]) IStaffService {
@@ -46,7 +46,7 @@ func (dep *staffService) LinkServiceToStaff(ctx context.Context, staffUUID, serv
 		return &utils.NotFoundError{Message: "invalid staff id"}
 	}
 
-	service, err := dep.adapters.ServiceStore.ServiceByName(ctx, serviceName)
+	service, err := dep.adapters.ServiceStore.ServiceTypeByName(ctx, serviceName)
 	if err != nil {
 		return &utils.NotFoundError{Message: "invalid service name"}
 	}

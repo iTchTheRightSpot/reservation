@@ -12,6 +12,7 @@ type IServiceType interface {
 	Create(ctx context.Context, p *service_type.ServiceTypePayload) error
 	ServiceTypes(ctx context.Context) (interface{}, error)
 	StaffsByServiceTypes(ctx context.Context, services *[]string) (interface{}, error)
+	CRMServiceTypes(ctx context.Context) (interface{}, error)
 }
 
 type serviceTypeImpl struct {
@@ -23,8 +24,36 @@ func NewServiceImpl(l utils.ILogger, a *stores.Adapters) IServiceType {
 	return &serviceTypeImpl{logger: l, adapters: a}
 }
 
+func (dep *serviceTypeImpl) CRMServiceTypes(ctx context.Context) (interface{}, error) {
+	db, err := dep.adapters.ServiceStore.ServiceTypes(ctx)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return nil, &utils.NotFoundError{Message: "an error occurred retrieving service types"}
+	}
+
+	type ui struct {
+		Name      string  `json:"name"`
+		Price     float64 `json:"price"`
+		IsVisible bool    `json:"is_visible"`
+		Duration  int     `json:"duration"`
+		CleanUp   int     `json:"clean_up_time"`
+	}
+
+	arr := make([]*ui, len(db))
+
+	for i, e := range db {
+		arr[i] = &ui{Name: e.Name, Price: e.Price, IsVisible: e.IsVisible, Duration: e.Duration, CleanUp: e.CleanUpTime}
+	}
+
+	if len(arr) == 0 {
+		return []interface{}{}, nil
+	}
+
+	return arr, nil
+}
+
 func (dep *serviceTypeImpl) ServiceTypes(ctx context.Context) (interface{}, error) {
-	db, err := dep.adapters.ServiceStore.ServicesByStatus(ctx, true)
+	db, err := dep.adapters.ServiceStore.ServiceTypes(ctx)
 	if err != nil {
 		dep.logger.Error(err.Error())
 		return nil, &utils.NotFoundError{Message: "an error occurred retrieving service types"}
@@ -36,10 +65,16 @@ func (dep *serviceTypeImpl) ServiceTypes(ctx context.Context) (interface{}, erro
 		Duration int     `json:"duration"`
 	}
 
-	arr := make([]*ui, len(db))
+	var arr []*ui
 
-	for i, e := range db {
-		arr[i] = &ui{Name: e.Name, Price: e.Price, Duration: e.Duration}
+	for _, e := range db {
+		if e.IsVisible {
+			arr = append(arr, &ui{Name: e.Name, Price: e.Price, Duration: e.Duration})
+		}
+	}
+
+	if len(arr) == 0 {
+		return []interface{}{}, nil
 	}
 
 	return arr, nil
