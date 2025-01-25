@@ -19,6 +19,10 @@ func (dep *MockProfileStore) ProfileRolesAndPermissionByEmail(context.Context, s
 	return nil, nil
 }
 
+func (dep *MockProfileStore) ProfileByStaffUUID(context.Context, string) (*models.ProfileEntity, error) {
+	return nil, nil
+}
+
 func (dep *MockProfileStore) Save(context.Context, *models.ProfileEntity) error {
 	dep.MockProfileSaveCalled = true
 	return dep.MockProfileSaveError

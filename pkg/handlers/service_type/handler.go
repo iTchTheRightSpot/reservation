@@ -5,7 +5,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
+	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"net/http"
@@ -37,7 +37,9 @@ func (dep *ServiceTypeHandler) Register() {
 
 	dep.mux.HandleFunc("GET /service", dep.services)
 	dep.mux.HandleFunc("GET /service/staffs", dep.staffsByServices)
-	dep.mux.Handle("POST /service", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(m.RequestBody(http.HandlerFunc(dep.create)), rp)))
+
+	dep.mux.Handle("GET /crm/services", dep.ware.Authentication(dep.ware.HasRole(http.HandlerFunc(dep.crmServices), &rp.Role)))
+	dep.mux.Handle("POST /crm/service", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(m.RequestBody(http.HandlerFunc(dep.create)), rp)))
 }
 
 func (dep *ServiceTypeHandler) create(w http.ResponseWriter, r *http.Request) {
@@ -91,4 +93,8 @@ func (dep *ServiceTypeHandler) staffsByServices(w http.ResponseWriter, r *http.R
 	if err = json.NewEncoder(w).Encode(arr); err != nil {
 		dep.logger.Error(err.Error())
 	}
+}
+
+func (dep *ServiceTypeHandler) crmServices(w http.ResponseWriter, r *http.Request) {
+
 }

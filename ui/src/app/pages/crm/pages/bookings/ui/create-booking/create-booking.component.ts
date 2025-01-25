@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { CRMStaffModel } from '@crm/pages/staff/crm-staff.model';
 
 @Component({
   selector: 'app-create-booking',
@@ -6,4 +7,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   templateUrl: './create-booking.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CreateBookingComponent {}
+export class CreateBookingComponent {
+  staffs = input.required<CRMStaffModel[]>()
+  protected readonly services = []
+}

@@ -12,7 +12,8 @@ import { TableModule } from 'primeng/table';
 import {
   BookingsModel,
   BookingsRequestPayload,
-  BookingStatus
+  BookingStatus,
+  UpdateBookingStatusPayload
 } from './bookings.model';
 import { AuthService } from '@shared/data-access/auth.service';
 import { interval, Subject, switchMap, takeWhile, tap } from 'rxjs';
@@ -20,7 +21,10 @@ import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { Avatar } from 'primeng/avatar';
 import { Drawer } from 'primeng/drawer';
-import { BookingDetailComponent } from '@crm/pages/bookings/ui/detail/booking-detail.component';
+import { BookingDetailComponent } from './ui/detail/booking-detail.component';
+import { Dialog } from 'primeng/dialog';
+import { CreateBookingComponent } from './ui/create-booking/create-booking.component';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-bookings',
@@ -34,7 +38,10 @@ import { BookingDetailComponent } from '@crm/pages/bookings/ui/detail/booking-de
     FormsModule,
     Avatar,
     Drawer,
-    BookingDetailComponent
+    BookingDetailComponent,
+    Dialog,
+    CreateBookingComponent,
+    AsyncPipe
   ],
   templateUrl: './bookings.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -46,7 +53,7 @@ export class BookingsComponent {
         tap(() => {
           const u = this.authService.activeUser();
           if (u)
-            this.emitter.next({
+            this.allBookingsEmitter.next({
               user_id: u.user_id,
               page: this.first,
               size: this.rows
@@ -61,7 +68,8 @@ export class BookingsComponent {
   private readonly staffService = inject(CRMStaffsService);
   protected readonly authService = inject(AuthService);
 
-  protected toggleDetails = false;
+  protected toggleBookingDetails = false;
+  protected toggleNewBookings = false;
   protected first = 0;
   protected rows = 10;
   protected date = new Date();
@@ -76,15 +84,21 @@ export class BookingsComponent {
     initialValue: { state: ApiState.LOADING } as ApiResponse<CRMStaffModel[]>
   });
 
-  private readonly emitter = new Subject<BookingsRequestPayload>();
+  private readonly allBookingsEmitter = new Subject<BookingsRequestPayload>();
   protected readonly bookings = toSignal(
-    this.emitter
+    this.allBookingsEmitter
       .asObservable()
       .pipe(switchMap(o => this.bookingService.bookings(o))),
     {
       initialValue: { state: ApiState.LOADING } as ApiResponse<BookingsModel[]>
     }
   );
+
+  private readonly updateBookingStatusEmitter =
+    new Subject<UpdateBookingStatusPayload>();
+  protected readonly updateBookingStatus$ = this.updateBookingStatusEmitter
+    .asObservable()
+    .pipe(switchMap(o => this.bookingService.updateBookingStatus(o)));
 
   protected readonly fm = (d: number) =>
     new Date(d).toLocaleDateString('en-US', {
@@ -96,4 +110,21 @@ export class BookingsComponent {
       hour: 'numeric',
       minute: 'numeric'
     });
+
+  protected readonly updateBookingStatus = (o: UpdateBookingStatusPayload) => {
+    this.updateBookingStatusEmitter.next(o);
+    const s = this.selectedStaff;
+    if (s)
+      this.allBookingsEmitter.next({
+        user_id: s.user_id,
+        page: this.first,
+        size: this.rows
+      });
+    else
+      this.allBookingsEmitter.next({
+        user_id: this.authService.activeUser()!!.user_id,
+        page: this.first,
+        size: this.rows
+      });
+  };
 }

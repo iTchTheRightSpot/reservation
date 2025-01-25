@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import {
   CRM_DummyServiceTypes,
-  CRM_ServiceTypeModel
+  CRMServiceTypeModel
 } from './crm-service-type.model';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '@env/environment';
@@ -29,20 +29,20 @@ export class CRMServiceTypeService {
   private readonly toast = inject(ToastService);
 
   private readonly cache = new BehaviorSubject<
-    CRM_ServiceTypeModel[] | undefined
+    CRMServiceTypeModel[] | undefined
   >(undefined);
 
-  readonly all = (): Observable<ApiResponse<CRM_ServiceTypeModel[]>> =>
+  readonly all = (): Observable<ApiResponse<CRMServiceTypeModel[]>> =>
     !environment.production
       ? of('yes').pipe(
           concatMap(() =>
             concat(
-              of<ApiResponse<CRM_ServiceTypeModel[]>>({
+              of<ApiResponse<CRMServiceTypeModel[]>>({
                 state: ApiState.LOADING
               }),
               timer(2000).pipe(
                 concatMap(() =>
-                  of<ApiResponse<CRM_ServiceTypeModel[]>>({
+                  of<ApiResponse<CRMServiceTypeModel[]>>({
                     state: ApiState.LOADED,
                     data: CRM_DummyServiceTypes(50)
                   })
@@ -54,37 +54,37 @@ export class CRMServiceTypeService {
       : this.cache.asObservable().pipe(
           switchMap(arr =>
             arr
-              ? of<ApiResponse<CRM_ServiceTypeModel[]>>({
+              ? of<ApiResponse<CRMServiceTypeModel[]>>({
                   state: ApiState.LOADED,
                   data: arr
                 })
               : this.http
                   .get<
-                    CRM_ServiceTypeModel[]
-                  >(`${environment.domain}crm/service`, { withCredentials: true })
+                    CRMServiceTypeModel[]
+                  >(`${environment.domain}crm/services`, { withCredentials: true })
                   .pipe(
                     map(arr => {
                       this.cache.next(arr);
                       return {
                         state: ApiState.LOADED,
                         data: arr
-                      } as ApiResponse<CRM_ServiceTypeModel[]>;
+                      } as ApiResponse<CRMServiceTypeModel[]>;
                     }),
                     startWith({ state: ApiState.LOADING } as ApiResponse<
-                      CRM_ServiceTypeModel[]
+                      CRMServiceTypeModel[]
                     >),
-                    catchError(e => of(err<CRM_ServiceTypeModel[]>(e)))
+                    catchError(e => of(err<CRMServiceTypeModel[]>(e)))
                   )
           )
         );
 
-  readonly create = (m: CRM_ServiceTypeModel) => this.write<any>('POST', m);
+  readonly create = (m: CRMServiceTypeModel) => this.write<any>('POST', m);
 
-  readonly update = (m: CRM_ServiceTypeModel) => this.write<any>('PUT', m);
+  readonly update = (m: CRMServiceTypeModel) => this.write<any>('PUT', m);
 
   private readonly write = <T>(
     method: 'POST' | 'PUT',
-    body: CRM_ServiceTypeModel
+    body: CRMServiceTypeModel
   ) => {
     if (!environment.production)
       return of('yes').pipe(

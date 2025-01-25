@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -70,7 +70,7 @@ func TestServiceStore(t *testing.T) {
 		ctx := context.Background()
 
 		// given
-		s := service.ServiceTypeEntity{
+		s := service_type.ServiceTypeEntity{
 			Name:        "name",
 			Price:       1000.95,
 			Duration:    3600,
@@ -110,7 +110,7 @@ func TestServiceStore(t *testing.T) {
 		ss := staff.NewStaffServiceStore(logger, tx)
 
 		// given
-		s := service.ServiceTypeEntity{
+		s := service_type.ServiceTypeEntity{
 			Name:        "name",
 			Price:       1000.95,
 			Duration:    3600,
@@ -153,7 +153,7 @@ func TestServiceStore(t *testing.T) {
 		ctx := context.Background()
 
 		// given
-		s := service.ServiceTypeEntity{
+		s := service_type.ServiceTypeEntity{
 			Name:  "name",
 			Price: 10001.95,
 		}

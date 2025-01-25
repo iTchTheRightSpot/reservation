@@ -3,6 +3,7 @@ package staff
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
@@ -16,6 +17,7 @@ type IStaffStore interface {
 	StaffByUUID(ctx context.Context, staffUUID string) (*staff.Staff, error)
 	StaffsByServices(ctx context.Context, s *[]string) ([]*staff.StaffStoreFrontDb, error)
 	StaffByProfileId(ctx context.Context, id uint64) (*staff.Staff, error)
+	AllStaffs(ctx context.Context) ([]*staff.AllStaffsEntity, error)
 }
 
 type staffStore struct {
@@ -25,6 +27,79 @@ type staffStore struct {
 
 func NewStaffStore(l utils.ILogger, db pkg.Db) IStaffStore {
 	return &staffStore{logger: l, db: db}
+}
+
+func (dep *staffStore) AllStaffs(ctx context.Context) ([]*staff.AllStaffsEntity, error) {
+	q := `
+        SELECT
+          p.firstname,
+          p.lastname,
+          p.email,
+          p.locked,
+          p.image_key,
+          st.uuid as user_id,
+          st.bio,
+          json_agg(
+              json_build_object(
+                  'role', r.role,
+                  'permissions', permissions.permissions
+              )
+          ) AS access_controls
+        FROM profile p
+        INNER JOIN staff st ON st.profile_id = p.profile_id
+		INNER JOIN role r ON r.profile_id = p.profile_id
+		INNER JOIN (
+			SELECT
+				r.role_id,
+				json_agg(perm.permission) AS permissions
+			FROM permission perm
+			INNER JOIN role r ON r.role_id = perm.role_id
+			GROUP BY r.role_id
+		) permissions ON permissions.role_id = r.role_id
+		GROUP BY p.firstname, p.lastname, p.email, p.locked, p.image_key, st.uuid, st.bio;
+    `
+
+	rows, err := dep.db.QueryContext(ctx, q)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return nil, errors.New("error retrieving all staffs")
+	}
+	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
+
+	var result = make([]*staff.AllStaffsEntity, 0)
+
+	for rows.Next() {
+		var pd staff.AllStaffsEntity
+		var rolePermData json.RawMessage
+
+		if err = rows.Scan(
+			&pd.Firstname,
+			&pd.Lastname,
+			&pd.Email,
+			&pd.Locked,
+			&pd.ImageKey,
+			&pd.UUID,
+			&pd.Bio,
+			&rolePermData,
+		); err != nil {
+			dep.logger.Error(err.Error())
+			return nil, errors.New("error scanning database rows")
+		}
+
+		if err = json.Unmarshal(rolePermData, &pd.AccessControls); err != nil {
+			dep.logger.Error(err.Error())
+			return nil, errors.New("error unmarshalling AllStaffs access control")
+		}
+
+		result = append(result, &pd)
+	}
+
+	if err = rows.Err(); err != nil {
+		dep.logger.Error(err.Error())
+		return nil, errors.New("error iterating through all staffs rows")
+	}
+
+	return result, nil
 }
 
 func (dep *staffStore) StaffByProfileId(ctx context.Context, profileId uint64) (*staff.Staff, error) {

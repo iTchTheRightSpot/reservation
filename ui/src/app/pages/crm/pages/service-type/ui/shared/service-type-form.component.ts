@@ -14,7 +14,15 @@ import { InputNumber } from 'primeng/inputnumber';
 
 @Component({
   selector: 'app-service-type-form',
-  imports: [Button, FormsModule, InputText, ReactiveFormsModule, Select, KeyFilter, InputNumber],
+  imports: [
+    Button,
+    FormsModule,
+    InputText,
+    ReactiveFormsModule,
+    Select,
+    KeyFilter,
+    InputNumber
+  ],
   template: `
     <form [formGroup]="form()">
       <div class="flex items-center gap-4 mb-4">
@@ -29,10 +37,19 @@ import { InputNumber } from 'primeng/inputnumber';
       </div>
       <div class="flex items-center gap-4 mb-8">
         <label for="price" class="font-semibold w-24">Price (₦)</label>
-        <p-input-number id="price" formControlName="price" inputId="minmaxfraction" mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="2" />
+        <p-input-number
+          id="price"
+          formControlName="price"
+          inputId="minmaxfraction"
+          mode="decimal"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+        />
       </div>
       <div class="flex items-center gap-4 mb-8">
-        <label for="duration" class="font-semibold w-24">Duration(in seconds)</label>
+        <label for="duration" class="font-semibold w-24"
+          >Duration(in seconds)</label
+        >
         <input
           pInputText
           id="duration"
@@ -43,7 +60,9 @@ import { InputNumber } from 'primeng/inputnumber';
         />
       </div>
       <div class="flex items-center gap-4 mb-8">
-        <label for="clean_up" class="font-semibold w-24">Clean up(in seconds)</label>
+        <label for="clean_up" class="font-semibold w-24"
+          >Clean up(in seconds)</label
+        >
         <input
           pInputText
           id="clean_up"

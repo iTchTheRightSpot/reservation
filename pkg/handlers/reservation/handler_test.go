@@ -15,7 +15,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
 	scheduleModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
@@ -421,8 +421,8 @@ func createSchedule(t *testing.T, jwtSer auth.IJwtService, staff1 *staff.Staff, 
 	}
 }
 
-func preSaveService(ctx context.Context, a *stores.Adapters) (*service.ServiceTypeEntity, error) {
-	s := service.ServiceTypeEntity{
+func preSaveService(ctx context.Context, a *stores.Adapters) (*service_type.ServiceTypeEntity, error) {
+	s := service_type.ServiceTypeEntity{
 		Name:        uuid.New().String(),
 		Price:       19.56,
 		Duration:    3600,
@@ -433,7 +433,7 @@ func preSaveService(ctx context.Context, a *stores.Adapters) (*service.ServiceTy
 	return &s, err
 }
 
-func linkServiceToStaff(a *stores.Adapters, sta *staff.Staff, staSer *service.ServiceTypeEntity) error {
+func linkServiceToStaff(a *stores.Adapters, sta *staff.Staff, staSer *service_type.ServiceTypeEntity) error {
 	return a.StaffServiceStore.Save(context.Background(), &staff.StaffServiceEntity{
 		StaffId:   sta.StaffId,
 		ServiceId: staSer.ServiceId,

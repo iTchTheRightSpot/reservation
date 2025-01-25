@@ -18,6 +18,10 @@ func (dep *MockStaffStore) StaffsByServices(context.Context, *[]string) ([]*staf
 	return nil, nil
 }
 
+func (dep *MockStaffStore) AllStaffs(context.Context) ([]*staff.AllStaffsEntity, error) {
+	return nil, nil
+}
+
 func (dep *MockStaffStore) Save(context.Context, *staff.Staff) error {
 	dep.StaffSaveCalled = true
 	return dep.StaffSaveError

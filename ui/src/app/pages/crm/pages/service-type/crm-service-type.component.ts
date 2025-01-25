@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { Button } from 'primeng/button';
 import { TableModule, TablePageEvent } from 'primeng/table';
-import { CRM_ServiceTypeModel } from './crm-service-type.model';
+import { CRMServiceTypeModel } from './crm-service-type.model';
 import { Badge } from 'primeng/badge';
 import { CRMServiceTypeService } from './crm-service-type.service';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -50,31 +50,31 @@ export class CRMServiceTypeComponent {
   protected toggleEditServiceTypeView = false;
 
   protected readonly clickedServiceType = signal<
-    CRM_ServiceTypeModel | undefined
+    CRMServiceTypeModel | undefined
   >(undefined);
 
   protected readonly models = toSignal(this.service.all(), {
     initialValue: { state: ApiState.LOADING, data: [] } as ApiResponse<
-      CRM_ServiceTypeModel[]
+      CRMServiceTypeModel[]
     >
   });
 
   protected readonly formatseconds = (secs: number) => FORMAT_SECONDS(secs);
 
-  protected readonly create = new Subject<CRM_ServiceTypeModel>();
+  protected readonly create = new Subject<CRMServiceTypeModel>();
   protected readonly createApiState = toSignal(
     this.create.asObservable().pipe(switchMap(o => this.service.create(o))),
     { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
   );
 
-  protected readonly update = new Subject<CRM_ServiceTypeModel>();
+  protected readonly update = new Subject<CRMServiceTypeModel>();
   protected readonly updateApiState = toSignal(
     this.update.asObservable().pipe(switchMap(o => this.service.update(o))),
     { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
   );
 
-  protected readonly data = (m: ApiResponse<CRM_ServiceTypeModel[]>) =>
-    tabledata<CRM_ServiceTypeModel[]>(m);
+  protected readonly data = (m: ApiResponse<CRMServiceTypeModel[]>) =>
+    tabledata<CRMServiceTypeModel[]>(m);
 
   protected readonly pageChange = (event: TablePageEvent) => {
     this.first = event.first;

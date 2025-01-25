@@ -86,7 +86,9 @@
     <ng-template #body let-model>
       <tr
         class="cursor-pointer"
-        (click)="selectedBooking = model; toggleDetails = !toggleDetails"
+        (click)="
+          selectedBooking = model; toggleBookingDetails = !toggleBookingDetails
+        "
       >
         <td>{{ model.name }}</td>
         <td>{{ fm(model.scheduled_for) }}</td>
@@ -103,18 +105,42 @@
     </ng-template>
 
     <ng-template #paginatorleft>
-      <p-button type="button" icon="pi pi-plus" text />
+      <p-button
+        type="button"
+        (onClick)="toggleNewBookings = !toggleNewBookings"
+        icon="pi pi-plus"
+        text
+      />
     </ng-template>
   </p-table>
 </div>
 
-<p-drawer
-  header="Booking Detail"
-  [(visible)]="toggleDetails"
-  position="right"
-  styleClass="!w-full md:!w-[40rem] lg:!w-[50rem]"
->
-  @if (selectedBooking; as sb) {
-    <app-booking-detail [booking]="sb" />
-  }
-</p-drawer>
+@defer {
+  <p-drawer
+    header="Booking Detail"
+    [(visible)]="toggleBookingDetails"
+    position="right"
+    styleClass="!w-full md:!w-[40rem] lg:!w-[50rem]"
+  >
+    @if (selectedBooking; as sb) {
+      <app-booking-detail
+        [booking]="sb"
+        [updateStatus]="(updateBookingStatus$ | async)?.state"
+        (emitter)="updateBookingStatus($event)"
+      />
+    } @else {
+      <p>error displaying booking details</p>
+    }
+  </p-drawer>
+}
+
+@defer {
+  <p-dialog
+    header="Create New Booking"
+    [modal]="true"
+    [(visible)]="toggleNewBookings"
+    [style]="{ width: '25rem' }"
+  >
+    <app-create-booking [staffs]="staffs().data || []" />
+  </p-dialog>
+}

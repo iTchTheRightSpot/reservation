@@ -1,4 +1,4 @@
-package service
+package service_type
 
 type ServiceTypeEntity struct {
 	ServiceId   uint64  `json:"service_id"`

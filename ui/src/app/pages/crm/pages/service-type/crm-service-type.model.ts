@@ -1,4 +1,4 @@
-export interface CRM_ServiceTypeModel {
+export interface CRMServiceTypeModel {
   name: string;
   price: number;
   is_visible: boolean;
@@ -6,7 +6,7 @@ export interface CRM_ServiceTypeModel {
   clean_up_time: number;
 }
 
-export const CRM_DummyServiceTypes = (num: number): CRM_ServiceTypeModel[] =>
+export const CRM_DummyServiceTypes = (num: number): CRMServiceTypeModel[] =>
   Array.from(
     { length: num },
     (_, index) =>
@@ -16,5 +16,5 @@ export const CRM_DummyServiceTypes = (num: number): CRM_ServiceTypeModel[] =>
         is_visible: Math.random() > 0.5,
         duration: Math.floor(Math.random() * 1000) + 1,
         clean_up_time: Math.floor(Math.random() * 500) + 1
-      }) as CRM_ServiceTypeModel
+      }) as CRMServiceTypeModel
   );

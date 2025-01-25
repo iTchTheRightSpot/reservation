@@ -1,6 +1,7 @@
 package staff
 
 import (
+	"encoding/json"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/staff"
@@ -21,16 +22,28 @@ func NewStaffHandler(mux *http.ServeMux, w *middleware.Middleware, l utils.ILogg
 }
 
 func (dep *StaffHandler) Register() {
-	mux := http.NewServeMux()
-	role := models.STAFF
 	rp := &models.RolePermissionEnum{
-		Role:        role,
+		Role:        models.STAFF,
 		Permissions: []models.PermissionEnum{models.WRITE},
 	}
 
-	mux.Handle("POST /service", dep.ware.HasRoleAndPermissions(http.HandlerFunc(dep.linkServiceToStaff), rp))
+	dep.mux.Handle("GET /staffs", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(http.HandlerFunc(dep.allStaffs), rp)))
+	dep.mux.Handle("POST /staff/service", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(http.HandlerFunc(dep.linkServiceToStaff), rp)))
+}
 
-	dep.mux.Handle("/staff/", http.StripPrefix("/staff", dep.ware.Authentication(dep.ware.HasRole(mux, &role))))
+func (dep *StaffHandler) allStaffs(w http.ResponseWriter, r *http.Request) {
+	arr, err := dep.service.AllStaffs(r.Context())
+	if err != nil {
+		utils.ErrorResponse(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	if err = json.NewEncoder(w).Encode(arr); err != nil {
+		dep.logger.Error(err.Error())
+	}
 }
 
 func (dep *StaffHandler) linkServiceToStaff(w http.ResponseWriter, r *http.Request) {
@@ -40,19 +53,19 @@ func (dep *StaffHandler) linkServiceToStaff(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	staffUUID := r.URL.Query().Get("staff_id")
+	uuid := r.URL.Query().Get("staff_id")
 
-	if len(staffUUID) < 1 {
+	if len(uuid) < 1 {
 		obj, ok := r.Context().Value(utils.UserContextKey).(*models.JwtObj)
 		if !ok || obj == nil {
 			dep.logger.Error("linkServiceToStaff invalid staff_id")
 			utils.ErrorResponse(w, &utils.AuthenticationError{})
 			return
 		}
-		staffUUID = obj.UserId
+		uuid = obj.UserId
 	}
 
-	err := dep.service.LinkServiceToStaff(r.Context(), strings.TrimSpace(staffUUID), strings.TrimSpace(name))
+	err := dep.service.LinkServiceToStaff(r.Context(), strings.TrimSpace(uuid), strings.TrimSpace(name))
 	if err != nil {
 		dep.logger.Error(err.Error())
 		utils.ErrorResponse(w, err)

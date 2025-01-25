@@ -8,7 +8,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/database"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	profileStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"
 	serviceStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/service_type"
@@ -82,8 +82,8 @@ func preSaveStaff(ps profileStore.IProfileStore, st staffStore.IStaffStore) (*st
 	return &s, nil
 }
 
-func preSaveService(a serviceStore.IServiceTypeStore) (*service.ServiceTypeEntity, error) {
-	s := service.ServiceTypeEntity{
+func preSaveService(a serviceStore.IServiceTypeStore) (*service_type.ServiceTypeEntity, error) {
+	s := service_type.ServiceTypeEntity{
 		Name:        "erp",
 		Price:       19.56,
 		Duration:    3600,

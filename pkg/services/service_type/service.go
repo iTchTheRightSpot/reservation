@@ -2,14 +2,14 @@ package service_type
 
 import (
 	"context"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"strings"
 )
 
 type IServiceType interface {
-	Create(ctx context.Context, p *service.ServiceTypePayload) error
+	Create(ctx context.Context, p *service_type.ServiceTypePayload) error
 	ServiceTypes(ctx context.Context) (interface{}, error)
 	StaffsByServiceTypes(ctx context.Context, services *[]string) (interface{}, error)
 }
@@ -77,8 +77,8 @@ func (dep *serviceTypeImpl) StaffsByServiceTypes(ctx context.Context, services *
 	return arr, nil
 }
 
-func (dep *serviceTypeImpl) Create(ctx context.Context, p *service.ServiceTypePayload) error {
-	s := service.ServiceTypeEntity{
+func (dep *serviceTypeImpl) Create(ctx context.Context, p *service_type.ServiceTypePayload) error {
+	s := service_type.ServiceTypeEntity{
 		Name:        strings.TrimSpace(p.Name),
 		Price:       p.Price,
 		IsVisible:   p.IsVisible,

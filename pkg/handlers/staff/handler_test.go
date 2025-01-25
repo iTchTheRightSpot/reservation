@@ -3,6 +3,7 @@ package staff
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
@@ -10,8 +11,9 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
+	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
@@ -20,6 +22,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"slices"
 	"testing"
 )
 
@@ -63,23 +66,87 @@ func TestStaffHandler(t *testing.T) {
 	adp := stores.NewAdapters(logger, db, prov)
 	jwtSer := auth.NewJwtService(logger, env)
 	m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
-	s := staff.NewStaffService(logger, adp)
+	cach := pkg.NewInMemoryCache[string, []*model.AllStaffsEntity](logger, 10, 10)
+	s := staff.NewStaffService(logger, adp, cach)
 
 	// register routes
 	NewStaffHandler(mux, m, logger, s).Register()
 
-	// pre-save
-	saveStaff, err := preSaveStaff(adp)
-	if err != nil {
-		t.Error(err)
-	}
+	t.Run("should return all staffs", func(t *testing.T) {
+		size := 10
 
-	saveService, err := preSaveService(adp)
-	if err != nil {
-		t.Error(err)
-	}
+		// pre-save
+		for i := 0; i < size; i++ {
+			_, err := preSaveStaff(context.Background(), adp)
+			if err != nil {
+				t.Error(err.Error())
+			}
+		}
+		cred := []models.RolePermissionEnum{
+			{
+				Role:        models.STAFF,
+				Permissions: []models.PermissionEnum{models.WRITE},
+			},
+		}
+
+		obj, _ := jwtSer.Encode(
+			&models.JwtObj{
+				UserId:         "uuid",
+				AccessControls: cred,
+			},
+			utils.TwoDaysInSeconds,
+		)
+
+		// route to test
+		req := httptest.NewRequest(http.MethodGet, "/staffs", nil)
+		req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+		req.Header.Set("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+
+		mux.ServeHTTP(rr, req)
+
+		// assert
+		if rr.Code != http.StatusOK {
+			t.Errorf("expected status code %d, received %d", http.StatusOK, rr.Code)
+			t.Error(rr.Body.String())
+		}
+
+		var arr []model.AllStaffsEntity
+
+		if err := json.NewDecoder(rr.Body).Decode(&arr); err != nil {
+			t.Error(err.Error())
+		}
+
+		if len(arr) != size {
+			t.Errorf("expect size %d given %v", size, len(arr))
+		}
+
+		var temp = make([]model.AllStaffsEntity, len(arr))
+		for i, stf := range arr {
+			b := slices.ContainsFunc(temp, func(entity model.AllStaffsEntity) bool {
+				return stf.Email == entity.Email
+			})
+
+			if b {
+				t.Error(" array contains duplicate")
+				break
+			}
+			temp[i] = stf
+		}
+	})
 
 	t.Run("should link service to staff & also reject", func(t *testing.T) {
+		// pre-save
+		saveStaff, err := preSaveStaff(context.Background(), adp)
+		if err != nil {
+			t.Error(err)
+		}
+
+		saveService, err := preSaveService(adp)
+		if err != nil {
+			t.Error(err)
+		}
+
 		cred := []models.RolePermissionEnum{
 			{
 				Role:        models.STAFF,
@@ -118,13 +185,12 @@ func TestStaffHandler(t *testing.T) {
 	})
 }
 
-func preSaveStaff(a *stores.Adapters) (*model.Staff, error) {
-	ctx := context.Background()
-
+func preSaveStaff(ctx context.Context, a *stores.Adapters) (*model.Staff, error) {
+	id := uuid.New()
 	p := models.ProfileEntity{
-		Firstname: "erp",
-		Lastname:  "erp",
-		Email:     "erp@email.com",
+		Firstname: "firstname",
+		Lastname:  "lastname",
+		Email:     fmt.Sprintf("%s@email.com", id.String()),
 		Password:  "password",
 	}
 
@@ -132,8 +198,17 @@ func preSaveStaff(a *stores.Adapters) (*model.Staff, error) {
 		return nil, err
 	}
 
+	r := models.RoleEntity{Role: models.STAFF, ProfileId: p.ProfileId}
+	if err := a.RoleStore.Save(ctx, &r); err != nil {
+		return nil, err
+	}
+
+	if err := a.PermissionStore.Save(ctx, &models.PermissionEntity{RoleId: r.RoleId, Permission: models.WRITE}); err != nil {
+		return nil, err
+	}
+
 	s := model.Staff{
-		UUID:      uuid.New(),
+		UUID:      id,
 		ProfileId: &p.ProfileId,
 	}
 
@@ -144,8 +219,8 @@ func preSaveStaff(a *stores.Adapters) (*model.Staff, error) {
 	return &s, nil
 }
 
-func preSaveService(a *stores.Adapters) (*service.ServiceTypeEntity, error) {
-	s := service.ServiceTypeEntity{
+func preSaveService(a *stores.Adapters) (*service_type.ServiceTypeEntity, error) {
+	s := service_type.ServiceTypeEntity{
 		Name:        "erp",
 		Price:       19.56,
 		Duration:    3600,

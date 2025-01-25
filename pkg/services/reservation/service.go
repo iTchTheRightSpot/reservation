@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/mail"
@@ -158,13 +158,13 @@ func (dep *reservationService) AvailableDates(ctx context.Context, o *reservatio
 	return *filter, nil
 }
 
-func (dep *reservationService) matchStaffServices(ctx context.Context, requestedServices []string, staffObj *staff.Staff) ([]*service.ServiceTypeEntity, error) {
+func (dep *reservationService) matchStaffServices(ctx context.Context, requestedServices []string, staffObj *staff.Staff) ([]*service_type.ServiceTypeEntity, error) {
 	serviceEntities, err := dep.adapters.ServiceStore.ServicesByStaffId(ctx, staffObj.StaffId, true)
 	if err != nil {
 		return nil, &utils.NotFoundError{Message: "invalid service for staff"}
 	}
 
-	arr := make([]*service.ServiceTypeEntity, 0)
+	arr := make([]*service_type.ServiceTypeEntity, 0)
 
 	for _, entity := range serviceEntities {
 		match := slices.ContainsFunc(requestedServices, func(s string) bool {
@@ -205,7 +205,7 @@ func (dep *reservationService) dateInTimezone(p *reservation.ReservationPayload)
 	return time.UnixMilli(num).In(l).In(dep.logger.Timezone()), nil
 }
 
-func (dep *reservationService) sumUpServiceDuration(s []*service.ServiceTypeEntity) int {
+func (dep *reservationService) sumUpServiceDuration(s []*service_type.ServiceTypeEntity) int {
 	count := 0
 	for _, entity := range s {
 		count += entity.Duration + entity.CleanUpTime
@@ -213,7 +213,7 @@ func (dep *reservationService) sumUpServiceDuration(s []*service.ServiceTypeEnti
 	return count
 }
 
-func (dep *reservationService) sumUpServicePrice(s []*service.ServiceTypeEntity) float64 {
+func (dep *reservationService) sumUpServicePrice(s []*service_type.ServiceTypeEntity) float64 {
 	var count float64
 	for _, entity := range s {
 		count += entity.Price
@@ -221,7 +221,7 @@ func (dep *reservationService) sumUpServicePrice(s []*service.ServiceTypeEntity)
 	return count
 }
 
-func (dep *reservationService) createReservation(ctx context.Context, p *reservation.ReservationPayload, matchedServices []*service.ServiceTypeEntity, s *staff.Staff, start time.Time, end time.Time) error {
+func (dep *reservationService) createReservation(ctx context.Context, p *reservation.ReservationPayload, matchedServices []*service_type.ServiceTypeEntity, s *staff.Staff, start time.Time, end time.Time) error {
 	return dep.adapters.Transaction.RunInTransaction(func(adapters *stores.Adapters) error {
 		priceSum := dep.sumUpServicePrice(matchedServices)
 

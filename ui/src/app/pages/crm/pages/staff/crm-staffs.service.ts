@@ -51,7 +51,7 @@ export class CRMStaffsService {
     this.http
       .get<
         CRMStaffModel[]
-      >(`${environment.domain}staff`, { withCredentials: true })
+      >(`${environment.domain}staffs`, { withCredentials: true })
       .pipe(
         map(arr => {
           this.cache.next(arr);

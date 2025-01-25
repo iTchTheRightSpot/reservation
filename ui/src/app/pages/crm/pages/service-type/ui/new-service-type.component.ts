@@ -7,7 +7,7 @@ import {
   output
 } from '@angular/core';
 import { FormBuilder, FormControl, Validators } from '@angular/forms';
-import { CRM_ServiceTypeModel } from '@crm/pages/service-type/crm-service-type.model';
+import { CRMServiceTypeModel } from '@crm/pages/service-type/crm-service-type.model';
 import { ApiState } from '@root/app.model';
 import { ServiceTypeFormComponent } from './shared/service-type-form.component';
 import { ServiceTypeSelectVisibilityModel } from './shared.model';
@@ -29,7 +29,7 @@ import { ServiceTypeSelectVisibilityModel } from './shared.model';
 export class NewServiceTypeComponent {
   apiState = input.required<ApiState>();
   visible = model.required<boolean>();
-  readonly emitter = output<CRM_ServiceTypeModel>();
+  readonly emitter = output<CRMServiceTypeModel>();
 
   protected readonly state = ApiState;
   protected readonly arr: ServiceTypeSelectVisibilityModel[] = [
@@ -59,6 +59,6 @@ export class NewServiceTypeComponent {
       is_visible: this.form.value.is_visible!!.value,
       duration: this.form.value.duration!!,
       clean_up_time: this.form.value.duration!!
-    } as CRM_ServiceTypeModel);
+    } as CRMServiceTypeModel);
   };
 }

@@ -14,6 +14,7 @@ import (
 type IAccountService interface {
 	Register(ctx context.Context, obj *models.ProfilePayload) error
 	Login(ctx context.Context, obj *models.Login) (*models.JwtResponse, error)
+	ActiveUser(ctx context.Context, obj *models.JwtObj) (*models.ActiveUser, error)
 }
 
 type accountService struct {
@@ -25,6 +26,20 @@ type accountService struct {
 
 func NewAccountService(l utils.ILogger, a *stores.Adapters, j auth.IJwtService, ps auth.IPasswordService) IAccountService {
 	return &accountService{logger: l, adp: a, jwt: j, ps: ps}
+}
+
+func (dep *accountService) ActiveUser(ctx context.Context, obj *models.JwtObj) (*models.ActiveUser, error) {
+	s, err := dep.adp.ProfileStore.ProfileByStaffUUID(ctx, obj.UserId)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return nil, &utils.NotFoundError{Message: "invalid user id"}
+	}
+	return &models.ActiveUser{
+		UserId:         obj.UserId,
+		Firstname:      s.Firstname,
+		ImageKey:       s.ImageKey,
+		AccessControls: obj.AccessControls,
+	}, nil
 }
 
 func (dep *accountService) accessControls(o *models.ProfileRolePermissionEntity) *[]models.RolePermissionEnum {

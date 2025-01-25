@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	reservationModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
-	serviceModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
+	serviceModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
 	staffModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/reservation"

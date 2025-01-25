@@ -2,6 +2,7 @@ package account
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/json"
 	"github.com/google/uuid"
@@ -10,6 +11,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/account"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
@@ -128,6 +130,54 @@ func TestAccountHandler(t *testing.T) {
 		// assert
 		if rr.Code != http.StatusCreated {
 			t.Errorf("expected %d, received %d", http.StatusCreated, rr.Code)
+		}
+	})
+
+	t.Run(" should return active user", func(t *testing.T) {
+		ctx := context.Background()
+
+		pr, err := adp.ProfileStore.ProfileByEmail(ctx, p.Email)
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		staf := staff.Staff{ProfileId: &pr.ProfileId, UUID: uuid.New()}
+		if err = adp.StaffStore.Save(ctx, &staf); err != nil {
+			t.Error(err.Error())
+		}
+
+		cred := []models.RolePermissionEnum{
+			{Role: models.STAFF, Permissions: []models.PermissionEnum{models.READ}},
+		}
+
+		obj, err := jwtSer.Encode(
+			&models.JwtObj{
+				UserId:         staf.UUID.String(),
+				AccessControls: cred,
+			},
+			utils.TwoDaysInSeconds,
+		)
+
+		if err != nil {
+			t.Error(err.Error())
+			return
+		}
+
+		req := httptest.NewRequest(http.MethodGet, "/active", nil)
+		req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+		req.Header.Set("Content-Type", "application/json")
+
+		rr := httptest.NewRecorder()
+
+		mux.ServeHTTP(rr, req)
+
+		if rr.Code != http.StatusOK {
+			t.Errorf("expected %d, received %d", http.StatusOK, rr.Code)
+			t.Error(rr.Body.String())
+		}
+
+		if len(rr.Body.String()) < 1 {
+			t.Error("expected not empty body, received empty body")
 		}
 	})
 }

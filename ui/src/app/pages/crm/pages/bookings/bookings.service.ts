@@ -3,7 +3,8 @@ import { Cache } from '@shared/data-access/cache';
 import {
   BookingsModel,
   BookingsRequestPayload,
-  DummyBookingsModels
+  DummyBookingsModels,
+  UpdateBookingStatusPayload
 } from './bookings.model';
 import { environment } from '@env/environment';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
@@ -64,4 +65,26 @@ export class BookingsService {
       )
     );
   };
+
+  readonly updateBookingStatus = (u: UpdateBookingStatusPayload) =>
+    !environment.production
+      ? of<ApiResponse<any>>({ state: ApiState.LOADED })
+      : this.http
+          .patch<any>(`${environment.domain}crm/reservation`, u, {
+            withCredentials: true
+          })
+          .pipe(
+            map(() => {
+              BookingsService.cache.clear();
+              return { state: ApiState.LOADED };
+            }),
+            startWith({ state: ApiState.LOADING } as ApiResponse<any>),
+            catchError(e => {
+              this.toast.message({
+                state: ToastEnum.ERROR,
+                message: e.message
+              });
+              return of(err<any>(e));
+            })
+          );
 }

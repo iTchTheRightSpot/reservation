@@ -8,8 +8,9 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/database"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"log"
@@ -31,11 +32,12 @@ func main() {
 		return
 	}
 
+	ps := auth.NewPasswordService(l)
 	a := stores.NewAdapters(l, db, stores.NewTransactionProvider(l, db))
 	ctx := context.Background()
 
 	// 1. Create profiles, roles, permissions & staffs
-	stafs := staffs(ctx, a)
+	stafs := staffs(ctx, a, ps)
 
 	// 2. Create services.
 	s := services(ctx, a)
@@ -47,9 +49,9 @@ func main() {
 	schedules(ctx, l.Date(), a, &stafs)
 }
 
-func services(ctx context.Context, a *stores.Adapters) [4]service.ServiceTypeEntity {
-	arr := [4]service.ServiceTypeEntity{}
-	s := service.ServiceTypeEntity{
+func services(ctx context.Context, a *stores.Adapters) [4]service_type.ServiceTypeEntity {
+	arr := [4]service_type.ServiceTypeEntity{}
+	s := service_type.ServiceTypeEntity{
 		Name:        "Men hair",
 		Price:       20.99,
 		IsVisible:   true,
@@ -79,15 +81,17 @@ func services(ctx context.Context, a *stores.Adapters) [4]service.ServiceTypeEnt
 	return arr
 }
 
-func staffs(ctx context.Context, a *stores.Adapters) [3]staff.Staff {
+func staffs(ctx context.Context, a *stores.Adapters, ps auth.IPasswordService) [3]staff.Staff {
 	arr := [3]staff.Staff{}
 
 	for i := 0; i < 3; i++ {
+		pass, _ := ps.Encode("Password123@#$")
+
 		p := models.ProfileEntity{
 			Firstname: fmt.Sprintf("staff-%v", i+1),
 			Lastname:  fmt.Sprintf("Lastname-%v", i+1),
 			Email:     fmt.Sprintf("staff-%v@email.com", i+1),
-			Password:  "password",
+			Password:  string(pass),
 		}
 
 		if err := a.ProfileStore.Save(ctx, &p); err != nil {
@@ -133,10 +137,50 @@ func staffs(ctx context.Context, a *stores.Adapters) [3]staff.Staff {
 		arr[i] = st
 	}
 
+	pass, _ := ps.Encode("Password123@#$")
+	p := models.ProfileEntity{
+		Firstname: "Developer",
+		Lastname:  "Lastname",
+		Email:     "developer@email.com",
+		Password:  string(pass),
+	}
+
+	_ = a.ProfileStore.Save(ctx, &p)
+
+	r1 := models.RoleEntity{Role: models.STAFF, ProfileId: p.ProfileId}
+	_ = a.RoleStore.Save(ctx, &r1)
+	_ = a.PermissionStore.Save(ctx, &models.PermissionEntity{
+		Permission: models.READ,
+		RoleId:     r1.RoleId,
+	})
+	_ = a.PermissionStore.Save(ctx, &models.PermissionEntity{
+		Permission: models.WRITE,
+		RoleId:     r1.RoleId,
+	})
+
+	r2 := models.RoleEntity{Role: models.DEVELOPER, ProfileId: p.ProfileId}
+	_ = a.RoleStore.Save(ctx, &r2)
+	_ = a.PermissionStore.Save(ctx, &models.PermissionEntity{
+		Permission: models.READ,
+		RoleId:     r2.RoleId,
+	})
+	_ = a.PermissionStore.Save(ctx, &models.PermissionEntity{
+		Permission: models.WRITE,
+		RoleId:     r2.RoleId,
+	})
+
+	lorem := "Lorem ipsum dolor sit amet, consectetur adipisicing elit."
+	st := staff.Staff{
+		UUID:      uuid.New(),
+		Bio:       &lorem,
+		ProfileId: &p.ProfileId,
+	}
+	_ = a.StaffStore.Save(ctx, &st)
+
 	return arr
 }
 
-func assignServices(ctx context.Context, a *stores.Adapters, s *[4]service.ServiceTypeEntity, st *[3]staff.Staff) {
+func assignServices(ctx context.Context, a *stores.Adapters, s *[4]service_type.ServiceTypeEntity, st *[3]staff.Staff) {
 	windowSize := 2
 	idx := 0
 

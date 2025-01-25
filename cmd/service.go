@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
+	staffModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/account"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
@@ -34,18 +35,13 @@ func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *
 	j := auth.NewJwtService(l, e)
 
 	return &serviceRegistry{
-		JwtService:      j,
-		ScheduleService: schedule.NewScheduleService(l, a),
-		ServiceImpl:     service_type.NewServiceImpl(l, a),
-		StaffService:    staff.NewStaffService(l, a),
-		ReservationService: reservation.NewReservationService(
-			l,
-			a,
-			pkg.NewInMemoryCache[string, []*model.ReservationTimeSlots](l, 30, 30),
-			m,
-		),
-		AccountService:  account.NewAccountService(l, a, j, p),
-		PasswordService: p,
-		MailService:     m,
+		JwtService:         j,
+		ScheduleService:    schedule.NewScheduleService(l, a),
+		ServiceImpl:        service_type.NewServiceImpl(l, a),
+		StaffService:       staff.NewStaffService(l, a, pkg.NewInMemoryCache[string, []*staffModel.AllStaffsEntity](l, 10, 10)),
+		ReservationService: reservation.NewReservationService(l, a, pkg.NewInMemoryCache[string, []*model.ReservationTimeSlots](l, 30, 30), m),
+		AccountService:     account.NewAccountService(l, a, j, p),
+		PasswordService:    p,
+		MailService:        m,
 	}
 }

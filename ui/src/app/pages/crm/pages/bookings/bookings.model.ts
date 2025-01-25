@@ -23,6 +23,11 @@ export interface BookingsRequestPayload {
   size: number;
 }
 
+export interface UpdateBookingStatusPayload {
+  reservation_id: number;
+  status: BookingStatus;
+}
+
 export const DummyBookingsModels = (num: number) =>
   Array.from({ length: num }, (_, index) => {
     const from = new Date();

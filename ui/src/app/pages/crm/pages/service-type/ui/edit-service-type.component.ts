@@ -5,7 +5,7 @@ import {
   OnChanges,
   SimpleChanges
 } from '@angular/core';
-import { CRM_ServiceTypeModel } from '@crm/pages/service-type/crm-service-type.model';
+import { CRMServiceTypeModel } from '@crm/pages/service-type/crm-service-type.model';
 import { NewServiceTypeComponent } from './new-service-type.component';
 import { ServiceTypeFormComponent } from './shared/service-type-form.component';
 
@@ -27,11 +27,11 @@ export class EditServiceTypeComponent
   extends NewServiceTypeComponent
   implements OnChanges
 {
-  service = input.required<CRM_ServiceTypeModel | undefined>();
+  service = input.required<CRMServiceTypeModel | undefined>();
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['service']) {
-      const curr = changes['service'].currentValue as CRM_ServiceTypeModel;
+      const curr = changes['service'].currentValue as CRMServiceTypeModel;
       if (curr) {
         this.form.controls['name'].setValue(curr.name);
         this.form.controls['price'].setValue(curr.price);

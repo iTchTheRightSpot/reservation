@@ -1,6 +1,7 @@
 package account
 
 import (
+	"encoding/json"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
@@ -30,11 +31,35 @@ func (dep *AccountHandler) Register() {
 		Permissions: []models.PermissionEnum{models.WRITE},
 	}
 
+	dep.mux.Handle("GET /active", dep.ware.Authentication(http.HandlerFunc(dep.activeUser)))
+
 	ware1 := middleware.RequestBodyMiddleware[models.ProfilePayload]{Logger: dep.logger}
 	dep.mux.Handle("POST /account/register", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(ware1.RequestBody(http.HandlerFunc(dep.register)), rp)))
 
 	ware2 := middleware.RequestBodyMiddleware[models.Login]{Logger: dep.logger}
 	dep.mux.Handle("POST /account/login", ware2.RequestBody(http.HandlerFunc(dep.login)))
+}
+
+func (dep *AccountHandler) activeUser(w http.ResponseWriter, r *http.Request) {
+	obj, ok := r.Context().Value(utils.UserContextKey).(*models.JwtObj)
+	if !ok || obj == nil {
+		dep.logger.Error("activeUser: invalid user context")
+		utils.ErrorResponse(w, &utils.AuthenticationError{})
+		return
+	}
+
+	a, err := dep.service.ActiveUser(r.Context(), obj)
+	if err != nil {
+		utils.ErrorResponse(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	if err = json.NewEncoder(w).Encode(a); err != nil {
+		dep.logger.Error(err.Error())
+	}
 }
 
 func (dep *AccountHandler) register(w http.ResponseWriter, r *http.Request) {

@@ -14,6 +14,7 @@ type IProfileStore interface {
 	Save(ctx context.Context, p *models.ProfileEntity) error
 	ProfileByEmail(ctx context.Context, email string) (*models.ProfileEntity, error)
 	ProfileRolesAndPermissionByEmail(ctx context.Context, email string) (*models.ProfileRolePermissionEntity, error)
+	ProfileByStaffUUID(ctx context.Context, userId string) (*models.ProfileEntity, error)
 }
 
 type profileStore struct {
@@ -23,6 +24,27 @@ type profileStore struct {
 
 func NewProfileStore(l utils.ILogger, db pkg.Db) IProfileStore {
 	return &profileStore{logger: l, db: db}
+}
+
+func (dep *profileStore) ProfileByStaffUUID(ctx context.Context, userId string) (*models.ProfileEntity, error) {
+	var p models.ProfileEntity
+
+	q := `
+		SELECT p.* FROM profile p
+      	INNER JOIN staff s ON s.profile_id = p.profile_id
+		WHERE s.uuid = $1
+		LIMIT 1
+    `
+
+	row := dep.db.QueryRowContext(ctx, q, userId)
+	err := row.Scan(&p.ProfileId, &p.Firstname, &p.Lastname, &p.Email, &p.Password, &p.Locked, &p.ImageKey)
+
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return nil, errors.New("error retrieving profile by userId")
+	}
+
+	return &p, nil
 }
 
 func (dep *profileStore) ProfileRolesAndPermissionByEmail(ctx context.Context, email string) (*models.ProfileRolePermissionEntity, error) {
@@ -102,7 +124,7 @@ func (dep *profileStore) ProfileByEmail(ctx context.Context, email string) (*mod
 	var p models.ProfileEntity
 
 	row := dep.db.QueryRowContext(ctx, "SELECT * FROM profile WHERE email = $1 LIMIT 1", email)
-	err := row.Scan(&p.ProfileId, &p.Firstname, &p.Lastname, &p.Email, &p.Password, &p.ImageKey)
+	err := row.Scan(&p.ProfileId, &p.Firstname, &p.Lastname, &p.Email, &p.Password, &p.Locked, &p.ImageKey)
 
 	if err != nil {
 		dep.logger.Error(err.Error())

@@ -1,4 +1,4 @@
-<div class="w-full flex flex-col gap-8">
+<div class="w-full flex flex-col gap-4">
   <h1 class="text-lg font-semibold underline">Contact Details</h1>
 
   <!-- phone -->
@@ -51,44 +51,112 @@
 
   <p-divider />
 
-  <h1 class="text-lg font-semibold underline">Booking Details</h1>
+  <h1 class="text-lg font-semibold underline">
+    Booking Details
+    @if (booking().status === state.CONFIRMED) {
+      <p-tag icon="pi pi-check" severity="success" [value]="state.CONFIRMED" />
+    } @else {
+      <p-tag icon="pi pi-times" severity="danger" [value]="state.CANCELLED" />
+    }
+  </h1>
 
   <!-- status -->
-  <div class="w-full flex flex-col gap-2">
-    <p-badge
-      [value]="booking().status"
-      [severity]="booking().status === state.CONFIRMED ? 'success' : 'danger'"
+  <div class="w-full flex gap-2 items-end">
+    <div class="w-full">
+      <label for="statuses" class="block">Update Status</label>
+      <p-select
+        id="statuses"
+        placeholder="Select a status"
+        [(ngModel)]="selectedBookingStatus"
+        [options]="statuses(booking().status)"
+        optionLabel="name"
+        class="w-full"
+      />
+    </div>
+
+    <p-confirm-popup />
+    <p-button
+      label="Update"
+      (onClick)="confirm($event, booking().reservation_id)"
     />
   </div>
 
-  <!-- services -->
-  <div class="w-full">
-    <p-floatlabel class="w-full" variant="on">
+  <!-- from & to -->
+  <div class="w-full flex gap-2 flex-col md:flex-row items-end">
+    <div class="w-full">
+      <div class="flex-auto">
+        <label class="block" for="from">From</label>
+        <input
+          id="from"
+          [disabled]="true"
+          [value]="fm(booking().scheduled_for)"
+          type="text"
+          class="w-full"
+          pInputText
+          placeholder="name*"
+        />
+      </div>
+    </div>
+
+    <div class="w-full">
+      <div class="flex-auto">
+        <label class="block" for="expire">To</label>
+        <input
+          [disabled]="true"
+          [value]="fm(booking().expire_at)"
+          type="text"
+          id="expire"
+          class="w-full"
+          pInputText
+          placeholder="expire at"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- total & services -->
+  <div class="w-full flex gap-2 flex-col md:flex-row items-end">
+    <div class="w-full">
+      <div class="flex-auto">
+        <label class="block" for="amount"> Estimated total </label>
+        <p-input-number
+          id="amount"
+          class="w-full"
+          [(ngModel)]="booking().price"
+          [disabled]="true"
+          inputId="currency-ngn"
+          mode="currency"
+          currency="NGN"
+          locale="en-NG"
+        />
+      </div>
+    </div>
+
+    <!-- services -->
+    <div class="w-full">
+      <label for="services" class="block">Services</label>
       <p-select
-        id="on_label"
+        id="services"
         inputId="on_label"
         [options]="services(booking().services)"
         optionLabel="name"
         class="w-full"
       />
-      <label for="on_label">Services</label>
-    </p-floatlabel>
+    </div>
   </div>
 
-  <!-- description -->
+  <!-- appointment notes -->
   <div>
-    <p-floatlabel variant="on">
-      <textarea
-        [disabled]="true"
-        pTextarea
-        id="over_label"
-        [value]="booking().description"
-        rows="5"
-        cols="30"
-        style="resize: none"
-        class="h-full w-full"
-      ></textarea>
-      <label for="over_label">appointment note</label>
-    </p-floatlabel>
+    <label class="block" for="notes">Appointment note</label>
+    <textarea
+      [disabled]="true"
+      pTextarea
+      id="notes"
+      [value]="booking().description || ''"
+      rows="5"
+      cols="30"
+      style="resize: none"
+      class="h-full w-full"
+    ></textarea>
   </div>
 </div>

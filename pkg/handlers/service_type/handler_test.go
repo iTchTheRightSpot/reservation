@@ -12,7 +12,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
+	serviceModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/service_type"
@@ -88,7 +88,7 @@ func TestServiceTypeHandler(t *testing.T) {
 			utils.TwoDaysInSeconds,
 		)
 
-		dtoBytes, err := json.Marshal(service.ServiceTypePayload{
+		dtoBytes, err := json.Marshal(serviceModel.ServiceTypePayload{
 			Name:        uuid.New().String(),
 			Price:       15.97,
 			Duration:    3600,
@@ -99,7 +99,7 @@ func TestServiceTypeHandler(t *testing.T) {
 			t.Errorf("failed to marshal SchedulePayload: %s", err)
 		}
 
-		req := httptest.NewRequest(http.MethodPost, "/service", bytes.NewBuffer(dtoBytes))
+		req := httptest.NewRequest(http.MethodPost, "/crm/service", bytes.NewBuffer(dtoBytes))
 		req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
 		req.Header.Set("Content-Type", "application/json")
 
@@ -253,7 +253,7 @@ func TestServiceTypeHandler(t *testing.T) {
 	})
 }
 
-func preSave(t *testing.T, adapters *stores.Adapters, ctx context.Context) service.ServiceTypeEntity {
+func preSave(t *testing.T, adapters *stores.Adapters, ctx context.Context) serviceModel.ServiceTypeEntity {
 	prof := models.ProfileEntity{Firstname: "f", Lastname: "l", Email: uuid.NewString(), Password: "password"}
 	if err := adapters.ProfileStore.Save(ctx, &prof); err != nil {
 		t.Error(err.Error())
@@ -264,7 +264,7 @@ func preSave(t *testing.T, adapters *stores.Adapters, ctx context.Context) servi
 		t.Error(err.Error())
 	}
 
-	serv := service.ServiceTypeEntity{
+	serv := serviceModel.ServiceTypeEntity{
 		Name:        uuid.NewString(),
 		Price:       20,
 		IsVisible:   true,

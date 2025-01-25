@@ -6,15 +6,15 @@ import (
 	"errors"
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 )
 
 type IServiceTypeStore interface {
-	Save(ctx context.Context, s *service.ServiceTypeEntity) error
-	ServiceByName(ctx context.Context, name string) (*service.ServiceTypeEntity, error)
-	ServicesByStaffId(ctx context.Context, staffId uint64, visible bool) ([]*service.ServiceTypeEntity, error)
-	ServicesByStatus(ctx context.Context, b bool) ([]*service.ServiceTypeEntity, error)
+	Save(ctx context.Context, s *service_type.ServiceTypeEntity) error
+	ServiceByName(ctx context.Context, name string) (*service_type.ServiceTypeEntity, error)
+	ServicesByStaffId(ctx context.Context, staffId uint64, visible bool) ([]*service_type.ServiceTypeEntity, error)
+	ServicesByStatus(ctx context.Context, b bool) ([]*service_type.ServiceTypeEntity, error)
 }
 
 type serviceTypeStore struct {
@@ -26,8 +26,8 @@ func NewServiceTypeStore(l utils.ILogger, db pkg.Db) IServiceTypeStore {
 	return &serviceTypeStore{logger: l, db: db}
 }
 
-func (dep *serviceTypeStore) ServicesByStatus(ctx context.Context, b bool) ([]*service.ServiceTypeEntity, error) {
-	var arr []*service.ServiceTypeEntity
+func (dep *serviceTypeStore) ServicesByStatus(ctx context.Context, b bool) ([]*service_type.ServiceTypeEntity, error) {
+	var arr []*service_type.ServiceTypeEntity
 
 	q := "SELECT * FROM service_type WHERE is_visible = $1"
 
@@ -40,7 +40,7 @@ func (dep *serviceTypeStore) ServicesByStatus(ctx context.Context, b bool) ([]*s
 	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
 
 	for rows.Next() {
-		var s service.ServiceTypeEntity
+		var s service_type.ServiceTypeEntity
 
 		err = rows.Scan(&s.ServiceId, &s.Name, &s.Price, &s.IsVisible, &s.Duration, &s.CleanUpTime)
 
@@ -61,7 +61,7 @@ func (dep *serviceTypeStore) ServicesByStatus(ctx context.Context, b bool) ([]*s
 	return arr, err
 }
 
-func (dep *serviceTypeStore) Save(ctx context.Context, s *service.ServiceTypeEntity) error {
+func (dep *serviceTypeStore) Save(ctx context.Context, s *service_type.ServiceTypeEntity) error {
 	if s == nil {
 		return errors.New("service type entity is nil")
 	}
@@ -83,8 +83,8 @@ func (dep *serviceTypeStore) Save(ctx context.Context, s *service.ServiceTypeEnt
 	return nil
 }
 
-func (dep *serviceTypeStore) ServiceByName(ctx context.Context, name string) (*service.ServiceTypeEntity, error) {
-	var s service.ServiceTypeEntity
+func (dep *serviceTypeStore) ServiceByName(ctx context.Context, name string) (*service_type.ServiceTypeEntity, error) {
+	var s service_type.ServiceTypeEntity
 
 	var q = `
 		SELECT
@@ -103,8 +103,8 @@ func (dep *serviceTypeStore) ServiceByName(ctx context.Context, name string) (*s
 	return &s, nil
 }
 
-func (dep *serviceTypeStore) ServicesByStaffId(ctx context.Context, staffId uint64, visible bool) ([]*service.ServiceTypeEntity, error) {
-	var arr []*service.ServiceTypeEntity
+func (dep *serviceTypeStore) ServicesByStaffId(ctx context.Context, staffId uint64, visible bool) ([]*service_type.ServiceTypeEntity, error) {
+	var arr []*service_type.ServiceTypeEntity
 
 	var q = `
 	 SELECT s.* FROM service_type s
@@ -121,7 +121,7 @@ func (dep *serviceTypeStore) ServicesByStaffId(ctx context.Context, staffId uint
 	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
 
 	for rows.Next() {
-		var s service.ServiceTypeEntity
+		var s service_type.ServiceTypeEntity
 
 		err = rows.Scan(&s.ServiceId, &s.Name, &s.Price, &s.IsVisible, &s.Duration, &s.CleanUpTime)
 
