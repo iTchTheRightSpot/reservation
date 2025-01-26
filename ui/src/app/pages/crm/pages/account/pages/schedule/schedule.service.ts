@@ -54,7 +54,7 @@ export class ScheduleService {
           : this.http
               .get<
                 Schedule[]
-              >(`${environment.domain}schedule?month=${d.getMonth()}&year=${d.getFullYear()}&page=${page}&size=${size}`, { withCredentials: true })
+              >(`${environment.domain}schedule?month=${1 + d.getMonth()}&year=${d.getFullYear()}&page=${page}&size=${size}`, { withCredentials: true })
               .pipe(
                 map(arr => {
                   ScheduleService.cache.setItem(key, arr);

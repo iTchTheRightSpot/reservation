@@ -3,6 +3,7 @@ package config
 import (
 	"cmp"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"net/http"
 	"os"
 )
 
@@ -29,6 +30,7 @@ func (dep *SecretVariables) Config() *SecretVariables {
 			CookieName:   cmp.Or(os.Getenv("COOKIENAME"), "RESERVATION_COOKIE"),
 			CookieSecure: profile == "production",
 			CookieDomain: cmp.Or(os.Getenv("COOKIEDOMAIN"), "localhost"),
+			SameSite:     http.SameSiteLaxMode,
 		},
 	}
 }

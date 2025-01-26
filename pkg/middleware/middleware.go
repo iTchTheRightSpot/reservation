@@ -108,7 +108,12 @@ func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 			} else {
 				cookie.Value = o.Token
 				cookie.Expires = o.ExpireAt
+				cookie.Path = "/"
+				cookie.HttpOnly = true
+				cookie.SameSite = dep.Param.SameSite
+				cookie.Secure = dep.Param.CookieSecure
 				http.SetCookie(w, cookie)
+
 				dep.Logger.Log("refreshed jwt")
 			}
 		}

@@ -20,6 +20,7 @@ type CookieParam struct {
 	CookieName   string
 	CookieDomain string
 	CookieSecure bool
+	SameSite     http.SameSite
 }
 
 func ErrorResponse(w http.ResponseWriter, err error) {

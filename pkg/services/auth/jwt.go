@@ -73,7 +73,7 @@ func (dep *jwtService) Encode(o *models.JwtObj, expirationInSeconds int) (*model
 		jwt.MapClaims{
 			"sub": o.UserId,
 			"obj": o,
-			"iss": "Enterprise Resource Planning powered by S.EJ.U development",
+			"iss": "Reservation application powered by S.EJ.U development",
 			"exp": exp.Unix(),
 			"iat": dep.logger.Date().Unix(),
 		},
