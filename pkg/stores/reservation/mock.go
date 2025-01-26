@@ -38,9 +38,9 @@ func (dep *MockReservationStore) ReservationById(context.Context, uint64) (*rese
 	return dep.ReservationByIdObj, dep.ReservationByIdError
 }
 
-func (dep *MockReservationStore) UpdateReservationStatus(context.Context, uint64, reservation.ReservationEnum) error {
+func (dep *MockReservationStore) UpdateReservationStatus(context.Context, uint64, reservation.ReservationEnum) (int64, error) {
 	dep.UpdateReservationStatusCalled = true
-	return dep.UpdateReservationStatusError
+	return 0, dep.UpdateReservationStatusError
 }
 
 type MockReservationServiceStore struct {

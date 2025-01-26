@@ -17,7 +17,7 @@ type IReservationStore interface {
 	CountReservationsInRange(ctx context.Context, staffId uint64, start, end time.Time, statuses ...reservation.ReservationEnum) (int, error)
 	Save(ctx context.Context, r *reservation.Reservation) error
 	ReservationById(ctx context.Context, reservationId uint64) (*reservation.Reservation, error)
-	UpdateReservationStatus(ctx context.Context, reservationId uint64, status reservation.ReservationEnum) error
+	UpdateReservationStatus(ctx context.Context, reservationId uint64, status reservation.ReservationEnum) (int64, error)
 	BookingsInRange(ctx context.Context, staffId uint64, from time.Time, to time.Time) ([]*reservation.CRMBookingsResponse, error)
 }
 
@@ -96,16 +96,21 @@ func (dep *reservationStore) BookingsInRange(ctx context.Context, staffId uint64
 	return arr, err
 }
 
-func (dep *reservationStore) UpdateReservationStatus(ctx context.Context, reservationId uint64, status reservation.ReservationEnum) error {
+func (dep *reservationStore) UpdateReservationStatus(ctx context.Context, reservationId uint64, status reservation.ReservationEnum) (int64, error) {
 	q := "UPDATE reservation SET status = $2 WHERE reservation_id = $1"
 
-	_, err := dep.db.ExecContext(ctx, q, reservationId, status)
+	r, err := dep.db.ExecContext(ctx, q, reservationId, status)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return errors.New("error updating reservation status")
+		return 0, errors.New("error updating reservation status")
 	}
 
-	return nil
+	num, err := r.RowsAffected()
+	if err != nil {
+		return 0, errors.New("error displaying rows affected")
+	}
+
+	return num, nil
 }
 
 func (dep *reservationStore) ReservationById(ctx context.Context, reservationId uint64) (*reservation.Reservation, error) {

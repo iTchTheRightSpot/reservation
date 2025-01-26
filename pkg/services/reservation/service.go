@@ -24,6 +24,7 @@ type IReservationService interface {
 	AvailableDates(ctx context.Context, o *reservation.AvailableTimesPayload) ([]*reservation.ReservationTimeSlots, error)
 	Cancel(ctx context.Context, reservationId uint64) error
 	Bookings(ctx context.Context, m *reservation.CRMBookingsPayload) (interface{}, error)
+	UpdateBookingStatus(ctx context.Context, dto *reservation.UpdateBookingPayload) error
 }
 
 type reservationService struct {
@@ -313,7 +314,7 @@ func (dep *reservationService) Cancel(ctx context.Context, reservationId uint64)
 		return &utils.BadRequestError{Message: "reservation already cancelled"}
 	}
 
-	err = dep.adapters.ReservationStore.UpdateReservationStatus(ctx, r.ReservationId, reservation.CANCELLED)
+	_, err = dep.adapters.ReservationStore.UpdateReservationStatus(ctx, r.ReservationId, reservation.CANCELLED)
 	if err != nil {
 		dep.logger.Error(err.Error())
 		return &utils.InsertionError{Message: "error cancelling reservation"}
@@ -343,4 +344,19 @@ func (dep *reservationService) Bookings(ctx context.Context, o *reservation.CRMB
 	}
 
 	return arr, nil
+}
+
+func (dep *reservationService) UpdateBookingStatus(ctx context.Context, dto *reservation.UpdateBookingPayload) error {
+	num, err := dep.adapters.ReservationStore.UpdateReservationStatus(ctx, dto.ReservationId, dto.Status)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return &utils.InsertionError{Message: "error updating booking status"}
+	}
+
+	if num == 0 {
+		return &utils.NotFoundError{Message: "update failed. invalid reservation id"}
+	}
+
+	dep.logger.Log("number of booking status rows affected", num)
+	return nil
 }

@@ -30,12 +30,15 @@ func (dep *ReservationHandler) Register() {
 		Role:        models.STAFF,
 		Permissions: []models.PermissionEnum{models.WRITE},
 	}
-	ware := middleware.RequestBodyMiddleware[model.ReservationPayload]{Logger: dep.logger}
 	dep.mux.HandleFunc("GET /reservation", dep.availableDates)
-	dep.mux.Handle("POST /reservation", ware.RequestBody(http.HandlerFunc(dep.create)))
 	dep.mux.HandleFunc("POST /reservation/cancel/{reservation_id}", dep.cancel)
+	ware1 := middleware.RequestBodyMiddleware[model.ReservationPayload]{Logger: dep.logger}
+	dep.mux.Handle("POST /reservation", ware1.RequestBody(http.HandlerFunc(dep.create)))
 
 	dep.mux.Handle("GET /crm/reservation", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(http.HandlerFunc(dep.bookings), &rp)))
+
+	ware2 := middleware.RequestBodyMiddleware[model.UpdateBookingPayload]{Logger: dep.logger}
+	dep.mux.Handle("PUT /crm/reservation", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(ware2.RequestBody(http.HandlerFunc(dep.updateBookingStatus)), &rp)))
 }
 
 func (dep *ReservationHandler) create(w http.ResponseWriter, r *http.Request) {
@@ -209,4 +212,21 @@ func (dep *ReservationHandler) bookings(w http.ResponseWriter, r *http.Request) 
 	if err = json.NewEncoder(w).Encode(dates); err != nil {
 		dep.logger.Error(err.Error())
 	}
+}
+
+func (dep *ReservationHandler) updateBookingStatus(w http.ResponseWriter, r *http.Request) {
+	dto, err := pkg.ReadBody[model.UpdateBookingPayload](r)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, err)
+		return
+	}
+
+	if err = dep.service.UpdateBookingStatus(r.Context(), dto); err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

@@ -390,6 +390,59 @@ func TestReservationHandler(t *testing.T) {
 				t.Errorf("expected non-empty body, got %s", bo)
 			}
 		})
+
+		t.Run("should update booking status", func(t *testing.T) {
+			t.Run("reject invalid reservation id", func(t *testing.T) {
+				body := model.UpdateBookingPayload{
+					ReservationId: 10000,
+					Status:        model.CANCELLED,
+				}
+
+				bts, err := json.Marshal(body)
+				if err != nil {
+					t.Fatalf("failed to marshal UpdateBookingPayload: %s", err.Error())
+				}
+
+				req := httptest.NewRequest(http.MethodPut, "/crm/reservation", bytes.NewBuffer(bts))
+				req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+				req.Header.Set("Content-Type", "application/json")
+				rr := httptest.NewRecorder()
+
+				mux.ServeHTTP(rr, req)
+
+				if rr.Code != http.StatusNotFound {
+					t.Errorf("expected status code %d, got %d", http.StatusNotFound, rr.Code)
+				}
+			})
+
+			t.Run("success", func(t *testing.T) {
+				first, err := firstReservation(ctx)
+				if err != nil {
+					t.Errorf(err.Error())
+				}
+
+				body := model.UpdateBookingPayload{
+					ReservationId: first.ReservationId,
+					Status:        model.CANCELLED,
+				}
+
+				bts, err := json.Marshal(body)
+				if err != nil {
+					t.Fatalf("failed to marshal UpdateBookingPayload: %s", err.Error())
+				}
+
+				req := httptest.NewRequest(http.MethodPut, "/crm/reservation", bytes.NewBuffer(bts))
+				req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+				req.Header.Set("Content-Type", "application/json")
+				rr := httptest.NewRecorder()
+
+				mux.ServeHTTP(rr, req)
+
+				if rr.Code != http.StatusNoContent {
+					t.Errorf("expected status code %d, got %d", http.StatusNoContent, rr.Code)
+				}
+			})
+		})
 	})
 }
 

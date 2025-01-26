@@ -79,3 +79,8 @@ type CRMBookingsResponse struct {
 	ExpireAt      time.Time       `json:"expire_at"`
 	Services      []string        `json:"services"`
 }
+
+type UpdateBookingPayload struct {
+	ReservationId uint64          `json:"reservation_id" validate:"required"`
+	Status        ReservationEnum `json:"status" validate:"required"`
+}
