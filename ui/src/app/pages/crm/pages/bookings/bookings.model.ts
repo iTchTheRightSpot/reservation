@@ -11,7 +11,6 @@ export interface BookingsModel {
   phone: string | null;
   price: number;
   status: BookingStatus;
-  created_at: number;
   scheduled_for: number;
   expire_at: number;
   services: string[];
@@ -19,6 +18,7 @@ export interface BookingsModel {
 
 export interface BookingsRequestPayload {
   user_id: string;
+  date: Date;
   page: number;
   size: number;
 }
@@ -47,7 +47,6 @@ export const DummyBookingsModels = (num: number) =>
       price: Math.random() * 100,
       status:
         index % 2 === 0 ? BookingStatus.CONFIRMED : BookingStatus.CANCELLED,
-      created_at: from.getTime(),
       scheduled_for: from.getTime(),
       expire_at: to.getTime(),
       services: ['erp', 'mens haircut']

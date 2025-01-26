@@ -39,7 +39,7 @@ func (dep *HandlerRegistry) Initialize() http.Handler {
 	schedule.NewScheduleHandler(v1, dep.ware, dep.lg, dep.ss.ScheduleService).Register()
 	service_type.NewServiceTypeHandler(v1, dep.lg, dep.ss.ServiceImpl, dep.ware).Register()
 	staff.NewStaffHandler(v1, dep.ware, dep.lg, dep.ss.StaffService).Register()
-	reservation.NewReservationHandler(v1, dep.lg, dep.ss.ReservationService).Register()
+	reservation.NewReservationHandler(v1, dep.lg, dep.ware, dep.ss.ReservationService).Register()
 	account.NewAccountHandler(v1, dep.ware, dep.lg, dep.env, dep.ss.PasswordService, dep.ss.AccountService).Register()
 
 	dep.mux.Handle("/api/v1/", http.StripPrefix("/api/v1", v1))

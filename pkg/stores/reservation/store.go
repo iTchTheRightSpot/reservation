@@ -2,6 +2,8 @@ package reservation
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
@@ -16,6 +18,7 @@ type IReservationStore interface {
 	Save(ctx context.Context, r *reservation.Reservation) error
 	ReservationById(ctx context.Context, reservationId uint64) (*reservation.Reservation, error)
 	UpdateReservationStatus(ctx context.Context, reservationId uint64, status reservation.ReservationEnum) error
+	BookingsInRange(ctx context.Context, staffId uint64, from time.Time, to time.Time) ([]*reservation.CRMBookingsResponse, error)
 }
 
 type reservationStore struct {
@@ -25,6 +28,72 @@ type reservationStore struct {
 
 func NewReservationStore(l utils.ILogger, db pkg.Db) IReservationStore {
 	return &reservationStore{logger: l, db: db}
+}
+
+func (dep *reservationStore) BookingsInRange(ctx context.Context, staffId uint64, from time.Time, to time.Time) ([]*reservation.CRMBookingsResponse, error) {
+	q := `
+		SELECT
+			r.reservation_id,
+			r.name,
+			r.email,
+			r.description,
+			r.phone,
+			r.price,
+			r.status,
+			r.scheduled_for,
+			r.expire_at,
+			json_agg(s.name) as services
+		FROM reservation r
+		INNER JOIN reservation_service rs ON rs.reservation_id = r.reservation_id
+		INNER JOIN service_type s ON s.service_id = rs.service_id
+		WHERE r.staff_id = $1 AND (r.scheduled_for BETWEEN $2 AND $3)
+		GROUP BY r.reservation_id, r.name, r.email, r.description, r.phone, r.price, r.status, r.scheduled_for, r.expire_at
+	`
+
+	rows, err := dep.db.QueryContext(ctx, q, staffId, from, to)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return nil, errors.New("error retrieving bookings")
+	}
+
+	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
+
+	var arr []*reservation.CRMBookingsResponse
+
+	for rows.Next() {
+		var o reservation.CRMBookingsResponse
+		var data json.RawMessage
+
+		if err = rows.Scan(
+			&o.ReservationId,
+			&o.Name,
+			&o.Email,
+			&o.Description,
+			&o.Phone,
+			&o.Price,
+			&o.Status,
+			&o.ScheduledFor,
+			&o.ExpireAt,
+			&data,
+		); err != nil {
+			dep.logger.Error(err.Error())
+			return nil, errors.New("error scanning database rows")
+		}
+
+		if err = json.Unmarshal(data, &o.Services); err != nil {
+			dep.logger.Error(err.Error())
+			return nil, errors.New("error unmarshalling services from bookings")
+		}
+
+		arr = append(arr, &o)
+	}
+
+	if err = rows.Err(); err != nil {
+		dep.logger.Error(err.Error())
+		return nil, errors.New("error iterating through bookings rows")
+	}
+
+	return arr, err
 }
 
 func (dep *reservationStore) UpdateReservationStatus(ctx context.Context, reservationId uint64, status reservation.ReservationEnum) error {

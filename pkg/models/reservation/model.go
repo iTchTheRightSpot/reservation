@@ -59,3 +59,23 @@ type Chunks struct {
 	Start time.Time
 	Times []time.Time
 }
+
+type CRMBookingsPayload struct {
+	StaffId  string `json:"staff_id" validate:"required,min=36,max=37"`
+	Month    int    `json:"month" validate:"required,min=1,max=31"`
+	Year     int    `json:"year" validate:"required"`
+	Timezone *time.Location
+}
+
+type CRMBookingsResponse struct {
+	ReservationId uint64          `json:"reservation_id"`
+	Name          string          `json:"name"`
+	Email         string          `json:"email"`
+	Description   *string         `json:"description"`
+	Phone         *string         `json:"phone"`
+	Price         float64         `json:"price"`
+	Status        ReservationEnum `json:"status"`
+	ScheduledFor  time.Time       `json:"scheduled_for"`
+	ExpireAt      time.Time       `json:"expire_at"`
+	Services      []string        `json:"services"`
+}

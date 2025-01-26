@@ -112,7 +112,7 @@ func TestReservationHandler(t *testing.T) {
 	scheduleHandler.NewScheduleHandler(mux, ware, logger, s).Register()
 
 	// register reservation handler
-	NewReservationHandler(mux, logger, rs).Register()
+	NewReservationHandler(mux, logger, ware, rs).Register()
 
 	date := logger.Date()
 	d := time.Date(date.Year(), date.Month(), date.Day(), 9, 0, 0, 0, logger.Timezone()).Add(24 * time.Hour)
@@ -328,6 +328,67 @@ func TestReservationHandler(t *testing.T) {
 					t.Errorf("expected status code %d, got %d", http.StatusNotFound, rr.Code)
 				}
 			})
+		})
+	})
+
+	t.Run("CRM", func(t *testing.T) {
+		obj, _ := jwtSer.Encode(
+			&models.JwtObj{
+				UserId: staff1.UUID.String(),
+				AccessControls: []models.RolePermissionEnum{
+					{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
+				},
+			},
+			utils.TwoDaysInSeconds,
+		)
+
+		t.Run("should return bookings. empty", func(t *testing.T) {
+			url := fmt.Sprintf(
+				"/crm/reservation?&month=%v&year=%v&user_id=%s&timezone=%s",
+				int(d.Month()), d.Year()+1, staff1.UUID.String(), zone.String(),
+			)
+
+			req := httptest.NewRequest(http.MethodGet, url, nil)
+			req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+			req.Header.Set("Content-Type", "application/json")
+			rr := httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+
+			if rr.Code != http.StatusOK {
+				t.Errorf("expected status code %d, got %d", http.StatusOK, rr.Code)
+			}
+
+			body := strings.TrimSpace(rr.Body.String())
+
+			if body == "" {
+				t.Error("expected non-empty body, got nil or empty body")
+			}
+
+			if strings.Compare(body, "[]") != 0 {
+				t.Errorf("expected empty array, got: %s", body)
+			}
+		})
+
+		t.Run("should return bookings", func(t *testing.T) {
+			url := fmt.Sprintf(
+				"/crm/reservation?&month=%v&year=%v&user_id=%s&timezone=%s",
+				int(d.Month()), d.Year(), staff1.UUID.String(), zone.String(),
+			)
+
+			req := httptest.NewRequest(http.MethodGet, url, nil)
+			req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+			req.Header.Set("Content-Type", "application/json")
+			rr := httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+
+			if rr.Code != http.StatusOK {
+				t.Errorf("expected status code %d, got %d", http.StatusOK, rr.Code)
+			}
+
+			bo := strings.TrimSpace(rr.Body.String())
+			if len(bo) < 2 {
+				t.Errorf("expected non-empty body, got %s", bo)
+			}
 		})
 	})
 }

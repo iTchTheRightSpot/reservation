@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -16,18 +17,25 @@ import (
 type ReservationHandler struct {
 	mux     *http.ServeMux
 	logger  utils.ILogger
+	ware    *middleware.Middleware
 	service reservation.IReservationService
 }
 
-func NewReservationHandler(mux *http.ServeMux, l utils.ILogger, s reservation.IReservationService) *ReservationHandler {
-	return &ReservationHandler{mux: mux, logger: l, service: s}
+func NewReservationHandler(mux *http.ServeMux, l utils.ILogger, w *middleware.Middleware, s reservation.IReservationService) *ReservationHandler {
+	return &ReservationHandler{mux: mux, logger: l, service: s, ware: w}
 }
 
 func (dep *ReservationHandler) Register() {
+	rp := models.RolePermissionEnum{
+		Role:        models.STAFF,
+		Permissions: []models.PermissionEnum{models.WRITE},
+	}
 	ware := middleware.RequestBodyMiddleware[model.ReservationPayload]{Logger: dep.logger}
 	dep.mux.HandleFunc("GET /reservation", dep.availableDates)
 	dep.mux.Handle("POST /reservation", ware.RequestBody(http.HandlerFunc(dep.create)))
 	dep.mux.HandleFunc("POST /reservation/cancel/{reservation_id}", dep.cancel)
+
+	dep.mux.Handle("GET /crm/reservation", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(http.HandlerFunc(dep.bookings), &rp)))
 }
 
 func (dep *ReservationHandler) create(w http.ResponseWriter, r *http.Request) {
@@ -139,6 +147,66 @@ func (dep *ReservationHandler) cancel(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNoContent)
 	if _, err = w.Write([]byte("reservation cancelled")); err != nil {
+		dep.logger.Error(err.Error())
+	}
+}
+
+func (dep *ReservationHandler) bookings(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+
+	month, err := strconv.Atoi(query.Get("month"))
+	if err != nil {
+		dep.logger.Error("month missing err: ", err.Error())
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: "month missing"})
+		return
+	}
+
+	year, err := strconv.Atoi(query.Get("year"))
+	if err != nil {
+		dep.logger.Error("year missing err: ", err.Error())
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: "year missing"})
+		return
+	}
+
+	var location *time.Location
+	zone := query.Get("timezone")
+	if zone == "" {
+		dep.logger.Error("timezone missing")
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: "timezone missing"})
+		return
+	} else {
+		location, err = time.LoadLocation(zone)
+		if err != nil {
+			dep.logger.Error(err.Error())
+			utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+			return
+		}
+	}
+
+	p := model.CRMBookingsPayload{
+		StaffId:  strings.TrimSpace(query.Get("user_id")),
+		Month:    month,
+		Year:     year,
+		Timezone: location,
+	}
+
+	if err = middleware.ValidatorInstance.Struct(p); err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		return
+	}
+
+	dates, err := dep.service.Bookings(r.Context(), &p)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	if err = json.NewEncoder(w).Encode(dates); err != nil {
 		dep.logger.Error(err.Error())
 	}
 }

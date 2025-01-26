@@ -8,6 +8,6 @@ import { CRMStaffModel } from '@crm/pages/staff/crm-staff.model';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CreateBookingComponent {
-  staffs = input.required<CRMStaffModel[]>()
-  protected readonly services = []
+  staffs = input.required<CRMStaffModel[]>();
+  protected readonly services = [];
 }

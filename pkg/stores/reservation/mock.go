@@ -19,6 +19,10 @@ type MockReservationStore struct {
 	UpdateReservationStatusCalled                        bool
 }
 
+func (dep *MockReservationStore) BookingsInRange(context.Context, uint64, time.Time, time.Time) ([]*reservation.CRMBookingsResponse, error) {
+	return nil, nil
+}
+
 func (dep *MockReservationStore) CountReservationsInRange(context.Context, uint64, time.Time, time.Time, ...reservation.ReservationEnum) (int, error) {
 	dep.CountReservationsInRangeByStaffTimeAndStatusesCalled = true
 	return dep.CountReservationsInRangeByStaffTimeAndStatusesReturn, dep.CountReservationsInRangeByStaffTimeAndStatusesError

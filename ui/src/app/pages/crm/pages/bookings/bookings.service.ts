@@ -11,7 +11,7 @@ import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { ApiResponse, ApiState } from '@root/app.model';
 import { HttpClient } from '@angular/common/http';
 import { ToastEnum, ToastService } from '@shared/data-access/toast.service';
-import { err } from '@root/app.util';
+import { err, TIMEZONE } from '@root/app.util';
 
 @Injectable({
   providedIn: 'root'
@@ -29,7 +29,7 @@ export class BookingsService {
         data: DummyBookingsModels(50)
       });
 
-    const k = `${o.user_id}_${o.page}_${o.size}`;
+    const k = `${o.user_id}_${o.date.getMonth()}_${o.date.getFullYear()}`;
     return BookingsService.cache.getItem(k).pipe(
       switchMap(arr =>
         arr
@@ -45,7 +45,7 @@ export class BookingsService {
             : this.http
                 .get<
                   BookingsModel[]
-                >(`${environment.domain}crm/reservation?user_id=${o.user_id}&page=${o.page}&size=${o.size}`, { withCredentials: true })
+                >(`${environment.domain}crm/reservation?user_id=${o.user_id}&month=${1 + o.date.getMonth()}&year=${o.date.getFullYear()}&timezone=${TIMEZONE}`, { withCredentials: true })
                 .pipe(
                   map(arr => {
                     BookingsService.cache.setItem(k, arr);

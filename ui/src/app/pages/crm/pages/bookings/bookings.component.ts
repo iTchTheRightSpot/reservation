@@ -54,6 +54,7 @@ export class BookingsComponent {
           const u = this.authService.activeUser();
           if (u)
             this.allBookingsEmitter.next({
+              date: new Date(),
               user_id: u.user_id,
               page: this.first,
               size: this.rows
@@ -72,11 +73,11 @@ export class BookingsComponent {
   protected toggleNewBookings = false;
   protected first = 0;
   protected rows = 10;
-  protected date = new Date();
   protected readonly apiState = ApiState;
   protected readonly bookingState = BookingStatus;
   protected readonly thead = ['Name', 'From', 'To', 'Status'];
 
+  protected date = new Date();
   protected selectedStaff: CRMStaffModel | undefined;
   protected selectedBooking: BookingsModel | undefined;
 
@@ -93,6 +94,24 @@ export class BookingsComponent {
       initialValue: { state: ApiState.LOADING } as ApiResponse<BookingsModel[]>
     }
   );
+
+  protected readonly selectedDate = (d: Date) => {
+    this.date = d;
+    if (!this.selectedStaff)
+      this.allBookingsEmitter.next({
+        user_id: this.authService.activeUser()?.user_id || '',
+        date: d,
+        page: (this.first = 0),
+        size: this.rows
+      });
+    else
+      this.allBookingsEmitter.next({
+        user_id: this.selectedStaff.user_id,
+        date: d,
+        page: (this.first = 0),
+        size: this.rows
+      });
+  };
 
   private readonly updateBookingStatusEmitter =
     new Subject<UpdateBookingStatusPayload>();
@@ -113,16 +132,17 @@ export class BookingsComponent {
 
   protected readonly updateBookingStatus = (o: UpdateBookingStatusPayload) => {
     this.updateBookingStatusEmitter.next(o);
-    const s = this.selectedStaff;
-    if (s)
+    if (this.selectedStaff)
       this.allBookingsEmitter.next({
-        user_id: s.user_id,
+        user_id: this.selectedStaff.user_id,
+        date: this.date,
         page: this.first,
         size: this.rows
       });
     else
       this.allBookingsEmitter.next({
-        user_id: this.authService.activeUser()!!.user_id,
+        user_id: this.authService.activeUser()?.user_id || '',
+        date: this.date,
         page: this.first,
         size: this.rows
       });

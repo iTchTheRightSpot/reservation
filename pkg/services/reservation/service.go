@@ -23,6 +23,7 @@ type IReservationService interface {
 	Create(ctx context.Context, p *reservation.ReservationPayload) error
 	AvailableDates(ctx context.Context, o *reservation.AvailableTimesPayload) ([]*reservation.ReservationTimeSlots, error)
 	Cancel(ctx context.Context, reservationId uint64) error
+	Bookings(ctx context.Context, m *reservation.CRMBookingsPayload) (interface{}, error)
 }
 
 type reservationService struct {
@@ -320,4 +321,26 @@ func (dep *reservationService) Cancel(ctx context.Context, reservationId uint64)
 
 	dep.cache.Clear()
 	return nil
+}
+
+func (dep *reservationService) Bookings(ctx context.Context, o *reservation.CRMBookingsPayload) (interface{}, error) {
+	staf, err := dep.adapters.StaffStore.StaffByUUID(ctx, o.StaffId)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return nil, &utils.NotFoundError{Message: "invalid staff id"}
+	}
+
+	from := time.Date(o.Year, time.Month(o.Month), 1, 0, 0, 0, 0, o.Timezone)
+	to := time.Date(from.Year(), from.Month()+1, 0, 23, 59, 59, 999999999, o.Timezone)
+
+	arr, err := dep.adapters.ReservationStore.BookingsInRange(ctx, staf.StaffId, from, to)
+	if err != nil {
+		return nil, &utils.NotFoundError{Message: "error retrieving bookings"}
+	}
+
+	if len(arr) == 0 {
+		return []interface{}{}, nil
+	}
+
+	return arr, nil
 }
