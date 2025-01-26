@@ -6,10 +6,10 @@ import (
 )
 
 type MockStaffStore struct {
-	StaffSave         *staff.Staff
+	StaffSave         *staff.StaffEntity
 	StaffSaveError    error
 	StaffSaveCalled   bool
-	StaffByUUIDReturn *staff.Staff
+	StaffByUUIDReturn *staff.StaffEntity
 	StaffByUUIDError  error
 	StaffByUUIDCalled bool
 }
@@ -22,16 +22,16 @@ func (dep *MockStaffStore) AllStaffs(context.Context) ([]*staff.AllStaffsEntity,
 	return nil, nil
 }
 
-func (dep *MockStaffStore) Save(context.Context, *staff.Staff) error {
+func (dep *MockStaffStore) Save(context.Context, *staff.StaffEntity) error {
 	dep.StaffSaveCalled = true
 	return dep.StaffSaveError
 }
 
-func (dep *MockStaffStore) StaffByProfileId(context.Context, uint64) (*staff.Staff, error) {
+func (dep *MockStaffStore) StaffByProfileId(context.Context, uint64) (*staff.StaffEntity, error) {
 	panic("implement me")
 }
 
-func (dep *MockStaffStore) StaffByUUID(context.Context, string) (*staff.Staff, error) {
+func (dep *MockStaffStore) StaffByUUID(context.Context, string) (*staff.StaffEntity, error) {
 	dep.StaffByUUIDCalled = true
 	return dep.StaffByUUIDReturn, dep.StaffByUUIDError
 }

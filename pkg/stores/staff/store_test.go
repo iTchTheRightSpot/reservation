@@ -82,7 +82,7 @@ func TestStaffStore(t *testing.T) {
 			t.Errorf("%s", err)
 		}
 
-		s := staff.Staff{
+		s := staff.StaffEntity{
 			UUID:      uuid.New(),
 			ProfileId: &p.ProfileId,
 		}

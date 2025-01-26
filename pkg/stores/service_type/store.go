@@ -15,6 +15,7 @@ type IServiceTypeStore interface {
 	ServiceTypeByName(ctx context.Context, name string) (*service_type.ServiceTypeEntity, error)
 	ServiceTypesByStaffId(ctx context.Context, staffId uint64, visible bool) ([]*service_type.ServiceTypeEntity, error)
 	ServiceTypes(ctx context.Context) ([]*service_type.ServiceTypeEntity, error)
+	Update(ctx context.Context, s *service_type.ServiceTypeEntity) error
 }
 
 type serviceTypeStore struct {
@@ -24,6 +25,20 @@ type serviceTypeStore struct {
 
 func NewServiceTypeStore(l utils.ILogger, db pkg.Db) IServiceTypeStore {
 	return &serviceTypeStore{logger: l, db: db}
+}
+
+func (dep *serviceTypeStore) Update(ctx context.Context, s *service_type.ServiceTypeEntity) error {
+	q := `
+		UPDATE service_type
+		SET name = $2, price = $3, is_visible = $4, duration = $5, clean_up_time = $6
+		WHERE service_id = $1
+	`
+	_, err := dep.db.ExecContext(ctx, q, s.ServiceId, s.Name, s.Price, s.IsVisible, s.Duration, s.CleanUpTime)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return errors.New("error updating service type")
+	}
+	return nil
 }
 
 func (dep *serviceTypeStore) ServiceTypes(ctx context.Context) ([]*service_type.ServiceTypeEntity, error) {

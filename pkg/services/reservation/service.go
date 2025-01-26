@@ -158,7 +158,7 @@ func (dep *reservationService) AvailableDates(ctx context.Context, o *reservatio
 	return *filter, nil
 }
 
-func (dep *reservationService) matchStaffServices(ctx context.Context, requestedServices []string, staffObj *staff.Staff) ([]*service_type.ServiceTypeEntity, error) {
+func (dep *reservationService) matchStaffServices(ctx context.Context, requestedServices []string, staffObj *staff.StaffEntity) ([]*service_type.ServiceTypeEntity, error) {
 	serviceEntities, err := dep.adapters.ServiceStore.ServiceTypesByStaffId(ctx, staffObj.StaffId, true)
 	if err != nil {
 		return nil, &utils.NotFoundError{Message: "invalid service for staff"}
@@ -221,7 +221,7 @@ func (dep *reservationService) sumUpServicePrice(s []*service_type.ServiceTypeEn
 	return count
 }
 
-func (dep *reservationService) createReservation(ctx context.Context, p *reservation.ReservationPayload, matchedServices []*service_type.ServiceTypeEntity, s *staff.Staff, start time.Time, end time.Time) error {
+func (dep *reservationService) createReservation(ctx context.Context, p *reservation.ReservationPayload, matchedServices []*service_type.ServiceTypeEntity, s *staff.StaffEntity, start time.Time, end time.Time) error {
 	return dep.adapters.Transaction.RunInTransaction(func(adapters *stores.Adapters) error {
 		priceSum := dep.sumUpServicePrice(matchedServices)
 

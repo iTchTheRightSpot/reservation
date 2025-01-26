@@ -13,10 +13,10 @@ import (
 )
 
 type IStaffStore interface {
-	Save(ctx context.Context, r *staff.Staff) error
-	StaffByUUID(ctx context.Context, staffUUID string) (*staff.Staff, error)
+	Save(ctx context.Context, r *staff.StaffEntity) error
+	StaffByUUID(ctx context.Context, staffUUID string) (*staff.StaffEntity, error)
 	StaffsByServices(ctx context.Context, s *[]string) ([]*staff.StaffStoreFrontDb, error)
-	StaffByProfileId(ctx context.Context, id uint64) (*staff.Staff, error)
+	StaffByProfileId(ctx context.Context, id uint64) (*staff.StaffEntity, error)
 	AllStaffs(ctx context.Context) ([]*staff.AllStaffsEntity, error)
 }
 
@@ -102,8 +102,8 @@ func (dep *staffStore) AllStaffs(ctx context.Context) ([]*staff.AllStaffsEntity,
 	return result, err
 }
 
-func (dep *staffStore) StaffByProfileId(ctx context.Context, profileId uint64) (*staff.Staff, error) {
-	var r staff.Staff
+func (dep *staffStore) StaffByProfileId(ctx context.Context, profileId uint64) (*staff.StaffEntity, error) {
+	var r staff.StaffEntity
 	row := dep.db.QueryRowContext(ctx, "SELECT * FROM staff WHERE profile_id = $1", profileId)
 	if err := row.Scan(&r.StaffId, &r.UUID, &r.Bio, &r.ProfileId); err != nil {
 		dep.logger.Error(err.Error())
@@ -173,7 +173,7 @@ func (dep *staffStore) StaffsByServices(ctx context.Context, s *[]string) ([]*st
 	return arr, err
 }
 
-func (dep *staffStore) Save(ctx context.Context, r *staff.Staff) error {
+func (dep *staffStore) Save(ctx context.Context, r *staff.StaffEntity) error {
 	if r == nil {
 		return errors.New("staff object is nil")
 	}
@@ -196,8 +196,8 @@ func (dep *staffStore) Save(ctx context.Context, r *staff.Staff) error {
 	return nil
 }
 
-func (dep *staffStore) StaffByUUID(ctx context.Context, staffUUID string) (*staff.Staff, error) {
-	var r staff.Staff
+func (dep *staffStore) StaffByUUID(ctx context.Context, staffUUID string) (*staff.StaffEntity, error) {
+	var r staff.StaffEntity
 	q := "SELECT * FROM staff WHERE uuid = $1"
 
 	row := dep.db.QueryRowContext(ctx, q, staffUUID)

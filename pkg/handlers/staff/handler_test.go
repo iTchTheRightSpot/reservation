@@ -11,7 +11,6 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
@@ -156,58 +155,9 @@ func TestStaffHandler(t *testing.T) {
 			}
 		})
 	})
-
-	t.Run("should link service to staff & also reject", func(t *testing.T) {
-		// pre-save
-		saveStaff, err := preSaveStaff(context.Background(), adp)
-		if err != nil {
-			t.Error(err)
-		}
-
-		saveService, err := preSaveService(adp)
-		if err != nil {
-			t.Error(err)
-		}
-
-		cred := []models.RolePermissionEnum{
-			{
-				Role:        models.STAFF,
-				Permissions: []models.PermissionEnum{models.WRITE},
-			},
-		}
-
-		obj, _ := jwtSer.Encode(
-			&models.JwtObj{
-				UserId:         saveStaff.UUID.String(),
-				AccessControls: cred,
-			},
-			utils.TwoDaysInSeconds,
-		)
-
-		for i := 0; i < 2; i++ {
-			url := fmt.Sprintf("/staff/service?service_name=%s", saveService.Name)
-			req := httptest.NewRequest(http.MethodPost, url, nil)
-			req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
-			req.Header.Set("Content-Type", "application/json")
-			rr := httptest.NewRecorder()
-
-			mux.ServeHTTP(rr, req)
-
-			// assert
-			if i == 0 {
-				if rr.Code != http.StatusCreated {
-					t.Errorf("index %v expected status code %d, got %d", i, http.StatusCreated, rr.Code)
-				}
-			} else {
-				if rr.Code != http.StatusConflict {
-					t.Errorf("index %v expected status code %d, got %d", i, http.StatusBadRequest, rr.Code)
-				}
-			}
-		}
-	})
 }
 
-func preSaveStaff(ctx context.Context, a *stores.Adapters) (*model.Staff, error) {
+func preSaveStaff(ctx context.Context, a *stores.Adapters) (*model.StaffEntity, error) {
 	id := uuid.New()
 	p := models.ProfileEntity{
 		Firstname: "firstname",
@@ -229,7 +179,7 @@ func preSaveStaff(ctx context.Context, a *stores.Adapters) (*model.Staff, error)
 		return nil, err
 	}
 
-	s := model.Staff{
+	s := model.StaffEntity{
 		UUID:      id,
 		ProfileId: &p.ProfileId,
 	}
@@ -239,15 +189,4 @@ func preSaveStaff(ctx context.Context, a *stores.Adapters) (*model.Staff, error)
 	}
 
 	return &s, nil
-}
-
-func preSaveService(a *stores.Adapters) (*service_type.ServiceTypeEntity, error) {
-	s := service_type.ServiceTypeEntity{
-		Name:        "erp",
-		Price:       19.56,
-		Duration:    3600,
-		CleanUpTime: 30 * 60,
-	}
-	err := a.ServiceStore.Save(context.Background(), &s)
-	return &s, err
 }

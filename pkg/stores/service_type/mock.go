@@ -17,6 +17,10 @@ type MockServiceTypeStore struct {
 	ServicesByStaffIdCalled bool
 }
 
+func (dep *MockServiceTypeStore) Update(context.Context, *service_type.ServiceTypeEntity) error {
+	return nil
+}
+
 func (dep *MockServiceTypeStore) ServiceTypes(context.Context) ([]*service_type.ServiceTypeEntity, error) {
 	return nil, nil
 }

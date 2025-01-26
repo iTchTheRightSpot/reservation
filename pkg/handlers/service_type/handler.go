@@ -9,6 +9,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"net/http"
+	"strings"
 )
 
 type ServiceTypeHandler struct {
@@ -38,8 +39,10 @@ func (dep *ServiceTypeHandler) Register() {
 	dep.mux.HandleFunc("GET /service", dep.services)
 	dep.mux.HandleFunc("GET /service/staffs", dep.staffsByServices)
 
+	dep.mux.Handle("POST /service/staff", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(http.HandlerFunc(dep.linkServiceToStaff), rp)))
 	dep.mux.Handle("GET /crm/services", dep.ware.Authentication(dep.ware.HasRole(http.HandlerFunc(dep.crmServices), &rp.Role)))
 	dep.mux.Handle("POST /crm/service", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(m.RequestBody(http.HandlerFunc(dep.create)), rp)))
+	dep.mux.Handle("PUT /crm/service", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(m.RequestBody(http.HandlerFunc(dep.update)), rp)))
 }
 
 func (dep *ServiceTypeHandler) create(w http.ResponseWriter, r *http.Request) {
@@ -72,6 +75,23 @@ func (dep *ServiceTypeHandler) services(w http.ResponseWriter, r *http.Request) 
 	if err = json.NewEncoder(w).Encode(arr); err != nil {
 		dep.logger.Error(err.Error())
 	}
+}
+
+func (dep *ServiceTypeHandler) update(w http.ResponseWriter, r *http.Request) {
+	dto, err := pkg.ReadBody[model.ServiceTypePayload](r)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		return
+	}
+
+	if err = dep.service.Update(r.Context(), dto); err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (dep *ServiceTypeHandler) staffsByServices(w http.ResponseWriter, r *http.Request) {
@@ -108,4 +128,34 @@ func (dep *ServiceTypeHandler) crmServices(w http.ResponseWriter, r *http.Reques
 	if err = json.NewEncoder(w).Encode(arr); err != nil {
 		dep.logger.Error(err.Error())
 	}
+}
+
+func (dep *ServiceTypeHandler) linkServiceToStaff(w http.ResponseWriter, r *http.Request) {
+	name := r.URL.Query().Get("service_name")
+	if len(name) < 1 {
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: "service_name is missing"})
+		return
+	}
+
+	uuid := r.URL.Query().Get("staff_id")
+
+	if len(uuid) < 1 {
+		obj, ok := r.Context().Value(utils.UserContextKey).(*models.JwtObj)
+		if !ok || obj == nil {
+			dep.logger.Error("linkServiceToStaff invalid staff_id")
+			utils.ErrorResponse(w, &utils.AuthenticationError{})
+			return
+		}
+		uuid = obj.UserId
+	}
+
+	err := dep.service.LinkServiceToStaff(r.Context(), strings.TrimSpace(uuid), strings.TrimSpace(name))
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, err)
+		return
+	}
+
+	dep.logger.Log("successfully linked service to staff")
+	w.WriteHeader(http.StatusCreated)
 }

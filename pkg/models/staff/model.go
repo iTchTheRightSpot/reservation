@@ -5,7 +5,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 )
 
-type Staff struct {
+type StaffEntity struct {
 	StaffId   uint64    `json:"staff_id"`
 	UUID      uuid.UUID `json:"uuid"`
 	Bio       *string   `json:"bio"`

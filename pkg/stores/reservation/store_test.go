@@ -56,7 +56,7 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 	}
 }
 
-func preSaveStaff(ps profileStore.IProfileStore, st staffStore.IStaffStore) (*staff.Staff, error) {
+func preSaveStaff(ps profileStore.IProfileStore, st staffStore.IStaffStore) (*staff.StaffEntity, error) {
 	ctx := context.Background()
 
 	p := models.ProfileEntity{
@@ -70,7 +70,7 @@ func preSaveStaff(ps profileStore.IProfileStore, st staffStore.IStaffStore) (*st
 		return nil, err
 	}
 
-	s := staff.Staff{
+	s := staff.StaffEntity{
 		UUID:      uuid.New(),
 		ProfileId: &p.ProfileId,
 	}

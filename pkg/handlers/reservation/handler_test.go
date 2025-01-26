@@ -348,7 +348,7 @@ func firstReservation(ctx context.Context) (*model.Reservation, error) {
 	return &r, nil
 }
 
-func reservationTimes(t *testing.T, d time.Time, staff1 *staff.Staff, serviceTypes []string, zone string, mux *http.ServeMux, err error) []model.ReservationTimeSlots {
+func reservationTimes(t *testing.T, d time.Time, staff1 *staff.StaffEntity, serviceTypes []string, zone string, mux *http.ServeMux, err error) []model.ReservationTimeSlots {
 	var sb strings.Builder
 	for _, ser := range serviceTypes {
 		sb.WriteString("service=" + ser + "&")
@@ -375,7 +375,7 @@ func reservationTimes(t *testing.T, d time.Time, staff1 *staff.Staff, serviceTyp
 	return payload
 }
 
-func createSchedule(t *testing.T, jwtSer auth.IJwtService, staff1 *staff.Staff, d time.Time, mux *http.ServeMux) {
+func createSchedule(t *testing.T, jwtSer auth.IJwtService, staff1 *staff.StaffEntity, d time.Time, mux *http.ServeMux) {
 	cred := []models.RolePermissionEnum{
 		{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 	}
@@ -433,7 +433,7 @@ func preSaveService(ctx context.Context, a *stores.Adapters) (*service_type.Serv
 	return &s, err
 }
 
-func linkServiceToStaff(a *stores.Adapters, sta *staff.Staff, staSer *service_type.ServiceTypeEntity) error {
+func linkServiceToStaff(a *stores.Adapters, sta *staff.StaffEntity, staSer *service_type.ServiceTypeEntity) error {
 	return a.StaffServiceStore.Save(context.Background(), &staff.StaffServiceEntity{
 		StaffId:   sta.StaffId,
 		ServiceId: staSer.ServiceId,

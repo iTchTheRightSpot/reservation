@@ -17,7 +17,7 @@ func DeleteAll(db *sql.DB) error {
 	return nil
 }
 
-func PreSaveStaff(ctx context.Context, a *stores.Adapters) (*staff.Staff, error) {
+func PreSaveStaff(ctx context.Context, a *stores.Adapters) (*staff.StaffEntity, error) {
 	p := models.ProfileEntity{
 		Firstname: "reservation",
 		Lastname:  "reservation",
@@ -29,7 +29,7 @@ func PreSaveStaff(ctx context.Context, a *stores.Adapters) (*staff.Staff, error)
 		return nil, err
 	}
 
-	s := staff.Staff{
+	s := staff.StaffEntity{
 		UUID:      uuid.New(),
 		ProfileId: &p.ProfileId,
 	}

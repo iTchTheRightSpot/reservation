@@ -3,6 +3,7 @@ package service_type
 import (
 	"context"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"strings"
@@ -13,6 +14,8 @@ type IServiceType interface {
 	ServiceTypes(ctx context.Context) (interface{}, error)
 	StaffsByServiceTypes(ctx context.Context, services *[]string) (interface{}, error)
 	CRMServiceTypes(ctx context.Context) (interface{}, error)
+	LinkServiceToStaff(ctx context.Context, staffUUID, serviceName string) error
+	Update(ctx context.Context, dto *service_type.ServiceTypePayload) error
 }
 
 type serviceTypeImpl struct {
@@ -22,6 +25,20 @@ type serviceTypeImpl struct {
 
 func NewServiceImpl(l utils.ILogger, a *stores.Adapters) IServiceType {
 	return &serviceTypeImpl{logger: l, adapters: a}
+}
+
+func (dep *serviceTypeImpl) Update(ctx context.Context, dto *service_type.ServiceTypePayload) error {
+	s, err := dep.adapters.ServiceStore.ServiceTypeByName(ctx, strings.TrimSpace(dto.Name))
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return &utils.NotFoundError{Message: "cannot update invalid service type"}
+	}
+	s.Name = strings.TrimSpace(dto.Name)
+	s.Price = dto.Price
+	s.IsVisible = dto.IsVisible
+	s.Duration = dto.Duration
+	s.CleanUpTime = dto.CleanUpTime
+	return dep.adapters.ServiceStore.Update(ctx, s)
 }
 
 func (dep *serviceTypeImpl) CRMServiceTypes(ctx context.Context) (interface{}, error) {
@@ -125,5 +142,36 @@ func (dep *serviceTypeImpl) Create(ctx context.Context, p *service_type.ServiceT
 		dep.logger.Error(err.Error())
 		return &utils.InsertionError{Message: err.Error()}
 	}
+	return nil
+}
+
+func (dep *serviceTypeImpl) LinkServiceToStaff(ctx context.Context, staffUUID, serviceName string) error {
+	s, err := dep.adapters.StaffStore.StaffByUUID(ctx, staffUUID)
+	if err != nil {
+		return &utils.NotFoundError{Message: "invalid staff id"}
+	}
+
+	service, err := dep.adapters.ServiceStore.ServiceTypeByName(ctx, serviceName)
+	if err != nil {
+		return &utils.NotFoundError{Message: "invalid service name"}
+	}
+
+	count, err := dep.adapters.StaffServiceStore.CountByStaffIdAndServiceId(ctx, s.StaffId, service.ServiceId)
+	if err != nil {
+		return &utils.InsertionError{Message: err.Error()}
+	}
+
+	if count > 0 {
+		return &utils.InsertionError{Message: "service already linked to staff"}
+	}
+
+	err = dep.adapters.StaffServiceStore.Save(ctx, &staff.StaffServiceEntity{
+		StaffId: s.StaffId, ServiceId: service.ServiceId,
+	})
+
+	if err != nil {
+		return &utils.InsertionError{Message: err.Error()}
+	}
+
 	return nil
 }

@@ -121,6 +121,6 @@ func (dep *accountService) Register(ctx context.Context, obj *models.ProfilePayl
 			return &utils.InsertionError{Message: "error creating account. permission"}
 		}
 		bio := "Ready to put a smile on your face 🌞"
-		return adps.StaffStore.Save(ctx, &staff.Staff{ProfileId: &p.ProfileId, UUID: uuid.New(), Bio: &bio})
+		return adps.StaffStore.Save(ctx, &staff.StaffEntity{ProfileId: &p.ProfileId, UUID: uuid.New(), Bio: &bio})
 	})
 }

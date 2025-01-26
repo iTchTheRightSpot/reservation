@@ -141,7 +141,7 @@ func TestAccountHandler(t *testing.T) {
 			t.Error(err.Error())
 		}
 
-		staf := staff.Staff{ProfileId: &pr.ProfileId, UUID: uuid.New()}
+		staf := staff.StaffEntity{ProfileId: &pr.ProfileId, UUID: uuid.New()}
 		if err = adp.StaffStore.Save(ctx, &staf); err != nil {
 			t.Error(err.Error())
 		}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -57,8 +58,9 @@ func (dep *Middleware) logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := dep.Logger.Date()
 		ip := dep.requestIP(r)
+		id := uuid.NewString()
 		dep.Logger.Log(fmt.Sprintf(
-			"[Request] IP: %s | Method: %s | Path: %s", ip, r.Method, r.URL.Path,
+			"[Request] ID: %s | IP: %s | Method: %s | Path: %s", id, ip, r.Method, r.URL.Path,
 		))
 		obj := &wrappedWriter{
 			ResponseWriter: w,
@@ -67,8 +69,8 @@ func (dep *Middleware) logging(next http.Handler) http.Handler {
 		next.ServeHTTP(obj, r)
 		end := dep.Logger.Date()
 		dep.Logger.Log(fmt.Sprintf(
-			"[Response] IP: %s | Status: %d | Method: %s | Path: %s | Duration: %v seconds",
-			ip, obj.status, r.Method, r.URL.Path, end.Sub(start).Seconds(),
+			"[Response] ID: %s | IP: %s | Status: %d | Method: %s | Path: %s | Duration: %v seconds",
+			id, ip, obj.status, r.Method, r.URL.Path, end.Sub(start).Seconds(),
 		))
 	})
 }

@@ -72,23 +72,41 @@ func TestServiceTypeHandler(t *testing.T) {
 	// register all routes
 	NewServiceTypeHandler(mux, logger, s, m).Register()
 
+	t.Run("should retrieve all services. empty", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/service", nil)
+		rr := httptest.NewRecorder()
+		mux.ServeHTTP(rr, req)
+
+		// assert
+		if rr.Code != http.StatusOK {
+			t.Errorf("expected status code %d, got %d", http.StatusOK, rr.Code)
+		}
+
+		if strings.TrimSpace(rr.Body.String()) != "[]" {
+			t.Errorf("expect [], given %s", rr.Body.String())
+		}
+	})
+
 	t.Run("crm", func(t *testing.T) {
+		serviceName := uuid.NewString()
+		save := preSave(t, adapters, context.Background())
+		cred := []models.RolePermissionEnum{
+			{
+				Role:        models.STAFF,
+				Permissions: []models.PermissionEnum{models.WRITE},
+			},
+		}
 		jwtObj, _ := jwtSer.Encode(
 			&models.JwtObj{
-				UserId: "staff-uuid",
-				AccessControls: []models.RolePermissionEnum{
-					{
-						Role:        models.STAFF,
-						Permissions: []models.PermissionEnum{models.WRITE},
-					},
-				},
+				UserId:         "staff-uuid",
+				AccessControls: cred,
 			},
 			utils.TwoDaysInSeconds,
 		)
 
 		t.Run("should create service", func(t *testing.T) {
 			dtoBytes, err := json.Marshal(serviceModel.ServiceTypePayload{
-				Name:        uuid.New().String(),
+				Name:        serviceName,
 				Price:       15.97,
 				Duration:    3600,
 				CleanUpTime: 1800,
@@ -138,8 +156,8 @@ func TestServiceTypeHandler(t *testing.T) {
 
 			// assert
 			size := len(resp)
-			if size != 1 {
-				t.Errorf("expected size 1, got %d", size)
+			if size != 2 {
+				t.Errorf("expected size 2, got %d", size)
 				t.Errorf("%v", resp)
 			}
 
@@ -152,10 +170,6 @@ func TestServiceTypeHandler(t *testing.T) {
 					t.Error("expect Price to be greater than zero")
 				}
 
-				if obj.IsVisible {
-					t.Error("expect is_visible to be true but is false")
-				}
-
 				if obj.Duration < 1 {
 					t.Error("expect Duration to be greater than zero")
 				}
@@ -163,6 +177,66 @@ func TestServiceTypeHandler(t *testing.T) {
 				if obj.CU < 1 {
 					t.Error("expect Clean up time to be greater than zero", obj.CU)
 				}
+			}
+		})
+
+		t.Run("should link service to staff & also reject", func(t *testing.T) {
+			obj, err := jwtSer.Encode(
+				&models.JwtObj{
+					UserId:         save.staff.UUID.String(),
+					AccessControls: cred,
+				},
+				utils.TwoDaysInSeconds,
+			)
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+			for i := 0; i < 2; i++ {
+				url := fmt.Sprintf("/service/staff?service_name=%s", serviceName)
+				req := httptest.NewRequest(http.MethodPost, url, nil)
+				req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+				req.Header.Set("Content-Type", "application/json")
+				rr := httptest.NewRecorder()
+
+				mux.ServeHTTP(rr, req)
+
+				// assert
+				if i == 0 {
+					if rr.Code != http.StatusCreated {
+						t.Errorf("index %v expected status code %d, got %d", i, http.StatusCreated, rr.Code)
+					}
+				} else {
+					if rr.Code != http.StatusConflict {
+						t.Errorf("index %v expected status code %d, got %d", i, http.StatusBadRequest, rr.Code)
+					}
+				}
+			}
+		})
+
+		t.Run("should update service type", func(t *testing.T) {
+			dtoBytes, err := json.Marshal(serviceModel.ServiceTypePayload{
+				Name:        serviceName,
+				Price:       10.97,
+				Duration:    3600,
+				CleanUpTime: 1800,
+				IsVisible:   false,
+			})
+			if err != nil {
+				t.Errorf("failed to marshal SchedulePayload: %s", err)
+			}
+
+			req := httptest.NewRequest(http.MethodPut, "/crm/service", bytes.NewBuffer(dtoBytes))
+			req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: jwtObj.Token})
+			req.Header.Set("Content-Type", "application/json")
+
+			rr := httptest.NewRecorder()
+
+			mux.ServeHTTP(rr, req)
+
+			// assert
+			if rr.Code != http.StatusNoContent {
+				t.Errorf("expected status code %d, got %d", http.StatusNoContent, rr.Code)
 			}
 		})
 	})
@@ -184,20 +258,16 @@ func TestServiceTypeHandler(t *testing.T) {
 				Duration int     `json:"duration"`
 			}
 
-			var resp []*ui
+			var resp []ui
 			if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
 				t.Errorf(err.Error())
 			}
 
 			// assert
 			size := len(resp)
-			if size != 0 {
-				t.Errorf("expected size 0, got %d", size)
+			if size != 1 {
+				t.Errorf("expected size 1, got %d", size)
 				t.Errorf("%v", resp)
-			}
-
-			if strings.TrimSpace(rr.Body.String()) != "[]" {
-				t.Errorf("expect [], given %s", rr.Body.String())
 			}
 		})
 
@@ -232,7 +302,7 @@ func TestServiceTypeHandler(t *testing.T) {
 			}
 
 			t.Run("success. should be empty as all services are not for each staff", func(t *testing.T) {
-				url := fmt.Sprintf("/service/staffs?name=%s&name=%s", serv1.Name, serv2.Name)
+				url := fmt.Sprintf("/service/staffs?name=%s&name=%s", serv1.service.Name, serv2.service.Name)
 				req := httptest.NewRequest(http.MethodGet, url, nil)
 				rr := httptest.NewRecorder()
 				mux.ServeHTTP(rr, req)
@@ -257,7 +327,7 @@ func TestServiceTypeHandler(t *testing.T) {
 			})
 
 			t.Run("success", func(t *testing.T) {
-				url := fmt.Sprintf("/service/staffs?name=%s", serv1.Name)
+				url := fmt.Sprintf("/service/staffs?name=%s", serv1.service.Name)
 				req := httptest.NewRequest(http.MethodGet, url, nil)
 				rr := httptest.NewRecorder()
 				mux.ServeHTTP(rr, req)
@@ -299,13 +369,19 @@ func TestServiceTypeHandler(t *testing.T) {
 	})
 }
 
-func preSave(t *testing.T, adapters *stores.Adapters, ctx context.Context) serviceModel.ServiceTypeEntity {
+type testObj struct {
+	service *serviceModel.ServiceTypeEntity
+	profile *models.ProfileEntity
+	staff   *staff.StaffEntity
+}
+
+func preSave(t *testing.T, adapters *stores.Adapters, ctx context.Context) *testObj {
 	prof := models.ProfileEntity{Firstname: "f", Lastname: "l", Email: uuid.NewString(), Password: "password"}
 	if err := adapters.ProfileStore.Save(ctx, &prof); err != nil {
 		t.Error(err.Error())
 	}
 
-	staf := staff.Staff{ProfileId: &prof.ProfileId, UUID: uuid.New()}
+	staf := staff.StaffEntity{ProfileId: &prof.ProfileId, UUID: uuid.New()}
 	if err := adapters.StaffStore.Save(ctx, &staf); err != nil {
 		t.Error(err.Error())
 	}
@@ -326,5 +402,6 @@ func preSave(t *testing.T, adapters *stores.Adapters, ctx context.Context) servi
 	}); err != nil {
 		t.Error(err.Error())
 	}
-	return serv
+
+	return &testObj{profile: &prof, staff: &staf, service: &serv}
 }

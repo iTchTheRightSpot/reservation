@@ -81,8 +81,8 @@ func services(ctx context.Context, a *stores.Adapters) [4]service_type.ServiceTy
 	return arr
 }
 
-func staffs(ctx context.Context, a *stores.Adapters, ps auth.IPasswordService) [3]staff.Staff {
-	arr := [3]staff.Staff{}
+func staffs(ctx context.Context, a *stores.Adapters, ps auth.IPasswordService) [3]staff.StaffEntity {
+	arr := [3]staff.StaffEntity{}
 
 	for i := 0; i < 3; i++ {
 		pass, _ := ps.Encode("Password123@#$")
@@ -124,7 +124,7 @@ func staffs(ctx context.Context, a *stores.Adapters, ps auth.IPasswordService) [
 		}
 
 		lorem := "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Amet corporis, deserunt eaque earum molestias neque nesciunt nulla placeat sed suscipit."
-		st := staff.Staff{
+		st := staff.StaffEntity{
 			UUID:      uuid.New(),
 			Bio:       &lorem,
 			ProfileId: &p.ProfileId,
@@ -170,7 +170,7 @@ func staffs(ctx context.Context, a *stores.Adapters, ps auth.IPasswordService) [
 	})
 
 	lorem := "Lorem ipsum dolor sit amet, consectetur adipisicing elit."
-	st := staff.Staff{
+	st := staff.StaffEntity{
 		UUID:      uuid.New(),
 		Bio:       &lorem,
 		ProfileId: &p.ProfileId,
@@ -180,7 +180,7 @@ func staffs(ctx context.Context, a *stores.Adapters, ps auth.IPasswordService) [
 	return arr
 }
 
-func assignServices(ctx context.Context, a *stores.Adapters, s *[4]service_type.ServiceTypeEntity, st *[3]staff.Staff) {
+func assignServices(ctx context.Context, a *stores.Adapters, s *[4]service_type.ServiceTypeEntity, st *[3]staff.StaffEntity) {
 	windowSize := 2
 	idx := 0
 
@@ -198,7 +198,7 @@ func assignServices(ctx context.Context, a *stores.Adapters, s *[4]service_type.
 	}
 }
 
-func schedules(ctx context.Context, date time.Time, a *stores.Adapters, st *[3]staff.Staff) {
+func schedules(ctx context.Context, date time.Time, a *stores.Adapters, st *[3]staff.StaffEntity) {
 	for _, staf := range st {
 		for j := 0; j < len(st); j++ {
 			date = date.Add(time.Duration(48*(j+1)) * time.Hour)

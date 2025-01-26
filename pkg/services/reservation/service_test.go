@@ -56,7 +56,7 @@ func TestReservationService(t *testing.T) {
 
 			scheduleStore := &schedule.MockScheduleStore{}
 			adapters := &stores.Adapters{
-				StaffStore:    &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.Staff{}},
+				StaffStore:    &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.StaffEntity{}},
 				ServiceStore:  &service_type.MockServiceTypeStore{ServicesByStaffIdError: fmt.Errorf("no matchStaffServices")},
 				ScheduleStore: scheduleStore,
 			}
@@ -86,7 +86,7 @@ func TestReservationService(t *testing.T) {
 			erp := "erp"
 			scheduleStore := &schedule.MockScheduleStore{}
 			adapters := &stores.Adapters{
-				StaffStore:    &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.Staff{}},
+				StaffStore:    &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.StaffEntity{}},
 				ServiceStore:  &service_type.MockServiceTypeStore{ServicesByStaffIdReturn: []*serviceModel.ServiceTypeEntity{}},
 				ScheduleStore: scheduleStore,
 			}
@@ -121,7 +121,7 @@ func TestReservationService(t *testing.T) {
 			}
 			scheduleStore := &schedule.MockScheduleStore{}
 			adapters := &stores.Adapters{
-				StaffStore: &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.Staff{}},
+				StaffStore: &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.StaffEntity{}},
 				ServiceStore: &service_type.MockServiceTypeStore{
 					ServicesByStaffIdReturn: []*serviceModel.ServiceTypeEntity{{Name: "erp"}}},
 				ScheduleStore: scheduleStore,
@@ -157,7 +157,7 @@ func TestReservationService(t *testing.T) {
 			}
 			scheduleStore := &schedule.MockScheduleStore{CountSchedulesInRangeAndVisibilityError: fmt.Errorf("err")}
 			adapters := &stores.Adapters{
-				StaffStore: &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.Staff{}},
+				StaffStore: &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.StaffEntity{}},
 				ServiceStore: &service_type.MockServiceTypeStore{
 					ServicesByStaffIdReturn: []*serviceModel.ServiceTypeEntity{{Name: erp}}},
 				ScheduleStore: scheduleStore,
@@ -189,7 +189,7 @@ func TestReservationService(t *testing.T) {
 			}
 			reservationStore := &reservation.MockReservationStore{}
 			adapters := &stores.Adapters{
-				StaffStore: &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.Staff{}},
+				StaffStore: &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.StaffEntity{}},
 				ServiceStore: &service_type.MockServiceTypeStore{
 					ServicesByStaffIdReturn: []*serviceModel.ServiceTypeEntity{{Name: erp}}},
 				ScheduleStore:    &schedule.MockScheduleStore{CountSchedulesInRangeAndVisibilityReturn: 0},
