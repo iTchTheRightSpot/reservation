@@ -39,6 +39,7 @@ import { InputNumber } from 'primeng/inputnumber';
         <label for="price" class="font-semibold w-24">Price (₦)</label>
         <p-input-number
           id="price"
+          class="flex-1"
           formControlName="price"
           inputId="minmaxfraction"
           mode="decimal"

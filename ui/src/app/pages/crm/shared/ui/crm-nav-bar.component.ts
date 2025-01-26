@@ -4,7 +4,6 @@ import { LightDarkModeComponent } from '@shared/ui/light-dark-mode.component';
 import { MenuItem } from 'primeng/api';
 import { Menubar } from 'primeng/menubar';
 import {
-  REGISTER_ROUTE,
   SCHEDULE_ROUTE,
   SETTINGS_ROUTE
 } from '@crm/pages/account/account.routes';
@@ -16,6 +15,10 @@ import {
   DASHBOARD_ROUTE
 } from '@crm/crm.routes';
 import { CRM_ROUTE } from '@root/app.routes';
+import {
+  ALL_STAFFS_ROUTE,
+  REGISTER_ROUTE
+} from '@crm/pages/staff/crm-staff.routes';
 
 @Component({
   selector: 'app-crm-nav-bar',
@@ -58,7 +61,18 @@ export class CrmNavBarComponent {
     {
       label: 'Staffs',
       icon: 'pi pi-users',
-      routerLink: `/${CRM_ROUTE}/${CRM_STAFFS_ROUTE}`
+      items: [
+        {
+          label: 'All',
+          icon: 'pi pi-list',
+          routerLink: `/${CRM_ROUTE}/${CRM_STAFFS_ROUTE}/${ALL_STAFFS_ROUTE}`
+        },
+        {
+          label: 'Register',
+          icon: 'pi pi-user-plus',
+          routerLink: `/${CRM_ROUTE}/${CRM_STAFFS_ROUTE}/${REGISTER_ROUTE}`
+        }
+      ]
     },
     {
       label: 'Account',
@@ -68,11 +82,6 @@ export class CrmNavBarComponent {
           label: 'Schedule',
           icon: 'pi pi-calendar-clock',
           routerLink: `/${CRM_ROUTE}/${ACCOUNT_ROUTE}/${SCHEDULE_ROUTE}`
-        },
-        {
-          label: 'Register',
-          icon: 'pi pi-user-plus',
-          routerLink: `/${CRM_ROUTE}/${ACCOUNT_ROUTE}/${REGISTER_ROUTE}`
         },
         {
           label: 'Settings',

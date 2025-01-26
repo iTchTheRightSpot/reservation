@@ -31,7 +31,11 @@ export const routes: Routes = [
   {
     path: CRM_STAFFS_ROUTE,
     loadComponent: () =>
-      import('./pages/staff/crm-staff.component').then(m => m.CrmStaffComponent)
+      import('./pages/staff/crm-staff-core.component').then(
+        m => m.CrmStaffCoreComponent
+      ),
+    loadChildren: () =>
+      import('./pages/staff/crm-staff.routes').then(m => m.routes)
   },
   {
     path: ACCOUNT_ROUTE,

@@ -1,17 +1,9 @@
 import { Routes } from '@angular/router';
 
-export const REGISTER_ROUTE = 'register';
-export const SETTINGS_ROUTE = 'settings';
 export const SCHEDULE_ROUTE = 'schedule';
+export const SETTINGS_ROUTE = 'settings';
 
 export const routes: Routes = [
-  {
-    path: REGISTER_ROUTE,
-    loadComponent: () =>
-      import('./pages/register/register.component').then(
-        m => m.RegisterComponent
-      )
-  },
   {
     path: SCHEDULE_ROUTE,
     loadComponent: () =>
@@ -20,8 +12,15 @@ export const routes: Routes = [
       )
   },
   {
+    path: SETTINGS_ROUTE,
+    loadComponent: () =>
+      import('./pages/settings/settings.component').then(
+        m => m.SettingsComponent
+      )
+  },
+  {
     path: '',
-    redirectTo: REGISTER_ROUTE,
+    redirectTo: SCHEDULE_ROUTE,
     pathMatch: 'full'
   }
 ];

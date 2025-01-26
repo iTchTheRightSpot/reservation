@@ -84,29 +84,33 @@
   </p-table>
 </div>
 
-<p-dialog
-  header="New Service"
-  [modal]="true"
-  [(visible)]="toggleNewServiceTypeView"
-  [style]="{ width: '25rem' }"
->
-  <app-new-service-type
+@defer {
+  <p-dialog
+    header="New Service"
+    [modal]="true"
     [(visible)]="toggleNewServiceTypeView"
-    [apiState]="createApiState().state"
-    (emitter)="create.next($event)"
-  />
-</p-dialog>
+    [style]="{ width: '40rem' }"
+  >
+    <app-new-service-type
+      [(visible)]="toggleNewServiceTypeView"
+      [apiState]="createApiState().state"
+      (emitter)="create.next($event)"
+    />
+  </p-dialog>
+}
 
-<p-dialog
-  header="Edit {{ clickedServiceType()?.name }}"
-  [modal]="true"
-  [(visible)]="toggleEditServiceTypeView"
-  [style]="{ width: '25rem' }"
->
-  <app-edit-service-type
+@defer {
+  <p-dialog
+    header="{{ clickedServiceType()?.name }}"
+    [modal]="true"
     [(visible)]="toggleEditServiceTypeView"
-    [service]="clickedServiceType()"
-    [apiState]="updateApiState().state"
-    (emitter)="update.next($event)"
-  />
-</p-dialog>
+    [style]="{ width: '50rem' }"
+  >
+    <app-edit-service-type
+      [(visible)]="toggleEditServiceTypeView"
+      [service]="clickedServiceType()"
+      [apiState]="updateApiState().state"
+      (emitter)="update.next($event)"
+    />
+  </p-dialog>
+}
