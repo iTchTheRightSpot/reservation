@@ -68,16 +68,18 @@ type CRMBookingsPayload struct {
 }
 
 type CRMBookingsResponse struct {
-	ReservationId uint64          `json:"reservation_id"`
-	Name          string          `json:"name"`
-	Email         string          `json:"email"`
-	Description   *string         `json:"description"`
-	Phone         *string         `json:"phone"`
-	Price         float64         `json:"price"`
-	Status        ReservationEnum `json:"status"`
-	ScheduledFor  time.Time       `json:"scheduled_for"`
-	ExpireAt      time.Time       `json:"expire_at"`
-	Services      []string        `json:"services"`
+	StaffFirstname string          `json:"staff_name"`
+	ImageKey       *string         `json:"image_key"`
+	ReservationId  uint64          `json:"reservation_id"`
+	Name           string          `json:"name"`
+	Email          string          `json:"email"`
+	Description    *string         `json:"description"`
+	Phone          *string         `json:"phone"`
+	Price          float64         `json:"price"`
+	Status         ReservationEnum `json:"status"`
+	ScheduledFor   time.Time       `json:"scheduled_for"`
+	ExpireAt       time.Time       `json:"expire_at"`
+	Services       []string        `json:"services"`
 }
 
 type UpdateBookingPayload struct {

@@ -33,6 +33,8 @@ func NewReservationStore(l utils.ILogger, db pkg.Db) IReservationStore {
 func (dep *reservationStore) BookingsInRange(ctx context.Context, staffId uint64, from time.Time, to time.Time) ([]*reservation.CRMBookingsResponse, error) {
 	q := `
 		SELECT
+		    p.firstname as staff_name,
+		    p.image_key,
 			r.reservation_id,
 			r.name,
 			r.email,
@@ -46,8 +48,10 @@ func (dep *reservationStore) BookingsInRange(ctx context.Context, staffId uint64
 		FROM reservation r
 		INNER JOIN reservation_service rs ON rs.reservation_id = r.reservation_id
 		INNER JOIN service_type s ON s.service_id = rs.service_id
+		INNER JOIN staff st ON st.staff_id = r.staff_id
+		INNER JOIN profile p ON p.profile_id = r.profile_id
 		WHERE r.staff_id = $1 AND (r.scheduled_for BETWEEN $2 AND $3)
-		GROUP BY r.reservation_id, r.name, r.email, r.description, r.phone, r.price, r.status, r.scheduled_for, r.expire_at
+		GROUP BY p.firstname, p.image_key, r.reservation_id, r.name, r.email, r.description, r.phone, r.price, r.status, r.scheduled_for, r.expire_at
 	`
 
 	rows, err := dep.db.QueryContext(ctx, q, staffId, from, to)
@@ -65,6 +69,8 @@ func (dep *reservationStore) BookingsInRange(ctx context.Context, staffId uint64
 		var data json.RawMessage
 
 		if err = rows.Scan(
+			&o.StaffFirstname,
+			&o.ImageKey,
 			&o.ReservationId,
 			&o.Name,
 			&o.Email,

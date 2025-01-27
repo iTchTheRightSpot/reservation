@@ -1,5 +1,31 @@
 <div class="w-full flex flex-col gap-4">
-  <h1 class="text-lg font-semibold underline">Contact Details</h1>
+  <h1 class="text-lg font-semibold underline">Staff</h1>
+
+  <!-- staff image & name -->
+  <div class="w-full flex gap-2 items-center">
+    @if (booking().image_key; as k) {
+      <p-avatar [image]="k" class="mr-2" shape="circle" />
+    } @else {
+      <p-avatar icon="pi pi-user" class="mr-2" shape="circle" />
+    }
+
+    <div class="flex-1">
+      <p-iconfield styleClass="mb-0">
+        <p-inputicon styleClass="pi pi-user" />
+        <input
+          class="w-full"
+          type="text"
+          [value]="booking().staff_name"
+          pInputText
+          [disabled]="true"
+        />
+      </p-iconfield>
+    </div>
+  </div>
+
+  <p-divider />
+
+  <h1 class="text-lg font-semibold underline">Customer</h1>
 
   <!-- phone -->
   <div>
@@ -52,7 +78,7 @@
   <p-divider />
 
   <h1 class="text-lg font-semibold underline">
-    Booking Details
+    Booking
     @if (booking().status === state.CONFIRMED) {
       <p-tag icon="pi pi-check" severity="success" [value]="state.CONFIRMED" />
     } @else {

@@ -4,6 +4,8 @@ export enum BookingStatus {
 }
 
 export interface BookingsModel {
+  staff_name: string;
+  image_key: string | null;
   reservation_id: number;
   name: string;
   email: string;
@@ -36,6 +38,8 @@ export const DummyBookingsModels = (num: number) =>
     to.setHours(8 * 60 * 60);
 
     const obj: BookingsModel = {
+      staff_name: `Staff Firstname${index + 1}`,
+      image_key: index % 2 == 0 ? './salon-1.jpg' : null,
       reservation_id: index + 1,
       name: `Firstname-${index + 1}`,
       email: `email-${index + 1}@email.com`,

@@ -23,6 +23,7 @@ import { Button } from 'primeng/button';
 import { ConfirmPopup } from 'primeng/confirmpopup';
 import { ConfirmationService } from 'primeng/api';
 import { ApiResponse, ApiState } from '@root/app.model';
+import { Avatar } from 'primeng/avatar';
 
 @Component({
   selector: 'app-booking-detail',
@@ -37,7 +38,8 @@ import { ApiResponse, ApiState } from '@root/app.model';
     FormsModule,
     Tag,
     Button,
-    ConfirmPopup
+    ConfirmPopup,
+    Avatar
   ],
   providers: [ConfirmationService],
   templateUrl: './booking-detail.component.html',
