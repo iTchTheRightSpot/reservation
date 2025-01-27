@@ -49,7 +49,7 @@ func (dep *reservationStore) BookingsInRange(ctx context.Context, staffId uint64
 		INNER JOIN reservation_service rs ON rs.reservation_id = r.reservation_id
 		INNER JOIN service_type s ON s.service_id = rs.service_id
 		INNER JOIN staff st ON st.staff_id = r.staff_id
-		INNER JOIN profile p ON p.profile_id = r.profile_id
+		INNER JOIN profile p ON p.profile_id = st.profile_id
 		WHERE r.staff_id = $1 AND (r.scheduled_for BETWEEN $2 AND $3)
 		GROUP BY p.firstname, p.image_key, r.reservation_id, r.name, r.email, r.description, r.phone, r.price, r.status, r.scheduled_for, r.expire_at
 	`
