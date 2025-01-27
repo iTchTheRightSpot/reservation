@@ -5,7 +5,7 @@ import {
   signal
 } from '@angular/core';
 import { Button } from 'primeng/button';
-import { TableModule, TablePageEvent } from 'primeng/table';
+import { TableModule } from 'primeng/table';
 import { CRMServiceTypeModel } from './crm-service-type.model';
 import { Badge } from 'primeng/badge';
 import { CRMServiceTypeService } from './crm-service-type.service';
@@ -75,9 +75,4 @@ export class CRMServiceTypeComponent {
 
   protected readonly data = (m: ApiResponse<CRMServiceTypeModel[]>) =>
     tabledata<CRMServiceTypeModel[]>(m);
-
-  protected readonly pageChange = (event: TablePageEvent) => {
-    this.first = event.first;
-    this.rows = event.rows;
-  };
 }

@@ -10,6 +10,7 @@
     [rows]="rows"
     [tableStyle]="{ 'min-width': '50rem' }"
     [showCurrentPageReport]="true"
+    (onPage)="first = $event.first; rows = $event.rows"
     currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
     [rowsPerPageOptions]="[5, 10, 20]"
   >

@@ -2,10 +2,13 @@ import { inject, Injectable } from '@angular/core';
 import {
   BehaviorSubject,
   catchError,
+  concat,
+  concatMap,
   map,
   of,
   startWith,
-  switchMap
+  switchMap,
+  timer
 } from 'rxjs';
 import { CRMStaffModel, DummyCRMStaffModels } from './crm-staff.model';
 import { HttpClient } from '@angular/common/http';
@@ -27,10 +30,22 @@ export class CRMStaffsService {
 
   readonly staffs = () =>
     !environment.production
-      ? of<ApiResponse<CRMStaffModel[]>>({
-          state: ApiState.LOADED,
-          data: DummyCRMStaffModels(5)
-        })
+      ? of('yes').pipe(
+          concatMap(() =>
+            concat(
+              of<ApiResponse<CRMStaffModel[]>>({ state: ApiState.LOADING }),
+
+              timer(1000).pipe(
+                concatMap(() =>
+                  of<ApiResponse<CRMStaffModel[]>>({
+                    state: ApiState.LOADED,
+                    data: DummyCRMStaffModels(25)
+                  })
+                )
+              )
+            )
+          )
+        )
       : this.cache.asObservable().pipe(
           switchMap(arr =>
             arr === null

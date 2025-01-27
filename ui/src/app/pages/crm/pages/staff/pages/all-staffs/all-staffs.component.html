@@ -1,1 +1,82 @@
-<p>all-staffs works!</p>
+<div class="mb-4">
+  <p-button
+    type="button"
+    icon="pi pi-chevron-left"
+    (click)="first = first - rows"
+    [disabled]="staffs().data ? first === 0 : true"
+    text
+  />
+  <p-button type="button" icon="pi pi-refresh" (click)="first = 0" text />
+  <p-button
+    type="button"
+    icon="pi pi-chevron-right"
+    (click)="first = first + rows"
+    [disabled]="
+      staffs().data ? first + rows >= (staffs().data?.length || 0) : true
+    "
+    text
+  />
+</div>
+
+<div class="card">
+  <p-table
+    #dt1
+    selectionMode="single"
+    dataKey="id"
+    [loading]="staffs().state === state.LOADING"
+    [value]="staffs().data || []"
+    [paginator]="true"
+    [first]="first"
+    (onPage)="first = $event.first; rows = $event.rows"
+    [rows]="rows"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+    [rowsPerPageOptions]="[5, 10, 20]"
+  >
+    <ng-template #header>
+      <tr>
+        @for (h of thead; track h) {
+          <th style="width: 25%">{{ h }}</th>
+        }
+      </tr>
+    </ng-template>
+    <ng-template #body let-model>
+      <tr class="cursor-pointer">
+        <td>
+          @if (model.image_key; as k) {
+            <p-avatar [image]="k" class="mr-2" shape="circle" />
+          } @else if (model.image_key === null) {
+            <p-avatar icon="pi pi-user" class="mr-2" shape="circle" />
+          }
+        </td>
+        <td>{{ model.firstname }}</td>
+        <td>{{ model.lastname }}</td>
+        <td>
+          <p-tag
+            [value]="model.locked"
+            [severity]="model.locked ? 'success' : 'danger'"
+          />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #paginatorleft>
+      <p-button type="button" icon="pi pi-plus" text (onClick)="register()" />
+    </ng-template>
+  </p-table>
+</div>
+
+@defer {
+  <p-drawer
+    header="Staff Detail"
+    [(visible)]="toggleStaffDetails"
+    position="right"
+    styleClass="!w-full md:!w-[40rem] lg:!w-[50rem]"
+  >
+    @if (selectedStaff; as sel) {
+      <app-staff-detail-holder [staff]="sel" />
+    } @else {
+      invalid staff selected
+    }
+  </p-drawer>
+}
