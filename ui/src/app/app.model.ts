@@ -1,4 +1,4 @@
-import { RolePermissionEntity } from '@crm/pages/staff/crm-staff.model';
+import { RolePermissionEntity } from '@crm/pages/staff/pages/all/crm-staff.model';
 
 export enum ApiState {
   LOADING = 'LOADING',

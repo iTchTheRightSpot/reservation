@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { CRMStaffsService } from '@crm/pages/staff/crm-staffs.service';
+import { CRMStaffsService } from './crm-staff.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ApiResponse, ApiState } from '@root/app.model';
-import { CRMStaffModel } from '@crm/pages/staff/crm-staff.model';
+import { CRMStaffModel } from './crm-staff.model';
 import { Button } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { Avatar } from 'primeng/avatar';
@@ -10,17 +10,17 @@ import { Tag } from 'primeng/tag';
 import { Router } from '@angular/router';
 import { CRM_ROUTE } from '@root/app.routes';
 import { CRM_STAFFS_ROUTE } from '@crm/crm.routes';
-import { REGISTER_ROUTE } from '@crm/pages/staff/crm-staff.routes';
+import { REGISTER_ROUTE } from '@crm/pages/staff/staff-core.routes';
 import { Drawer } from 'primeng/drawer';
-import { StaffDetailComponent } from '@crm/pages/staff/pages/all-staffs/ui/staff-detail.component';
+import { StaffDetailComponent } from './ui/staff-detail.component';
 
 @Component({
-  selector: 'app-all-staffs',
+  selector: 'app-crm-staff',
   imports: [Button, TableModule, Avatar, Tag, Drawer, StaffDetailComponent],
-  templateUrl: './all-staffs.component.html',
+  templateUrl: './crm-staff.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AllStaffsComponent {
+export class CrmStaffComponent {
   private readonly service = inject(CRMStaffsService);
   private readonly router = inject(Router);
 
@@ -28,12 +28,7 @@ export class AllStaffsComponent {
   protected rows = 5;
   protected readonly state = ApiState;
   protected toggleStaffDetails = false;
-  protected readonly thead = [
-    'Image',
-    'Firstname',
-    'Lastname',
-    'Account locked'
-  ];
+  protected readonly thead = ['Image', 'Firstname', 'Lastname', 'Account'];
   protected selectedStaff: CRMStaffModel | undefined;
 
   protected readonly register = async () =>

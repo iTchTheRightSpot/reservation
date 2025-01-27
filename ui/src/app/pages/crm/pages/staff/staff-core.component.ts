@@ -7,4 +7,4 @@ import { RouterOutlet } from '@angular/router';
   template: `<router-outlet />`,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CrmStaffCoreComponent {}
+export class StaffCoreComponent {}

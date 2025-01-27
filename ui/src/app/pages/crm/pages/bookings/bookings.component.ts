@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { BookingsService } from './bookings.service';
-import { CRMStaffsService } from '@crm/pages/staff/crm-staffs.service';
+import { CRMStaffsService } from '@crm/pages/staff/pages/all/crm-staff.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ApiResponse, ApiState } from '@root/app.model';
-import { CRMStaffModel } from '@crm/pages/staff/crm-staff.model';
+import { CRMStaffModel } from '@crm/pages/staff/pages/all/crm-staff.model';
 import { Badge } from 'primeng/badge';
 import { Button } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';

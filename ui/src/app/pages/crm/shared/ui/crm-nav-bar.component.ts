@@ -18,7 +18,7 @@ import { CRM_ROUTE } from '@root/app.routes';
 import {
   ALL_STAFFS_ROUTE,
   REGISTER_ROUTE
-} from '@crm/pages/staff/crm-staff.routes';
+} from '@crm/pages/staff/staff-core.routes';
 
 @Component({
   selector: 'app-crm-nav-bar',

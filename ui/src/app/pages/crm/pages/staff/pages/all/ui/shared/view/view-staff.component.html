@@ -1,0 +1,93 @@
+<div class="w-full flex flex-col gap-4">
+  <!-- image & email -->
+  <div class="w-full flex gap-2 items-center">
+    @if (staff().image_key; as k) {
+      <p-avatar [image]="k" class="mr-2" shape="circle" />
+    } @else {
+      <p-avatar icon="pi pi-user" class="mr-2" shape="circle" />
+    }
+    <div class="flex-1">
+      <p-iconfield styleClass="mb-0">
+        <p-inputicon styleClass="pi pi-envelope" />
+        <input
+          class="w-full"
+          type="text"
+          [value]="staff().email"
+          pInputText
+          [disabled]="true"
+        />
+      </p-iconfield>
+    </div>
+  </div>
+
+  <!-- first & last name -->
+  <div class="w-full flex gap-2 flex-col md:flex-row items-end">
+    <div class="w-full">
+      <div class="flex-auto">
+        <label class="font-semibold block" for="firstname">Firstname</label>
+        <input
+          id="firstname"
+          [disabled]="true"
+          [value]="staff().firstname"
+          type="text"
+          class="w-full"
+          pInputText
+        />
+      </div>
+    </div>
+
+    <div class="w-full">
+      <div class="flex-auto">
+        <label class="font-semibold block" for="lastname">Lastname</label>
+        <input
+          [disabled]="true"
+          [value]="staff().lastname"
+          type="text"
+          id="lastname"
+          class="w-full"
+          pInputText
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- roles & permissions -->
+  <div class="w-full flex gap-2 flex-col md:flex-row items-end">
+    <div class="w-full flex-auto">
+      <label class="font-semibold block" for="role">Role</label>
+      <p-select
+        id="role"
+        placeholder="roles"
+        [(ngModel)]="selectedRole"
+        [options]="roles(staff().access_controls)"
+        class="w-full"
+      />
+    </div>
+
+    <div class="w-full flex-auto">
+      <label class="font-semibold block" for="permissions">Permissions</label>
+      <p-select
+        [disabled]="selectedRole === undefined"
+        id="permissions"
+        placeholder="permissions"
+        [options]="permissions(staff().access_controls)"
+        class="w-full"
+      />
+    </div>
+  </div>
+
+  <!-- bio -->
+  <div class="w-full">
+    <label class="font-semibold block" for="notes">Bio</label>
+    <textarea
+      [disabled]="true"
+      pTextarea
+      id="notes"
+      [value]="staff().bio || ''"
+      rows="5"
+      cols="30"
+      style="resize: none"
+      class="h-fit w-full"
+    ></textarea>
+  </div>
+</div>

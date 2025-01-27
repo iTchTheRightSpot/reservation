@@ -2,12 +2,11 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { CRMStaffModel } from '@crm/pages/staff/pages/all/crm-staff.model';
 
 @Component({
-  selector: 'app-create-booking',
+  selector: 'app-role',
   imports: [],
-  templateUrl: './create-booking.component.html',
+  templateUrl: './role.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CreateBookingComponent {
-  staffs = input.required<CRMStaffModel[]>();
-  protected readonly services = [];
+export class RoleComponent {
+  staff = input.required<CRMStaffModel>();
 }

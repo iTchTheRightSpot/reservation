@@ -7,8 +7,8 @@ export const routes: Routes = [
   {
     path: ALL_STAFFS_ROUTE,
     loadComponent: () =>
-      import('./pages/all-staffs/all-staffs.component').then(
-        m => m.AllStaffsComponent
+      import('@crm/pages/staff/pages/all/crm-staff.component').then(
+        m => m.CrmStaffComponent
       )
   },
   {
