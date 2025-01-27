@@ -74,7 +74,9 @@ import { InputNumber } from 'primeng/inputnumber';
         />
       </div>
       <div class="flex items-center gap-4 mb-8">
-        <label for="is_visible" class="font-semibold w-24">Visible</label>
+        <label for="is_visible" class="font-semibold w-24"
+          >Visible (display to customers)</label
+        >
         <p-select
           inputId="is_visible"
           [options]="visibilityOptions()"

@@ -29,20 +29,33 @@ func NewServiceTypeHandler(mux *http.ServeMux, l utils.ILogger, s service_type.I
 }
 
 func (dep *ServiceTypeHandler) Register() {
-	rp := &models.RolePermissionEnum{
-		Role:        models.STAFF,
-		Permissions: []models.PermissionEnum{models.WRITE},
-	}
-
-	m := middleware.RequestBodyMiddleware[model.ServiceTypePayload]{Logger: dep.logger}
+	rp := &models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}}
 
 	dep.mux.HandleFunc("GET /service", dep.services)
 	dep.mux.HandleFunc("GET /service/staffs", dep.staffsByServices)
 
-	dep.mux.Handle("POST /service/staff", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(http.HandlerFunc(dep.linkServiceToStaff), rp)))
-	dep.mux.Handle("GET /crm/services", dep.ware.Authentication(dep.ware.HasRole(http.HandlerFunc(dep.crmServices), &rp.Role)))
-	dep.mux.Handle("POST /crm/service", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(m.RequestBody(http.HandlerFunc(dep.create)), rp)))
-	dep.mux.Handle("PUT /crm/service", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(m.RequestBody(http.HandlerFunc(dep.update)), rp)))
+	// protected routes
+	// reads
+	dep.mux.Handle("GET /crm/services", dep.ware.Authentication(
+		dep.ware.HasRole(http.HandlerFunc(dep.crmServices), &rp.Role),
+	))
+	dep.mux.Handle("GET /crm/services/staff", dep.ware.Authentication(
+		dep.ware.HasRoleAndPermissions(
+			http.HandlerFunc(dep.servicesByStaff),
+			&models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.READ}},
+		),
+	))
+
+	// writes
+	dep.mux.Handle("POST /crm/service/staff", dep.ware.Authentication(
+		dep.ware.HasRoleAndPermissions(http.HandlerFunc(dep.linkServiceToStaff), rp)))
+	dep.mux.Handle("DELETE /crm/service/staff", dep.ware.Authentication(
+		dep.ware.HasRoleAndPermissions(http.HandlerFunc(dep.deLinkServiceFromStaff), rp)))
+	m := middleware.RequestBodyMiddleware[model.ServiceTypePayload]{Logger: dep.logger}
+	dep.mux.Handle("POST /crm/service", dep.ware.Authentication(
+		dep.ware.HasRoleAndPermissions(m.RequestBody(http.HandlerFunc(dep.create)), rp)))
+	dep.mux.Handle("PUT /crm/service", dep.ware.Authentication(
+		dep.ware.HasRoleAndPermissions(m.RequestBody(http.HandlerFunc(dep.update)), rp)))
 }
 
 func (dep *ServiceTypeHandler) create(w http.ResponseWriter, r *http.Request) {
@@ -158,4 +171,12 @@ func (dep *ServiceTypeHandler) linkServiceToStaff(w http.ResponseWriter, r *http
 
 	dep.logger.Log("successfully linked service to staff")
 	w.WriteHeader(http.StatusCreated)
+}
+
+func (dep *ServiceTypeHandler) servicesByStaff(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+func (dep *ServiceTypeHandler) deLinkServiceFromStaff(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
 }

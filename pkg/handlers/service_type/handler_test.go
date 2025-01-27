@@ -193,7 +193,7 @@ func TestServiceTypeHandler(t *testing.T) {
 			}
 
 			for i := 0; i < 2; i++ {
-				url := fmt.Sprintf("/service/staff?service_name=%s", serviceName)
+				url := fmt.Sprintf("/crm/service/staff?service_name=%s", serviceName)
 				req := httptest.NewRequest(http.MethodPost, url, nil)
 				req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
 				req.Header.Set("Content-Type", "application/json")

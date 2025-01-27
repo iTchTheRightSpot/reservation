@@ -1,10 +1,17 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  output
+} from '@angular/core';
 import { CRMStaffModel } from '@crm/pages/staff/pages/all/crm-staff.model';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { ViewStaffComponent } from './shared/view/view-staff.component';
 import { Tag } from 'primeng/tag';
 import { RoleComponent } from './shared/role/role.component';
 import { LinkServiceComponent } from './shared/link-service/link-service.component';
+import { ServicePayToStaffload } from './shared/link-service/link-service.model';
+import { ApiResponse, ApiState } from '@root/app.model';
 
 @Component({
   selector: 'app-staff-detail-holder',
@@ -39,7 +46,17 @@ import { LinkServiceComponent } from './shared/link-service/link-service.compone
           <app-role [staff]="staff()" />
         </p-tabpanel>
         <p-tabpanel value="2">
-          <app-link-service [staff]="staff()" />
+          <app-link-service
+            [allServices]="allServices()"
+            [linkServiceLoadingState]="linkServiceToStaffLoadingState()"
+            [staffId]="staff().user_id"
+            [staffServices]="servicesByStaff()"
+            [deLinkServiceFromStaffState]="deLinkServiceFromStaffState()"
+            (deLinkServiceFromStaffEmitter)="
+              deLinkServiceFromStaffEmitter.emit($event)
+            "
+            (linkServiceToStaffEmitter)="linkServiceToStaffEmitter.emit($event)"
+          />
         </p-tabpanel>
       </p-tabpanels>
     </p-tabs>
@@ -48,4 +65,11 @@ import { LinkServiceComponent } from './shared/link-service/link-service.compone
 })
 export class StaffDetailComponent {
   staff = input.required<CRMStaffModel>();
+  linkServiceToStaffLoadingState = input.required<ApiState>();
+  servicesByStaff = input.required<ApiResponse<string[]>>();
+  allServices = input.required<ApiResponse<string[]>>();
+  deLinkServiceFromStaffState = input.required<ApiState>();
+
+  readonly deLinkServiceFromStaffEmitter = output<ServicePayToStaffload>();
+  readonly linkServiceToStaffEmitter = output<ServicePayToStaffload>();
 }

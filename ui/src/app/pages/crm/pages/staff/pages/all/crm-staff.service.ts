@@ -34,7 +34,6 @@ export class CRMStaffsService {
           concatMap(() =>
             concat(
               of<ApiResponse<CRMStaffModel[]>>({ state: ApiState.LOADING }),
-
               timer(1000).pipe(
                 concatMap(() =>
                   of<ApiResponse<CRMStaffModel[]>>({

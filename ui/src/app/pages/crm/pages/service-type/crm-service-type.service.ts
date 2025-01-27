@@ -20,15 +20,22 @@ import {
 import { ApiResponse, ApiState } from '@root/app.model';
 import { err } from '@root/app.util';
 import { ToastEnum, ToastService } from '@shared/data-access/toast.service';
+import { ServicePayToStaffload } from '@crm/pages/staff/pages/all/ui/shared/link-service/link-service.model';
+import { Cache } from '@shared/data-access/cache';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CRMServiceTypeService {
+  private static readonly serviceTypesByStaffCache = new Cache<
+    string,
+    string[]
+  >();
+
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
 
-  private readonly cache = new BehaviorSubject<
+  private readonly allServiceTypesCache = new BehaviorSubject<
     CRMServiceTypeModel[] | undefined
   >(undefined);
 
@@ -51,7 +58,7 @@ export class CRMServiceTypeService {
             )
           )
         )
-      : this.cache.asObservable().pipe(
+      : this.allServiceTypesCache.asObservable().pipe(
           switchMap(arr =>
             arr
               ? of<ApiResponse<CRMServiceTypeModel[]>>({
@@ -64,7 +71,7 @@ export class CRMServiceTypeService {
                   >(`${environment.domain}crm/services`, { withCredentials: true })
                   .pipe(
                     map(arr => {
-                      this.cache.next(arr);
+                      this.allServiceTypesCache.next(arr);
                       return {
                         state: ApiState.LOADED,
                         data: arr
@@ -106,8 +113,8 @@ export class CRMServiceTypeService {
         : this.http.put<T>(url, body, { withCredentials: true });
 
     return req$.pipe(
-      map(res => {
-        this.cache.next(undefined);
+      map(() => {
+        this.allServiceTypesCache.next(undefined);
         return { state: ApiState.LOADED } as ApiResponse<T>;
       }),
       startWith({ state: ApiState.LOADING } as ApiResponse<T>),
@@ -117,4 +124,133 @@ export class CRMServiceTypeService {
       })
     );
   };
+
+  readonly linkServiceToStaff = (
+    o: ServicePayToStaffload
+  ): Observable<ApiResponse<any>> =>
+    !environment.production
+      ? of('yes').pipe(
+          concatMap(() =>
+            concat(
+              of<ApiResponse<any>>({ state: ApiState.LOADING }),
+              timer(1000).pipe(
+                concatMap(() =>
+                  of<ApiResponse<any>>({ state: ApiState.LOADED })
+                )
+              )
+            )
+          )
+        )
+      : this.http
+          .post<ServicePayToStaffload>(
+            `${environment.domain}crm/service/staff`,
+            o,
+            {
+              withCredentials: true
+            }
+          )
+          .pipe(
+            map(() => {
+              this.toast.message({
+                message: 'linked service to staff!',
+                state: ToastEnum.SUCCESS
+              });
+              return { state: ApiState.LOADED } as ApiResponse<any>;
+            }),
+            startWith({ state: ApiState.LOADING } as ApiResponse<any>),
+            catchError(e => {
+              this.toast.message({
+                state: ToastEnum.ERROR,
+                message: e.message
+              });
+              return of(err<any>(e));
+            })
+          );
+
+  readonly servicesByStaff = (
+    staffId: string
+  ): Observable<ApiResponse<string[]>> => {
+    if (!environment.production)
+      return of('yes').pipe(
+        concatMap(() =>
+          concat(
+            of<ApiResponse<string[]>>({
+              state: ApiState.LOADING
+            }),
+            timer(2000).pipe(
+              concatMap(() =>
+                of<ApiResponse<string[]>>({
+                  state: ApiState.LOADED,
+                  data: ['lawn', 'pedicure', 'mens hair']
+                })
+              )
+            )
+          )
+        )
+      );
+
+    const req$ = this.http
+      .get<
+        string[]
+      >(`${environment.domain}crm/services/staff`, { withCredentials: true })
+      .pipe(
+        map(arr => {
+          CRMServiceTypeService.serviceTypesByStaffCache.setItem(staffId, arr);
+          return {
+            state: ApiState.LOADED,
+            data: arr
+          } as ApiResponse<string[]>;
+        }),
+        startWith({ state: ApiState.LOADING } as ApiResponse<string[]>),
+        catchError(e => of(err<string[]>(e)))
+      );
+
+    return CRMServiceTypeService.serviceTypesByStaffCache
+      .getItem(staffId)
+      .pipe(
+        switchMap(arr =>
+          arr
+            ? of<ApiResponse<string[]>>({ state: ApiState.LOADED, data: arr })
+            : arr === undefined
+              ? req$
+              : of<ApiResponse<string[]>>({ state: ApiState.LOADED, data: [] })
+        )
+      );
+  };
+
+  readonly deLinkServiceFromStaff = (o: ServicePayToStaffload) =>
+    !environment.production
+      ? of('yes').pipe(
+          concatMap(() =>
+            concat(
+              of<ApiResponse<any>>({ state: ApiState.LOADING }),
+              timer(1000).pipe(
+                concatMap(() =>
+                  of<ApiResponse<any>>({ state: ApiState.LOADED })
+                )
+              )
+            )
+          )
+        )
+      : this.http
+          .delete<
+            ApiResponse<any>
+          >(`${environment.domain}crm/service/staff?staff_id=${o.staff_id}&service=${o.service}`, { withCredentials: true })
+          .pipe(
+            map(() => {
+              this.toast.message({
+                message: 'de-linked service from staff',
+                state: ToastEnum.SUCCESS
+              });
+              return { state: ApiState.LOADED } as ApiResponse<any>;
+            }),
+            startWith({ state: ApiState.LOADING } as ApiResponse<any>),
+            catchError(e => {
+              this.toast.message({
+                state: ToastEnum.ERROR,
+                message: e.message
+              });
+              return of(err<any>(e));
+            })
+          );
 }

@@ -13,6 +13,9 @@ import { CRM_STAFFS_ROUTE } from '@crm/crm.routes';
 import { REGISTER_ROUTE } from '@crm/pages/staff/staff-core.routes';
 import { Drawer } from 'primeng/drawer';
 import { StaffDetailComponent } from './ui/staff-detail.component';
+import { map, Subject, switchMap, tap } from 'rxjs';
+import { ServicePayToStaffload } from '@crm/pages/staff/pages/all/ui/shared/link-service/link-service.model';
+import { CRMServiceTypeService } from '@crm/pages/service-type/crm-service-type.service';
 
 @Component({
   selector: 'app-crm-staff',
@@ -21,7 +24,8 @@ import { StaffDetailComponent } from './ui/staff-detail.component';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CrmStaffComponent {
-  private readonly service = inject(CRMStaffsService);
+  private readonly staffsService = inject(CRMStaffsService);
+  private readonly serviceType = inject(CRMServiceTypeService);
   private readonly router = inject(Router);
 
   protected first = 0;
@@ -36,7 +40,59 @@ export class CrmStaffComponent {
       `${CRM_ROUTE}/${CRM_STAFFS_ROUTE}/${REGISTER_ROUTE}`
     ]);
 
-  protected readonly staffs = toSignal(this.service.staffs(), {
+  protected readonly allServices = toSignal(
+    this.serviceType.all().pipe(
+      map(
+        o =>
+          ({
+            state: o.state,
+            message: o.message,
+            data: o.data?.map(s => s.name)
+          }) as ApiResponse<string[]>
+      )
+    ),
+    { initialValue: { state: ApiState.LOADING } as ApiResponse<string[]> }
+  );
+
+  protected readonly staffs = toSignal(this.staffsService.staffs(), {
     initialValue: { state: ApiState.LOADING } as ApiResponse<CRMStaffModel[]>
   });
+
+  protected readonly linkServiceToStaffEmitter =
+    new Subject<ServicePayToStaffload>();
+  protected readonly serviceToStaffState = toSignal(
+    this.linkServiceToStaffEmitter
+      .asObservable()
+      .pipe(
+        switchMap(o =>
+          this.serviceType
+            .linkServiceToStaff(o)
+            .pipe(tap(() => this.servicesByStaffEmitter.next(o.staff_id)))
+        )
+      ),
+    { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
+  );
+
+  protected readonly servicesByStaffEmitter = new Subject<string>();
+  protected readonly servicesByStaff = toSignal(
+    this.servicesByStaffEmitter
+      .asObservable()
+      .pipe(switchMap(o => this.serviceType.servicesByStaff(o))),
+    { initialValue: { state: ApiState.LOADED } as ApiResponse<string[]> }
+  );
+
+  protected readonly deLinkServiceFromStaffEmitter =
+    new Subject<ServicePayToStaffload>();
+  protected readonly deLinkServiceFromStaffState = toSignal(
+    this.deLinkServiceFromStaffEmitter
+      .asObservable()
+      .pipe(
+        switchMap(o =>
+          this.serviceType
+            .deLinkServiceFromStaff(o)
+            .pipe(tap(() => this.servicesByStaffEmitter.next(o.staff_id)))
+        )
+      ),
+    { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
+  );
 }
