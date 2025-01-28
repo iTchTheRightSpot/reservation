@@ -70,7 +70,7 @@ export class BookingsService {
     !environment.production
       ? of<ApiResponse<any>>({ state: ApiState.LOADED })
       : this.http
-          .patch<any>(`${environment.domain}crm/reservation`, u, {
+          .put<any>(`${environment.domain}crm/reservation`, u, {
             withCredentials: true
           })
           .pipe(

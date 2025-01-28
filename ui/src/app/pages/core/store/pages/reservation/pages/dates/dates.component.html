@@ -16,6 +16,8 @@
       <ng-template pTemplate="date" let-date>
         @if (crossDates(date, invalidDates())) {
           <strong style="text-decoration: line-through">{{ date.day }}</strong>
+        } @else if (crossDates(date, validDates())) {
+          <strong class="p-2 bg-primary rounded-full">{{ date.day }}</strong>
         } @else {
           {{ date.day }}
         }
@@ -74,7 +76,6 @@
                 @for (time of ds; track time.original) {
                   <p-button
                     [label]="time.format"
-                    variant="outlined"
                     severity="secondary"
                     (onClick)="updateParent(time.original)"
                   />

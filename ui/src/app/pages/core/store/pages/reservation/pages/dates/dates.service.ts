@@ -51,7 +51,7 @@ export class DatesService {
         message: 'missing: service(s) & staff'
       });
 
-    const d = new Date(date)
+    const d = new Date(date);
     if (d.getMonth() !== new Date().getMonth()) d.setDate(1);
 
     const key = `${obj.staff.staff_id}_${obj.services.map(s => s.name).join('_')}_${d.getMonth()}_${d.getFullYear()}_${TIMEZONE}`;

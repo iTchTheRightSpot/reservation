@@ -12,6 +12,7 @@ import { RoleComponent } from './shared/role/role.component';
 import { LinkServiceComponent } from './shared/link-service/link-service.component';
 import { ServiceTypeToStaffPayload } from './shared/link-service/link-service.model';
 import { ApiResponse, ApiState } from '@root/app.model';
+import { StaffScheduleComponent } from './shared/staff-schedule/staff-schedule.component';
 
 @Component({
   selector: 'app-staff-detail-holder',
@@ -24,7 +25,8 @@ import { ApiResponse, ApiState } from '@root/app.model';
     ViewStaffComponent,
     Tag,
     RoleComponent,
-    LinkServiceComponent
+    LinkServiceComponent,
+    StaffScheduleComponent
   ],
   template: `
     <p-tabs value="0">
@@ -36,7 +38,8 @@ import { ApiResponse, ApiState } from '@root/app.model';
           }
         </p-tab>
         <p-tab value="1">Roles & Permissions</p-tab>
-        <p-tab value="2">Sevices</p-tab>
+        <p-tab value="2">Services</p-tab>
+        <p-tab value="3">Schedules</p-tab>
       </p-tablist>
       <p-tabpanels>
         <p-tabpanel value="0">
@@ -57,6 +60,9 @@ import { ApiResponse, ApiState } from '@root/app.model';
             "
             (linkServiceToStaffEmitter)="linkServiceToStaffEmitter.emit($event)"
           />
+        </p-tabpanel>
+        <p-tabpanel value="3">
+          <app-staff-schedule />
         </p-tabpanel>
       </p-tabpanels>
     </p-tabs>

@@ -22,7 +22,7 @@ import { Tag } from 'primeng/tag';
 import { Button } from 'primeng/button';
 import { ConfirmPopup } from 'primeng/confirmpopup';
 import { ConfirmationService } from 'primeng/api';
-import { ApiResponse, ApiState } from '@root/app.model';
+import { ApiState } from '@root/app.model';
 import { Avatar } from 'primeng/avatar';
 
 @Component({
@@ -56,13 +56,10 @@ export class BookingDetailComponent {
   protected readonly state = BookingStatus;
   protected selectedBookingStatus: BookingStatus | undefined;
 
-  protected readonly services = (arr: string[]) =>
-    arr.map(s => ({ name: s.trim() }));
-
   protected readonly statuses = (s: BookingStatus) =>
     [BookingStatus.CONFIRMED, BookingStatus.CANCELLED]
       .filter(a => a !== s)
-      .map(a => ({ name: a }));
+      .map(a => a);
 
   protected readonly fm = (d: number) =>
     new Date(d).toLocaleDateString('en-US', {

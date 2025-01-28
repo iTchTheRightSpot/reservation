@@ -11,6 +11,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/mail"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"math"
 	"reflect"
 	"slices"
 	"strconv"
@@ -58,11 +59,11 @@ func (dep *reservationService) generateChunks(schedules []*schedule.Schedule, du
 			defer wg.Done()
 
 			var times []time.Time
-			tempStart := sch.Start
-
-			for tempStart.Before(sch.End) {
-				times = append(times, tempStart)
-				tempStart = tempStart.Add(time.Duration(duration) * time.Second)
+			add := time.Duration(duration) * time.Second
+			start := sch.Start
+			for start.Before(sch.End) && start.Add(add).Before(sch.End) {
+				times = append(times, start)
+				start = start.Add(add)
 			}
 
 			mu.Lock()
@@ -208,11 +209,18 @@ func (dep *reservationService) dateInTimezone(p *reservation.ReservationPayload)
 }
 
 func (dep *reservationService) sumUpServiceDuration(s []*service_type.ServiceTypeEntity) int {
+	maxCleanup := s[0].CleanUpTime
 	count := 0
-	for _, entity := range s {
-		count += entity.Duration + entity.CleanUpTime
+	for _, e := range s {
+		count += e.Duration
+		maxCleanup = int(math.Max(float64(maxCleanup), float64(e.CleanUpTime)))
 	}
-	return count
+	return count + maxCleanup
+	//count := 0
+	//for _, entity := range s {
+	//	count += entity.Duration + entity.CleanUpTime
+	//}
+	//return count
 }
 
 func (dep *reservationService) sumUpServicePrice(s []*service_type.ServiceTypeEntity) float64 {

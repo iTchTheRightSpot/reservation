@@ -156,13 +156,14 @@ func TestReservationHandler(t *testing.T) {
 			reserves := reservationTimes(t, d, staff1, types, zone.String(), mux, err)
 
 			// create reservation
+			maxT := len(reserves[0].Times)
 			createBody := model.ReservationPayload{
 				StaffId:  staff1.UUID.String(),
 				Name:     "user-name",
 				Email:    uuid.NewString() + "@email.com",
 				Phone:    "0123456789",
 				Services: types,
-				Time:     reserves[0].Times[0],
+				Time:     reserves[0].Times[rand.Intn(maxT-0)+0],
 				Timezone: zone.String(),
 			}
 
@@ -188,13 +189,14 @@ func TestReservationHandler(t *testing.T) {
 			reserves := reservationTimes(t, d, staff1, types, zone.String(), mux, err)
 
 			// create reservation
+			maxT := len(reserves[0].Times)
 			payload := model.ReservationPayload{
 				StaffId:  staff1.UUID.String(),
 				Name:     "user-name",
 				Email:    uuid.NewString() + "@email.com",
 				Phone:    "0123456789",
 				Services: types,
-				Time:     reserves[0].Times[0],
+				Time:     reserves[0].Times[rand.Intn(maxT-0)+0],
 				Timezone: zone.String(),
 			}
 
@@ -210,7 +212,7 @@ func TestReservationHandler(t *testing.T) {
 
 			if rr.Code != http.StatusCreated {
 				t.Errorf("expected status code %d, got %d", http.StatusCreated, rr.Code)
-				t.Errorf(rr.Body.String())
+				t.Log(rr.Body.String())
 			}
 		})
 
@@ -222,13 +224,14 @@ func TestReservationHandler(t *testing.T) {
 			types := []string{serviceType1.Name, serviceType2.Name}
 			reserves := reservationTimes(t, ddate, staff1, types, zone.String(), mux, err)
 
+			maxT := len(reserves[0].Times)
 			payload := model.ReservationPayload{
 				StaffId:  staff1.UUID.String(),
 				Name:     "user-name",
 				Email:    uuid.NewString() + "@email.com",
 				Phone:    "0123456789",
 				Services: types,
-				Time:     reserves[0].Times[0],
+				Time:     reserves[0].Times[rand.Intn(maxT-0)+0],
 				Timezone: zone.String(),
 			}
 
@@ -266,15 +269,15 @@ func TestReservationHandler(t *testing.T) {
 			num := handlers.CountResponseStatus(statusArr, 201)
 			if num != 1 {
 				t.Errorf("expect 1 given %v", num)
-				t.Errorf("%v", statusArr)
-				t.Errorf("%v", errArr)
+				t.Logf("%v", statusArr)
+				t.Logf("%v", errArr)
 			}
 
 			num = handlers.CountResponseStatus(statusArr, 409)
 			if num != (randNum - 1) {
 				t.Errorf("expect %v given %v", randNum-1, num)
-				t.Errorf("%v", statusArr)
-				t.Errorf("%v", errArr)
+				t.Logf("%v", statusArr)
+				t.Logf("%v", errArr)
 			}
 		})
 

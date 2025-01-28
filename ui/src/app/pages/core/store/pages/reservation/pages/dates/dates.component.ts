@@ -65,6 +65,7 @@ export class DatesComponent {
   protected readonly skeleton = (len: number) =>
     Array.from({ length: len }, (_, index) => index);
 
+  protected readonly validDates = signal<Date[]>([]);
   protected readonly invalidDates = signal<Date[]>([]);
   protected readonly req = toSignal(
     this.selected.asObservable().pipe(
@@ -73,8 +74,12 @@ export class DatesComponent {
       switchMap(date =>
         this.service.dates(date).pipe(
           tap(obj => {
-            if (obj.state === ApiState.LOADED && obj.data)
+            if (obj.state === ApiState.LOADED && obj.data) {
+              this.validDates.set(
+                obj.data.map(d => moment.tz(Number(d.date), TIMEZONE).toDate())
+              );
               this.invalidDates.set(this.filter(date, obj.data));
+            }
           })
         )
       )

@@ -19,7 +19,8 @@
         <div class="flex gap-2">
           <p-floatlabel variant="on">
             <p-date-picker
-              (onSelect)="selectedDate($event)"
+              (onSelect)="onSelectedDate($event)"
+              [(ngModel)]="selectedDate"
               size="small"
               id="over_label"
               inputId="over_label"
@@ -37,6 +38,7 @@
               [loading]="staffs().state === apiState.LOADING"
               [options]="staffs().data"
               [(ngModel)]="selectedStaff"
+              (onChange)="onSelectedStaff()"
               optionLabel="firstname"
               class="w-full md:w-56"
             >

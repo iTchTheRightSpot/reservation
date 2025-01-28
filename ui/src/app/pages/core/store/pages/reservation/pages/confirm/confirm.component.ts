@@ -114,7 +114,7 @@ export class ConfirmComponent {
       name: this.form.controls['name'].value || '',
       email: this.form.controls['email'].value || '',
       description: this.form.controls['description'].value || '',
-      phone: this.form.controls['phone'].value || '',
+      phone: `${this.form.controls['phone'].value}` || '',
       services: state.services?.map(s => s.name.trim()) || [],
       timezone: TIMEZONE,
       time: state.datetime || ''

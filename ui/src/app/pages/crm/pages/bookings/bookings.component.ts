@@ -17,7 +17,7 @@ import {
 } from './bookings.model';
 import { AuthService } from '@shared/data-access/auth.service';
 import { interval, Subject, switchMap, takeWhile, tap } from 'rxjs';
-import { Select } from 'primeng/select';
+import { Select, SelectChangeEvent } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { Avatar } from 'primeng/avatar';
 import { Drawer } from 'primeng/drawer';
@@ -77,7 +77,7 @@ export class BookingsComponent {
   protected readonly bookingState = BookingStatus;
   protected readonly thead = ['Name', 'From', 'To', 'Status'];
 
-  protected date = new Date();
+  protected selectedDate: Date | undefined;
   protected selectedStaff: CRMStaffModel | undefined;
   protected selectedBooking: BookingsModel | undefined;
 
@@ -91,27 +91,20 @@ export class BookingsComponent {
       .asObservable()
       .pipe(switchMap(o => this.bookingService.bookings(o))),
     {
-      initialValue: { state: ApiState.LOADING } as ApiResponse<BookingsModel[]>
+      initialValue: { state: ApiState.LOADED } as ApiResponse<BookingsModel[]>
     }
   );
 
-  protected readonly selectedDate = (d: Date) => {
-    this.date = d;
-    if (!this.selectedStaff)
-      this.allBookingsEmitter.next({
-        user_id: this.authService.activeUser()?.user_id || '',
-        date: d,
-        page: (this.first = 0),
-        size: this.rows
-      });
-    else
-      this.allBookingsEmitter.next({
-        user_id: this.selectedStaff.user_id,
-        date: d,
-        page: (this.first = 0),
-        size: this.rows
-      });
-  };
+  protected readonly onSelectedDate = (d: Date) =>
+    this.allBookingsEmitter.next({
+      user_id:
+        this.selectedStaff?.user_id ||
+        this.authService.activeUser()?.user_id ||
+        '',
+      date: d,
+      page: (this.first = 0),
+      size: this.rows
+    });
 
   private readonly updateBookingStatusEmitter =
     new Subject<UpdateBookingStatusPayload>();
@@ -132,19 +125,22 @@ export class BookingsComponent {
 
   protected readonly updateBookingStatus = (o: UpdateBookingStatusPayload) => {
     this.updateBookingStatusEmitter.next(o);
-    if (this.selectedStaff)
-      this.allBookingsEmitter.next({
-        user_id: this.selectedStaff.user_id,
-        date: this.date,
-        page: this.first,
-        size: this.rows
-      });
-    else
-      this.allBookingsEmitter.next({
-        user_id: this.authService.activeUser()?.user_id || '',
-        date: this.date,
-        page: this.first,
-        size: this.rows
-      });
+    this.allBookingsEmitter.next({
+      user_id:
+        this.selectedStaff?.user_id ||
+        this.authService.activeUser()?.user_id ||
+        '',
+      date: this.selectedDate || new Date(),
+      page: this.first,
+      size: this.rows
+    });
   };
+
+  protected readonly onSelectedStaff = () =>
+    this.allBookingsEmitter.next({
+      user_id: this.selectedStaff?.user_id || '',
+      date: this.selectedDate || new Date(),
+      page: (this.first = 0),
+      size: this.rows
+    });
 }

@@ -95,7 +95,6 @@
         placeholder="Select a status"
         [(ngModel)]="selectedBookingStatus"
         [options]="statuses(booking().status)"
-        optionLabel="name"
         class="w-full"
       />
     </div>
@@ -164,8 +163,7 @@
       <p-select
         id="services"
         inputId="on_label"
-        [options]="services(booking().services)"
-        optionLabel="name"
+        [options]="booking().services"
         class="w-full"
       />
     </div>
