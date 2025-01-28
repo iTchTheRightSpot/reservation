@@ -20,17 +20,14 @@ import {
 import { ApiResponse, ApiState } from '@root/app.model';
 import { err } from '@root/app.util';
 import { ToastEnum, ToastService } from '@shared/data-access/toast.service';
-import { ServicePayToStaffload } from '@crm/pages/staff/pages/all/ui/shared/link-service/link-service.model';
+import { ServiceTypeToStaffPayload } from '@crm/pages/staff/pages/all/ui/shared/link-service/link-service.model';
 import { Cache } from '@shared/data-access/cache';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CRMServiceTypeService {
-  private static readonly serviceTypesByStaffCache = new Cache<
-    string,
-    string[]
-  >();
+  static readonly ServiceTypesByStaffCache = new Cache<string, string[]>();
 
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
@@ -126,7 +123,7 @@ export class CRMServiceTypeService {
   };
 
   readonly linkServiceToStaff = (
-    o: ServicePayToStaffload
+    o: ServiceTypeToStaffPayload
   ): Observable<ApiResponse<any>> =>
     !environment.production
       ? of('yes').pipe(
@@ -142,7 +139,7 @@ export class CRMServiceTypeService {
           )
         )
       : this.http
-          .post<ServicePayToStaffload>(
+          .post<ServiceTypeToStaffPayload>(
             `${environment.domain}crm/service/staff`,
             o,
             {
@@ -192,10 +189,10 @@ export class CRMServiceTypeService {
     const req$ = this.http
       .get<
         string[]
-      >(`${environment.domain}crm/services/staff`, { withCredentials: true })
+      >(`${environment.domain}crm/services/staff?staff_id=${staffId}`, { withCredentials: true })
       .pipe(
         map(arr => {
-          CRMServiceTypeService.serviceTypesByStaffCache.setItem(staffId, arr);
+          CRMServiceTypeService.ServiceTypesByStaffCache.setItem(staffId, arr);
           return {
             state: ApiState.LOADED,
             data: arr
@@ -205,20 +202,20 @@ export class CRMServiceTypeService {
         catchError(e => of(err<string[]>(e)))
       );
 
-    return CRMServiceTypeService.serviceTypesByStaffCache
-      .getItem(staffId)
-      .pipe(
-        switchMap(arr =>
+    return CRMServiceTypeService.ServiceTypesByStaffCache.getItem(staffId).pipe(
+      switchMap(
+        arr =>
           arr
             ? of<ApiResponse<string[]>>({ state: ApiState.LOADED, data: arr })
-            : arr === undefined
-              ? req$
-              : of<ApiResponse<string[]>>({ state: ApiState.LOADED, data: [] })
-        )
-      );
+            : req$
+        // : arr === undefined
+        //   ? req$
+        //   : of<ApiResponse<string[]>>({ state: ApiState.LOADED, data: [] })
+      )
+    );
   };
 
-  readonly deLinkServiceFromStaff = (o: ServicePayToStaffload) =>
+  readonly deLinkServiceFromStaff = (o: ServiceTypeToStaffPayload) =>
     !environment.production
       ? of('yes').pipe(
           concatMap(() =>

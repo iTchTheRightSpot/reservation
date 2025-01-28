@@ -26,3 +26,8 @@ type ServiceTypeResponse struct {
 	Duration      int     `json:"duration"`
 	CleanUpTime   int     `json:"clean_up_time"`
 }
+
+type LinkServiceTypeToStaffPayload struct {
+	Service   string `json:"service" validate:"required,max=50"`
+	StaffUUID string `json:"staff_id" validate:"required"`
+}

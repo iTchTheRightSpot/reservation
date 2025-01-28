@@ -8,7 +8,7 @@ import {
 import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
-import { ServicePayToStaffload } from './link-service.model';
+import { ServiceTypeToStaffPayload } from './link-service.model';
 import { ApiResponse, ApiState } from '@root/app.model';
 import { Divider } from 'primeng/divider';
 import { Skeleton } from 'primeng/skeleton';
@@ -31,8 +31,8 @@ export class LinkServiceComponent {
   linkServiceLoadingState = input.required<ApiState>();
   deLinkServiceFromStaffState = input.required<ApiState>();
 
-  readonly deLinkServiceFromStaffEmitter = output<ServicePayToStaffload>();
-  readonly linkServiceToStaffEmitter = output<ServicePayToStaffload>();
+  readonly deLinkServiceFromStaffEmitter = output<ServiceTypeToStaffPayload>();
+  readonly linkServiceToStaffEmitter = output<ServiceTypeToStaffPayload>();
 
   protected selectedService: string | undefined;
   protected readonly state = ApiState;

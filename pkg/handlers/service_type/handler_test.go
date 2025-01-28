@@ -93,7 +93,7 @@ func TestServiceTypeHandler(t *testing.T) {
 		cred := []models.RolePermissionEnum{
 			{
 				Role:        models.STAFF,
-				Permissions: []models.PermissionEnum{models.WRITE},
+				Permissions: []models.PermissionEnum{models.WRITE, models.READ},
 			},
 		}
 		jwtObj, _ := jwtSer.Encode(
@@ -192,9 +192,13 @@ func TestServiceTypeHandler(t *testing.T) {
 				t.Error(err.Error())
 			}
 
+			pl, err := json.Marshal(serviceModel.LinkServiceTypeToStaffPayload{Service: serviceName, StaffUUID: save.staff.UUID.String()})
+			if err != nil {
+				t.Errorf("failed to marshal SchedulePayload: %s", err)
+			}
+
 			for i := 0; i < 2; i++ {
-				url := fmt.Sprintf("/crm/service/staff?service_name=%s", serviceName)
-				req := httptest.NewRequest(http.MethodPost, url, nil)
+				req := httptest.NewRequest(http.MethodPost, "/crm/service/staff", bytes.NewBuffer(pl))
 				req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
 				req.Header.Set("Content-Type", "application/json")
 				rr := httptest.NewRecorder()
@@ -237,6 +241,30 @@ func TestServiceTypeHandler(t *testing.T) {
 			// assert
 			if rr.Code != http.StatusNoContent {
 				t.Errorf("expected status code %d, got %d", http.StatusNoContent, rr.Code)
+			}
+		})
+
+		t.Run("should retrieve service types by staff uuid", func(t *testing.T) {
+			url := fmt.Sprintf("/crm/services/staff?staff_id=%s", save.staff.UUID.String())
+			req := httptest.NewRequest(http.MethodGet, url, nil)
+			req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: jwtObj.Token})
+			rr := httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+
+			// assert
+			if rr.Code != http.StatusOK {
+				t.Errorf("expected status code %d, got %d", http.StatusOK, rr.Code)
+				t.Log(rr.Body.String())
+			}
+
+			var arr []string
+			if err := json.Unmarshal(rr.Body.Bytes(), &arr); err != nil {
+				t.Errorf(err.Error())
+			}
+
+			if len(arr) != 2 {
+				t.Errorf("expect size to be 2, given %v", len(arr))
+				t.Log(arr)
 			}
 		})
 	})

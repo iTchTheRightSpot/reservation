@@ -14,8 +14,9 @@ type IServiceType interface {
 	ServiceTypes(ctx context.Context) (interface{}, error)
 	StaffsByServiceTypes(ctx context.Context, services *[]string) (interface{}, error)
 	CRMServiceTypes(ctx context.Context) (interface{}, error)
-	LinkServiceToStaff(ctx context.Context, staffUUID, serviceName string) error
+	LinkServiceToStaff(ctx context.Context, obj *service_type.LinkServiceTypeToStaffPayload) error
 	Update(ctx context.Context, dto *service_type.ServiceTypePayload) error
+	ServicesByStaffUUID(ctx context.Context, staffUUID string) (interface{}, error)
 }
 
 type serviceTypeImpl struct {
@@ -145,13 +146,13 @@ func (dep *serviceTypeImpl) Create(ctx context.Context, p *service_type.ServiceT
 	return nil
 }
 
-func (dep *serviceTypeImpl) LinkServiceToStaff(ctx context.Context, staffUUID, serviceName string) error {
-	s, err := dep.adapters.StaffStore.StaffByUUID(ctx, staffUUID)
+func (dep *serviceTypeImpl) LinkServiceToStaff(ctx context.Context, obj *service_type.LinkServiceTypeToStaffPayload) error {
+	s, err := dep.adapters.StaffStore.StaffByUUID(ctx, obj.StaffUUID)
 	if err != nil {
 		return &utils.NotFoundError{Message: "invalid staff id"}
 	}
 
-	service, err := dep.adapters.ServiceStore.ServiceTypeByName(ctx, serviceName)
+	service, err := dep.adapters.ServiceStore.ServiceTypeByName(ctx, obj.Service)
 	if err != nil {
 		return &utils.NotFoundError{Message: "invalid service name"}
 	}
@@ -174,4 +175,18 @@ func (dep *serviceTypeImpl) LinkServiceToStaff(ctx context.Context, staffUUID, s
 	}
 
 	return nil
+}
+
+func (dep *serviceTypeImpl) ServicesByStaffUUID(ctx context.Context, staffUUID string) (interface{}, error) {
+	arr, err := dep.adapters.ServiceStore.ServiceTypesByStaffUUID(ctx, strings.TrimSpace(staffUUID))
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return nil, &utils.NotFoundError{Message: "error retrieving services. Please double check staff id"}
+	}
+
+	if len(arr) == 0 {
+		return []interface{}{}, nil
+	}
+
+	return arr, nil
 }

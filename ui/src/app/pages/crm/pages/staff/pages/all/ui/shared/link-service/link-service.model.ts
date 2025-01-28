@@ -1,4 +1,4 @@
-export interface ServicePayToStaffload {
+export interface ServiceTypeToStaffPayload {
   staff_id: string;
   service: string;
 }

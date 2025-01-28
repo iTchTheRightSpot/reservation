@@ -49,7 +49,7 @@
         <p-skeleton size="4rem" styleClass="mr-2" />
       }
       @case (state.ERROR) {
-        {{ staffServices().message }}
+        <p class="text-red-600">{{ staffServices().message }}</p>
       }
       @case (state.LOADED) {
         <p-confirm-popup />
@@ -61,6 +61,8 @@
             icon="pi pi-times"
             iconPos="right"
           />
+        } @empty {
+          <p class="text-red-600">no services linked</p>
         }
       }
     }

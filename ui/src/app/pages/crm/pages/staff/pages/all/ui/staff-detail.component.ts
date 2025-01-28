@@ -10,7 +10,7 @@ import { ViewStaffComponent } from './shared/view/view-staff.component';
 import { Tag } from 'primeng/tag';
 import { RoleComponent } from './shared/role/role.component';
 import { LinkServiceComponent } from './shared/link-service/link-service.component';
-import { ServicePayToStaffload } from './shared/link-service/link-service.model';
+import { ServiceTypeToStaffPayload } from './shared/link-service/link-service.model';
 import { ApiResponse, ApiState } from '@root/app.model';
 
 @Component({
@@ -70,6 +70,6 @@ export class StaffDetailComponent {
   allServices = input.required<ApiResponse<string[]>>();
   deLinkServiceFromStaffState = input.required<ApiState>();
 
-  readonly deLinkServiceFromStaffEmitter = output<ServicePayToStaffload>();
-  readonly linkServiceToStaffEmitter = output<ServicePayToStaffload>();
+  readonly deLinkServiceFromStaffEmitter = output<ServiceTypeToStaffPayload>();
+  readonly linkServiceToStaffEmitter = output<ServiceTypeToStaffPayload>();
 }

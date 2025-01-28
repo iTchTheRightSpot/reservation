@@ -14,6 +14,7 @@ type IServiceTypeStore interface {
 	Save(ctx context.Context, s *service_type.ServiceTypeEntity) error
 	ServiceTypeByName(ctx context.Context, name string) (*service_type.ServiceTypeEntity, error)
 	ServiceTypesByStaffId(ctx context.Context, staffId uint64, visible bool) ([]*service_type.ServiceTypeEntity, error)
+	ServiceTypesByStaffUUID(ctx context.Context, uid string) ([]string, error)
 	ServiceTypes(ctx context.Context) ([]*service_type.ServiceTypeEntity, error)
 	Update(ctx context.Context, s *service_type.ServiceTypeEntity) error
 }
@@ -150,6 +151,41 @@ func (dep *serviceTypeStore) ServiceTypesByStaffId(ctx context.Context, staffId 
 	if err = rows.Err(); err != nil {
 		dep.logger.Error(err)
 		return nil, errors.New("error iterating services")
+	}
+
+	return arr, err
+}
+
+func (dep *serviceTypeStore) ServiceTypesByStaffUUID(ctx context.Context, uid string) ([]string, error) {
+	var q = `
+		SELECT s.name FROM staff st
+		INNER JOIN staff_service sts ON sts.staff_id = st.staff_id
+		INNER JOIN service_type s ON s.service_id = sts.service_id
+	 	WHERE st.uuid = $1
+	`
+
+	rows, err := dep.db.QueryContext(ctx, q, uid)
+	if err != nil {
+		dep.logger.Error(err)
+		return nil, errors.New("exception retrieving services")
+	}
+
+	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
+
+	var arr []string
+	for rows.Next() {
+		var str string
+		if err = rows.Scan(&str); err != nil {
+			dep.logger.Error(err)
+			return nil, errors.New("exception scanning service types")
+		}
+
+		arr = append(arr, str)
+	}
+
+	if err = rows.Err(); err != nil {
+		dep.logger.Error(err.Error())
+		return nil, errors.New("error iterating service types")
 	}
 
 	return arr, err

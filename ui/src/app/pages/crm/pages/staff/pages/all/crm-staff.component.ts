@@ -14,7 +14,7 @@ import { REGISTER_ROUTE } from '@crm/pages/staff/staff-core.routes';
 import { Drawer } from 'primeng/drawer';
 import { StaffDetailComponent } from './ui/staff-detail.component';
 import { map, Subject, switchMap, tap } from 'rxjs';
-import { ServicePayToStaffload } from '@crm/pages/staff/pages/all/ui/shared/link-service/link-service.model';
+import { ServiceTypeToStaffPayload } from '@crm/pages/staff/pages/all/ui/shared/link-service/link-service.model';
 import { CRMServiceTypeService } from '@crm/pages/service-type/crm-service-type.service';
 
 @Component({
@@ -59,17 +59,18 @@ export class CrmStaffComponent {
   });
 
   protected readonly linkServiceToStaffEmitter =
-    new Subject<ServicePayToStaffload>();
+    new Subject<ServiceTypeToStaffPayload>();
   protected readonly serviceToStaffState = toSignal(
-    this.linkServiceToStaffEmitter
-      .asObservable()
-      .pipe(
-        switchMap(o =>
-          this.serviceType
-            .linkServiceToStaff(o)
-            .pipe(tap(() => this.servicesByStaffEmitter.next(o.staff_id)))
+    this.linkServiceToStaffEmitter.asObservable().pipe(
+      switchMap(o =>
+        this.serviceType.linkServiceToStaff(o).pipe(
+          tap(() => {
+            CRMServiceTypeService.ServiceTypesByStaffCache.clear();
+            this.servicesByStaffEmitter.next(o.staff_id);
+          })
         )
-      ),
+      )
+    ),
     { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
   );
 
@@ -82,7 +83,7 @@ export class CrmStaffComponent {
   );
 
   protected readonly deLinkServiceFromStaffEmitter =
-    new Subject<ServicePayToStaffload>();
+    new Subject<ServiceTypeToStaffPayload>();
   protected readonly deLinkServiceFromStaffState = toSignal(
     this.deLinkServiceFromStaffEmitter
       .asObservable()

@@ -9,7 +9,6 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"net/http"
-	"strings"
 )
 
 type ServiceTypeHandler struct {
@@ -41,21 +40,30 @@ func (dep *ServiceTypeHandler) Register() {
 	))
 	dep.mux.Handle("GET /crm/services/staff", dep.ware.Authentication(
 		dep.ware.HasRoleAndPermissions(
-			http.HandlerFunc(dep.servicesByStaff),
+			http.HandlerFunc(dep.serviceTypesByStaffUUID),
 			&models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.READ}},
 		),
 	))
 
 	// writes
+	m1 := middleware.RequestBodyMiddleware[model.LinkServiceTypeToStaffPayload]{Logger: dep.logger}
 	dep.mux.Handle("POST /crm/service/staff", dep.ware.Authentication(
-		dep.ware.HasRoleAndPermissions(http.HandlerFunc(dep.linkServiceToStaff), rp)))
+		dep.ware.HasRoleAndPermissions(
+			m1.RequestBody(http.HandlerFunc(dep.linkServiceToStaff)),
+			rp,
+		),
+	))
 	dep.mux.Handle("DELETE /crm/service/staff", dep.ware.Authentication(
-		dep.ware.HasRoleAndPermissions(http.HandlerFunc(dep.deLinkServiceFromStaff), rp)))
-	m := middleware.RequestBodyMiddleware[model.ServiceTypePayload]{Logger: dep.logger}
+		dep.ware.HasRoleAndPermissions(
+			http.HandlerFunc(dep.deLinkServiceFromStaff),
+			&models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.DELETE}},
+		)),
+	)
+	m2 := middleware.RequestBodyMiddleware[model.ServiceTypePayload]{Logger: dep.logger}
 	dep.mux.Handle("POST /crm/service", dep.ware.Authentication(
-		dep.ware.HasRoleAndPermissions(m.RequestBody(http.HandlerFunc(dep.create)), rp)))
+		dep.ware.HasRoleAndPermissions(m2.RequestBody(http.HandlerFunc(dep.create)), rp)))
 	dep.mux.Handle("PUT /crm/service", dep.ware.Authentication(
-		dep.ware.HasRoleAndPermissions(m.RequestBody(http.HandlerFunc(dep.update)), rp)))
+		dep.ware.HasRoleAndPermissions(m2.RequestBody(http.HandlerFunc(dep.update)), rp)))
 }
 
 func (dep *ServiceTypeHandler) create(w http.ResponseWriter, r *http.Request) {
@@ -144,26 +152,14 @@ func (dep *ServiceTypeHandler) crmServices(w http.ResponseWriter, r *http.Reques
 }
 
 func (dep *ServiceTypeHandler) linkServiceToStaff(w http.ResponseWriter, r *http.Request) {
-	name := r.URL.Query().Get("service_name")
-	if len(name) < 1 {
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: "service_name is missing"})
+	dto, err := pkg.ReadBody[model.LinkServiceTypeToStaffPayload](r)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
 		return
 	}
 
-	uuid := r.URL.Query().Get("staff_id")
-
-	if len(uuid) < 1 {
-		obj, ok := r.Context().Value(utils.UserContextKey).(*models.JwtObj)
-		if !ok || obj == nil {
-			dep.logger.Error("linkServiceToStaff invalid staff_id")
-			utils.ErrorResponse(w, &utils.AuthenticationError{})
-			return
-		}
-		uuid = obj.UserId
-	}
-
-	err := dep.service.LinkServiceToStaff(r.Context(), strings.TrimSpace(uuid), strings.TrimSpace(name))
-	if err != nil {
+	if err = dep.service.LinkServiceToStaff(r.Context(), dto); err != nil {
 		dep.logger.Error(err.Error())
 		utils.ErrorResponse(w, err)
 		return
@@ -173,10 +169,31 @@ func (dep *ServiceTypeHandler) linkServiceToStaff(w http.ResponseWriter, r *http
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (dep *ServiceTypeHandler) servicesByStaff(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotImplemented)
+func (dep *ServiceTypeHandler) serviceTypesByStaffUUID(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("staff_id")
+	if len(id) < 1 {
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: "staff_id missing. bad request"})
+		return
+	}
+
+	arr, err := dep.service.ServicesByStaffUUID(r.Context(), id)
+	if err != nil {
+		utils.ErrorResponse(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	if err = json.NewEncoder(w).Encode(arr); err != nil {
+		dep.logger.Error(err.Error())
+	}
 }
 
 func (dep *ServiceTypeHandler) deLinkServiceFromStaff(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNotImplemented)
+	if err := json.NewEncoder(w).Encode(utils.InsertionError{Message: "route not implemented"}); err != nil {
+		dep.logger.Error(err.Error())
+	}
 }

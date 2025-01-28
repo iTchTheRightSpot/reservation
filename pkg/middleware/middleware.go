@@ -51,6 +51,19 @@ func (dep *Middleware) timeout(next http.Handler) http.Handler {
 		ctx, cancel := context.WithTimeout(r.Context(), dur)
 		defer cancel()
 		next.ServeHTTP(w, r.WithContext(ctx))
+		//if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		//	dep.Logger.Error("request timeout")
+		//	w.Header().Set("Content-Type", "application/json")
+		//	code := http.StatusRequestTimeout
+		//	w.WriteHeader(code)
+		//	type obj struct {
+		//		Status  int
+		//		Message string
+		//	}
+		//	if err := json.NewEncoder(w).Encode(obj{Status: code, Message: "request timeout"}); err != nil {
+		//		dep.Logger.Error(err.Error())
+		//	}
+		//}
 	})
 }
 

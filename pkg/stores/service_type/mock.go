@@ -39,3 +39,8 @@ func (dep *MockServiceTypeStore) ServiceTypesByStaffId(context.Context, uint64, 
 	dep.ServicesByStaffIdCalled = true
 	return dep.ServicesByStaffIdReturn, dep.ServicesByStaffIdError
 }
+
+func (dep *MockServiceTypeStore) ServiceTypesByStaffUUID(context.Context, string) ([]string, error) {
+	dep.ServicesByStaffIdCalled = true
+	return nil, dep.ServicesByStaffIdError
+}
