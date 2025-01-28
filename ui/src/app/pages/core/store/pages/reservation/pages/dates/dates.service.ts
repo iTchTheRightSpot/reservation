@@ -51,9 +51,10 @@ export class DatesService {
         message: 'missing: service(s) & staff'
       });
 
-    if (date.getMonth() !== new Date().getMonth()) date.setDate(1);
+    const d = new Date(date)
+    if (d.getMonth() !== new Date().getMonth()) d.setDate(1);
 
-    const key = `${obj.staff.staff_id}_${obj.services.map(s => s.name).join('_')}_${date.getMonth()}_${date.getFullYear()}_${TIMEZONE}`;
+    const key = `${obj.staff.staff_id}_${obj.services.map(s => s.name).join('_')}_${d.getMonth()}_${d.getFullYear()}_${TIMEZONE}`;
 
     return DatesService.cache.getItem(key).pipe(
       switchMap(arr =>
@@ -66,7 +67,7 @@ export class DatesService {
               key,
               obj!.services!.map(o => o.name),
               obj.staff!.staff_id,
-              date
+              d
             )
       )
     );

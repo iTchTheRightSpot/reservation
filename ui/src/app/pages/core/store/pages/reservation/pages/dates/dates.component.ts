@@ -11,6 +11,7 @@ import {
   BehaviorSubject,
   debounceTime,
   distinctUntilChanged,
+  Subject,
   switchMap,
   tap
 } from 'rxjs';
@@ -60,7 +61,7 @@ export class DatesComponent {
   protected date: Date[] | undefined;
   protected readonly tz = TIMEZONE;
 
-  protected readonly selected = new BehaviorSubject(new Date());
+  protected readonly selected = new BehaviorSubject<Date>(new Date());
 
   protected readonly skeleton = (len: number) =>
     Array.from({ length: len }, (_, index) => index);
@@ -161,11 +162,8 @@ export class DatesComponent {
   private readonly monthYearImpl = (
     month: number | undefined,
     year: number | undefined
-  ) => {
-    if (!month || !year) return;
-    const d = new Date(year, month - 1, this.selected.getValue().getDate());
-    this.selected.next(d);
-  };
+  ) =>
+    !month || !year ? {} : this.selected.next(new Date(year, month - 1, 1));
 
   protected readonly updateParent = async (dt: string) => {
     this.reservationService.setDateTime(dt);
