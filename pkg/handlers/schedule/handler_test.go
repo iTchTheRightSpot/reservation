@@ -54,13 +54,11 @@ func TestMain(m *testing.M) {
 }
 
 func TestScheduleHandler(t *testing.T) {
-	del := func() {
+	t.Cleanup(func() {
 		if err := handlers.DeleteAll(db); err != nil {
 			t.Log("failed to delete all from db after test ", err.Error())
 		}
-	}
-
-	t.Cleanup(del)
+	})
 
 	// given
 	mux := http.NewServeMux()
@@ -171,7 +169,7 @@ func TestScheduleHandler(t *testing.T) {
 				utils.TwoDaysInSeconds,
 			)
 
-			url := fmt.Sprintf("/schedule?month=%v&year=%v&timezone=%s", int(d.Month()), d.Year(), logger.Timezone().String())
+			url := fmt.Sprintf("/schedules?month=%v&year=%v&timezone=%s", int(d.Month()), d.Year(), logger.Timezone().String())
 			req := httptest.NewRequest(http.MethodGet, url, nil)
 			req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
 			req.Header.Set("Content-Type", "application/json")
@@ -209,7 +207,7 @@ func TestScheduleHandler(t *testing.T) {
 				utils.TwoDaysInSeconds,
 			)
 
-			url := fmt.Sprintf("/schedule/staff?month=%v&year=%v&timezone=%s", int(d.Month()), d.Year(), logger.Timezone().String())
+			url := fmt.Sprintf("/schedules/staff?month=%v&year=%v&timezone=%s", int(d.Month()), d.Year(), logger.Timezone().String())
 			req := httptest.NewRequest(http.MethodGet, url, nil)
 			req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
 			req.Header.Set("Content-Type", "application/json")
@@ -237,7 +235,7 @@ func TestScheduleHandler(t *testing.T) {
 				utils.TwoDaysInSeconds,
 			)
 
-			url := fmt.Sprintf("/schedule/staff?month=%v&year=%v&timezone=%s", int(d.Month()), d.Year(), logger.Timezone().String())
+			url := fmt.Sprintf("/schedules/staff?month=%v&year=%v&timezone=%s", int(d.Month()), d.Year(), logger.Timezone().String())
 			req := httptest.NewRequest(http.MethodGet, url, nil)
 			req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
 			req.Header.Set("Content-Type", "application/json")
@@ -264,8 +262,6 @@ func TestScheduleHandler(t *testing.T) {
 	})
 
 	t.Run("reject. concurrent CREATE schedule request. duplicate", func(t *testing.T) {
-		t.Cleanup(del)
-
 		var wg sync.WaitGroup
 		var mu sync.Mutex
 		var statusArr []int
@@ -283,7 +279,7 @@ func TestScheduleHandler(t *testing.T) {
 			utils.TwoDaysInSeconds,
 		)
 
-		nt := d.Add(48 * time.Hour)
+		nt := d.Add(730 * time.Hour) // 1 month
 		dto := model.SchedulePayload{
 			StaffId: staff1.UUID.String(),
 			Times: &[]model.ScheduleSegmentPayload{
@@ -394,4 +390,130 @@ func TestScheduleHandler(t *testing.T) {
 			t.Errorf("expected status code %d, got %d", http.StatusBadRequest, rr.Code)
 		}
 	})
+
+	t.Run("update schedule", func(t *testing.T) {
+		// given
+		ss, err := schedules()
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		obj, _ := jwtSer.Encode(
+			&models.JwtObj{
+				UserId: staff1.UUID.String(),
+				AccessControls: []models.RolePermissionEnum{
+					{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
+				},
+			},
+			utils.TwoDaysInSeconds,
+		)
+
+		p, err := json.Marshal(model.UpdateSchedulePayload{
+			ScheduleId:    ss[0].ScheduleId,
+			IsVisible:     !ss[0].IsVisible,
+			IsReoccurring: !ss[0].IsReoccurring,
+		})
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		// request
+		req := httptest.NewRequest(http.MethodPut, "/schedule", bytes.NewBuffer(p))
+		req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+		req.Header.Set("Content-Type", "application/json")
+
+		rr := httptest.NewRecorder()
+
+		mux.ServeHTTP(rr, req)
+
+		// assert
+		if rr.Code != http.StatusNoContent {
+			t.Errorf("expected %d, got %d", http.StatusNoContent, rr.Code)
+			t.Log(rr.Body.String())
+		}
+	})
+
+	t.Run("delete schedule", func(t *testing.T) {
+		obj, _ := jwtSer.Encode(
+			&models.JwtObj{
+				UserId: staff1.UUID.String(),
+				AccessControls: []models.RolePermissionEnum{
+					{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE, models.DELETE}},
+				},
+			},
+			utils.TwoDaysInSeconds,
+		)
+
+		ss, err := schedules()
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		t.Run("reject. schedule references reservation", func(t *testing.T) {
+			// pre-save reservation
+			q := `
+				INSERT INTO reservation (staff_id, name, email, description, phone, price, status, created_at, scheduled_for, expire_at)
+        		VALUES ($1, 'user', 'user', 'notes', '00', 19.99, 'CONFIRMED', $2, $3, $4)
+			`
+
+			_, err = db.ExecContext(context.Background(), q, ss[0].StaffId, ss[0].Start, ss[0].Start, ss[0].Start.Add(5*time.Minute))
+			if err != nil {
+				t.Errorf(err.Error())
+			}
+
+			// route
+			url := fmt.Sprintf("/schedule/%v", ss[0].ScheduleId)
+			req := httptest.NewRequest(http.MethodDelete, url, nil)
+			req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+			req.Header.Set("Content-Type", "application/json")
+
+			rr := httptest.NewRecorder()
+
+			mux.ServeHTTP(rr, req)
+
+			// assert
+			if rr.Code != http.StatusConflict {
+				t.Errorf("expected %d, got %d", http.StatusConflict, rr.Code)
+			}
+		})
+
+		t.Run("success", func(t *testing.T) {
+			url := fmt.Sprintf("/schedule/%v", ss[1].ScheduleId)
+			req := httptest.NewRequest(http.MethodDelete, url, nil)
+			req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+			req.Header.Set("Content-Type", "application/json")
+
+			rr := httptest.NewRecorder()
+
+			mux.ServeHTTP(rr, req)
+
+			// assert
+			if rr.Code != http.StatusNoContent {
+				t.Errorf("expected %d, got %d", http.StatusNoContent, rr.Code)
+			}
+		})
+	})
+}
+
+func schedules() ([]*model.ScheduleEntity, error) {
+	rows, err := db.QueryContext(context.Background(), "SELECT * FROM schedule s")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func(rs *sql.Rows) { err = rs.Close() }(rows)
+
+	var arr []*model.ScheduleEntity
+	for rows.Next() {
+		var s model.ScheduleEntity
+
+		err = rows.Scan(&s.ScheduleId, &s.Start, &s.End, &s.IsVisible, &s.IsReoccurring, &s.StaffId)
+		if err != nil {
+			return nil, err
+		}
+
+		arr = append(arr, &s)
+	}
+
+	return arr, err
 }

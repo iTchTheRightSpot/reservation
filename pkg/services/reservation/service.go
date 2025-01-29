@@ -48,14 +48,14 @@ func (dep *reservationService) createKey(o *reservation.AvailableTimesPayload) s
 	return fmt.Sprintf("%s_%v_%v_%v_%v_%s", strings.Join(o.Services, "_"), o.StaffId, o.Day, o.Month, o.Year, o.StartDateTime.Location().String())
 }
 
-func (dep *reservationService) generateChunks(schedules []*schedule.Schedule, duration int) []*reservation.Chunks {
+func (dep *reservationService) generateChunks(schedules []*schedule.ScheduleEntity, duration int) []*reservation.Chunks {
 	var arr []*reservation.Chunks
 	var wg sync.WaitGroup
 	var mu sync.Mutex // to ensure safe concurrent access to 'arr'
 
 	for _, sch := range schedules {
 		wg.Add(1)
-		go func(sch *schedule.Schedule) {
+		go func(sch *schedule.ScheduleEntity) {
 			defer wg.Done()
 
 			var times []time.Time

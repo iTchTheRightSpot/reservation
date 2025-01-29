@@ -8,13 +8,19 @@ import (
 	"time"
 )
 
-type Schedule struct {
+type ScheduleEntity struct {
 	ScheduleId    uint64    `json:"schedule_id"`
 	StaffId       uint64    `json:"staff_id"`
 	Start         time.Time `json:"schedule_start"`
 	End           time.Time `json:"schedule_end"`
 	IsVisible     bool      `json:"is_visible"`
 	IsReoccurring bool      `json:"is_reoccurring"`
+}
+
+type UpdateSchedulePayload struct {
+	ScheduleId    uint64 `json:"schedule_id" validate:"required"`
+	IsVisible     bool   `json:"is_visible"`
+	IsReoccurring bool   `json:"is_reoccurring"`
 }
 
 type ScheduleResponse struct {

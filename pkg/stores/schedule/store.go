@@ -12,11 +12,14 @@ import (
 )
 
 type IScheduleStore interface {
-	Save(ctx context.Context, s *schedule.Schedule) error
+	Save(ctx context.Context, s *schedule.ScheduleEntity) error
+	Update(ctx context.Context, s *schedule.ScheduleEntity) (int64, error)
 	CountExistingSchedulesForStaff(ctx context.Context, staffId uint64, start, end time.Time) (int, error)
-	SchedulesInRange(ctx context.Context, staffId uint64, start time.Time, end time.Time) ([]*schedule.Schedule, error)
+	SchedulesInRange(ctx context.Context, staffId uint64, start time.Time, end time.Time) ([]*schedule.ScheduleEntity, error)
 	CountSchedulesInRangeAndVisibility(ctx context.Context, staffId uint64, start time.Time, end time.Time, isVisible bool) (int, error)
-	SchedulesWithinTimeframe(ctx context.Context, staffId uint64, start time.Time, end time.Time, isVisible bool, duration int) ([]*schedule.Schedule, error)
+	SchedulesWithinTimeframe(ctx context.Context, staffId uint64, start time.Time, end time.Time, isVisible bool, duration int) ([]*schedule.ScheduleEntity, error)
+	ScheduleByScheduleId(ctx context.Context, scheduleId uint64) (*schedule.ScheduleEntity, error)
+	Delete(context.Context, uint64) (int64, error)
 }
 
 type scheduleStore struct {
@@ -28,7 +31,7 @@ func NewScheduleStore(l utils.ILogger, db pkg.Db) IScheduleStore {
 	return &scheduleStore{logger: l, db: db}
 }
 
-func (dep *scheduleStore) SchedulesInRange(ctx context.Context, staffId uint64, start time.Time, end time.Time) ([]*schedule.Schedule, error) {
+func (dep *scheduleStore) SchedulesInRange(ctx context.Context, staffId uint64, start time.Time, end time.Time) ([]*schedule.ScheduleEntity, error) {
 	q := `
 		SELECT * FROM schedule s
 		WHERE s.staff_id = $1
@@ -46,9 +49,9 @@ func (dep *scheduleStore) SchedulesInRange(ctx context.Context, staffId uint64, 
 
 	defer func(rs *sql.Rows) { err = rs.Close() }(rows)
 
-	var arr []*schedule.Schedule
+	var arr []*schedule.ScheduleEntity
 	for rows.Next() {
-		var s schedule.Schedule
+		var s schedule.ScheduleEntity
 
 		err = rows.Scan(&s.ScheduleId, &s.Start, &s.End, &s.IsVisible, &s.IsReoccurring, &s.StaffId)
 		if err != nil {
@@ -62,7 +65,7 @@ func (dep *scheduleStore) SchedulesInRange(ctx context.Context, staffId uint64, 
 	return arr, err
 }
 
-func (dep *scheduleStore) Save(ctx context.Context, s *schedule.Schedule) error {
+func (dep *scheduleStore) Save(ctx context.Context, s *schedule.ScheduleEntity) error {
 	if s == nil {
 		return errors.New("schedule object is nil")
 	}
@@ -77,11 +80,27 @@ func (dep *scheduleStore) Save(ctx context.Context, s *schedule.Schedule) error 
 	err := row.Scan(&s.ScheduleId, &s.Start, &s.End, &s.IsVisible, &s.IsReoccurring, &s.StaffId)
 
 	if err != nil {
-		dep.logger.Error(err)
+		dep.logger.Error(err.Error())
 		return errors.New("exception saving to schedule table")
 	}
 
 	return nil
+}
+
+func (dep *scheduleStore) Update(ctx context.Context, s *schedule.ScheduleEntity) (int64, error) {
+	if s == nil {
+		return 0, errors.New("schedule object is nil")
+	}
+
+	q := "UPDATE schedule SET is_visible = $2, is_reoccurring = $3 WHERE schedule_id = $1"
+
+	res, err := dep.db.ExecContext(ctx, q, s.ScheduleId, s.IsVisible, s.IsReoccurring)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return 0, errors.New("exception saving to schedule table")
+	}
+
+	return res.RowsAffected()
 }
 
 func (dep *scheduleStore) CountExistingSchedulesForStaff(ctx context.Context, staffId uint64, start, end time.Time) (int, error) {
@@ -130,7 +149,7 @@ func (dep *scheduleStore) CountSchedulesInRangeAndVisibility(ctx context.Context
 	return count, nil
 }
 
-func (dep *scheduleStore) SchedulesWithinTimeframe(ctx context.Context, staffId uint64, start time.Time, end time.Time, isVisible bool, duration int) ([]*schedule.Schedule, error) {
+func (dep *scheduleStore) SchedulesWithinTimeframe(ctx context.Context, staffId uint64, start time.Time, end time.Time, isVisible bool, duration int) ([]*schedule.ScheduleEntity, error) {
 	q := `
 	   SELECT * FROM schedule s
 	   WHERE s.staff_id = $1
@@ -150,9 +169,9 @@ func (dep *scheduleStore) SchedulesWithinTimeframe(ctx context.Context, staffId 
 
 	defer func(rs *sql.Rows) { err = rs.Close() }(rows)
 
-	var arr []*schedule.Schedule
+	var arr []*schedule.ScheduleEntity
 	for rows.Next() {
-		var s schedule.Schedule
+		var s schedule.ScheduleEntity
 
 		err = rows.Scan(&s.ScheduleId, &s.Start, &s.End, &s.IsVisible, &s.IsReoccurring, &s.StaffId)
 		if err != nil {
@@ -164,4 +183,28 @@ func (dep *scheduleStore) SchedulesWithinTimeframe(ctx context.Context, staffId 
 	}
 
 	return arr, err
+}
+
+func (dep *scheduleStore) ScheduleByScheduleId(ctx context.Context, scheduleId uint64) (*schedule.ScheduleEntity, error) {
+	var s schedule.ScheduleEntity
+
+	row := dep.db.QueryRowContext(ctx, "SELECT * FROM schedule s WHERE s.schedule_id = $1 LIMIT 1", scheduleId)
+	err := row.Scan(&s.ScheduleId, &s.Start, &s.End, &s.IsVisible, &s.IsReoccurring, &s.StaffId)
+
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return nil, fmt.Errorf("error retrieving schedule with id %v", scheduleId)
+	}
+
+	return &s, nil
+}
+
+func (dep *scheduleStore) Delete(ctx context.Context, scheduleId uint64) (int64, error) {
+	result, err := dep.db.ExecContext(ctx, "DELETE FROM schedule WHERE schedule_id = $1", scheduleId)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return 0, fmt.Errorf("error schedule schedule with id %v", scheduleId)
+	}
+
+	return result.RowsAffected()
 }

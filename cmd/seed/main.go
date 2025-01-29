@@ -203,7 +203,7 @@ func schedules(ctx context.Context, date time.Time, a *stores.Adapters, st *[3]s
 		for j := 0; j < len(st); j++ {
 			date = date.Add(time.Duration(48*(j+1)) * time.Hour)
 			d := time.Date(date.Year(), date.Month(), date.Day(), 9, 0, 0, 0, date.Location())
-			if err := a.ScheduleStore.Save(ctx, &schedule.Schedule{
+			if err := a.ScheduleStore.Save(ctx, &schedule.ScheduleEntity{
 				StaffId:   staf.StaffId,
 				Start:     d,
 				End:       d.Add(8 * time.Hour),

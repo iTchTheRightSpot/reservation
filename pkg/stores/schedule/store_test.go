@@ -71,7 +71,7 @@ func TestScheduleStore(t *testing.T) {
 			t.Errorf("%s", err)
 		}
 
-		s := &schedule.Schedule{
+		s := &schedule.ScheduleEntity{
 			StaffId: staffObj.StaffId,
 			Start:   mockLog.Date(),
 			End:     mockLog.Date().Add(time.Duration(8) * time.Hour),
@@ -105,7 +105,7 @@ func TestScheduleStore(t *testing.T) {
 		}
 
 		date := mockLog.Date()
-		s := &schedule.Schedule{
+		s := &schedule.ScheduleEntity{
 			StaffId: staffObj.StaffId,
 			Start:   date,
 			End:     mockLog.Date().Add(time.Duration(8) * time.Hour),
@@ -141,7 +141,7 @@ func TestScheduleStore(t *testing.T) {
 		}
 
 		date := mockLog.Date()
-		s := &schedule.Schedule{
+		s := &schedule.ScheduleEntity{
 			StaffId: staffObj.StaffId,
 			Start:   date,
 			End:     mockLog.Date().Add(time.Duration(8) * time.Hour),
@@ -181,7 +181,7 @@ func TestScheduleStore(t *testing.T) {
 		}
 
 		start := mockLog.Date()
-		s := schedule.Schedule{
+		s := schedule.ScheduleEntity{
 			StaffId: staffObj.StaffId,
 			Start:   start,
 			End:     start.Add(time.Duration(8) * time.Hour),
@@ -226,7 +226,7 @@ func TestScheduleStore(t *testing.T) {
 		}
 
 		start := mockLog.Date()
-		err := store.Save(ctx, &schedule.Schedule{
+		err := store.Save(ctx, &schedule.ScheduleEntity{
 			StaffId: staffObj.StaffId,
 			Start:   start,
 			End:     start.Add(time.Duration(8) * time.Hour),
@@ -281,7 +281,7 @@ func TestScheduleStore(t *testing.T) {
 		// pre-save schedules
 		for i := 0; i < 5; i++ {
 			start := time.Date(mockLog.Date().Year(), mockLog.Date().Month(), i+1, 0, 0, 0, 0, mockLog.Timezone())
-			err := store.Save(ctx, &schedule.Schedule{
+			err := store.Save(ctx, &schedule.ScheduleEntity{
 				StaffId:   staffObj.StaffId,
 				Start:     start,
 				End:       start.Add(time.Duration(8) * time.Hour),
