@@ -35,6 +35,7 @@ func (dep *ScheduleHandler) Register() {
 	dep.mux.Handle("POST /schedule", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(m.RequestBody(http.HandlerFunc(dep.create)), rp)))
 	dep.mux.Handle("GET /schedule", dep.ware.Authentication(dep.ware.HasRole(http.HandlerFunc(dep.schedules), &rp.Role)))
 	dep.mux.Handle("GET /schedule/staff", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(http.HandlerFunc(dep.otherStaffSchedules), rp)))
+	dep.mux.Handle("GET /schedules/staff", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(http.HandlerFunc(dep.schedulesByStaff), rp)))
 }
 
 func (dep *ScheduleHandler) create(w http.ResponseWriter, r *http.Request) {
@@ -176,4 +177,8 @@ func (dep *ScheduleHandler) schedules(w http.ResponseWriter, r *http.Request) {
 	if err = json.NewEncoder(w).Encode(arr); err != nil {
 		dep.logger.Error(err.Error())
 	}
+}
+
+func (dep *ScheduleHandler) schedulesByStaff(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
 }

@@ -54,7 +54,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestScheduleHandler(t *testing.T) {
-	logger := utils.NewMockLogger()
 	del := func() {
 		if err := handlers.DeleteAll(db); err != nil {
 			t.Log("failed to delete all from db after test ", err.Error())
@@ -65,6 +64,7 @@ func TestScheduleHandler(t *testing.T) {
 
 	// given
 	mux := http.NewServeMux()
+	logger := utils.NewMockLogger()
 	prov := stores.NewTransactionProvider(logger, db)
 	adapters := stores.NewAdapters(logger, db, prov)
 	jwtSer := auth.NewJwtService(logger, env)
@@ -116,7 +116,7 @@ func TestScheduleHandler(t *testing.T) {
 
 			dtoBytes, err := json.Marshal(dto)
 			if err != nil {
-				t.Errorf("failed to marshal SchedulePayload: %s", err)
+				t.Errorf("failed to marshal SchedulePayload: %s", err.Error())
 				return
 			}
 

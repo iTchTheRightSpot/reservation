@@ -87,10 +87,16 @@
         [servicesByStaff]="servicesByStaff()"
         [linkServiceToStaffLoadingState]="serviceToStaffState().state"
         [deLinkServiceFromStaffState]="deLinkServiceFromStaffState().state"
+        [staffSchedules]="staffSchedules()"
+        [createScheduleLoadingState]="createSchedule().state"
+        [updateScheduleLoadingState]="updateSchedule().state"
         (linkServiceToStaffEmitter)="linkServiceToStaffEmitter.next($event)"
         (deLinkServiceFromStaffEmitter)="
           deLinkServiceFromStaffEmitter.next($event)
         "
+        (schedulesEmitter)="staffSchedulesEmitter.next($event)"
+        (createScheduleEmitter)="createScheduleEmitter.next($event)"
+        (updateScheduleEmitter)="updateScheduleEmitter.next($event)"
       />
     } @else {
       invalid staff selected

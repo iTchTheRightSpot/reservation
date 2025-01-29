@@ -13,6 +13,9 @@ import { LinkServiceComponent } from './shared/link-service/link-service.compone
 import { ServiceTypeToStaffPayload } from './shared/link-service/link-service.model';
 import { ApiResponse, ApiState } from '@root/app.model';
 import { StaffScheduleComponent } from './shared/staff-schedule/staff-schedule.component';
+import { StaffScheduleEmitter } from '@crm/pages/staff/pages/all/ui/shared/staff-schedule/staff-schedule.model';
+import { Schedule } from '@crm/pages/account/pages/schedule/schedule.model';
+import { CreateUpdateScheduleModel } from '@crm/pages/staff/pages/all/ui/shared/staff-schedule/ui/shared/shared-create-update-schedule.model';
 
 @Component({
   selector: 'app-staff-detail-holder',
@@ -62,7 +65,15 @@ import { StaffScheduleComponent } from './shared/staff-schedule/staff-schedule.c
           />
         </p-tabpanel>
         <p-tabpanel value="3">
-          <app-staff-schedule />
+          <app-staff-schedule
+            [staffId]="staff().user_id"
+            [schedules]="staffSchedules()"
+            [createScheduleLoadingState]="createScheduleLoadingState()"
+            [updateScheduleLoadingState]="updateScheduleLoadingState()"
+            (dateClicked)="schedulesEmitter.emit($event)"
+            (createScheduleEmitter)="createScheduleEmitter.emit($event)"
+            (updateScheduleEmitter)="updateScheduleEmitter.emit($event)"
+          />
         </p-tabpanel>
       </p-tabpanels>
     </p-tabs>
@@ -75,7 +86,13 @@ export class StaffDetailComponent {
   servicesByStaff = input.required<ApiResponse<string[]>>();
   allServices = input.required<ApiResponse<string[]>>();
   deLinkServiceFromStaffState = input.required<ApiState>();
+  staffSchedules = input.required<ApiResponse<Schedule[]>>();
+  createScheduleLoadingState = input.required<ApiState>();
+  updateScheduleLoadingState = input.required<ApiState>();
 
   readonly deLinkServiceFromStaffEmitter = output<ServiceTypeToStaffPayload>();
   readonly linkServiceToStaffEmitter = output<ServiceTypeToStaffPayload>();
+  readonly schedulesEmitter = output<StaffScheduleEmitter>();
+  readonly createScheduleEmitter = output<CreateUpdateScheduleModel>();
+  readonly updateScheduleEmitter = output<CreateUpdateScheduleModel>();
 }

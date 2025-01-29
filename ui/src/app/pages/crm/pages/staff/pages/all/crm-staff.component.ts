@@ -14,8 +14,12 @@ import { REGISTER_ROUTE } from '@crm/pages/staff/staff-core.routes';
 import { Drawer } from 'primeng/drawer';
 import { StaffDetailComponent } from './ui/staff-detail.component';
 import { map, Subject, switchMap, tap } from 'rxjs';
-import { ServiceTypeToStaffPayload } from '@crm/pages/staff/pages/all/ui/shared/link-service/link-service.model';
+import { ServiceTypeToStaffPayload } from './ui/shared/link-service/link-service.model';
 import { CRMServiceTypeService } from '@crm/pages/service-type/crm-service-type.service';
+import { ScheduleService } from '@crm/pages/account/pages/schedule/schedule.service';
+import { StaffScheduleEmitter } from './ui/shared/staff-schedule/staff-schedule.model';
+import { Schedule } from '@crm/pages/account/pages/schedule/schedule.model';
+import { CreateUpdateScheduleModel } from '@crm/pages/staff/pages/all/ui/shared/staff-schedule/ui/shared/shared-create-update-schedule.model';
 
 @Component({
   selector: 'app-crm-staff',
@@ -26,6 +30,7 @@ import { CRMServiceTypeService } from '@crm/pages/service-type/crm-service-type.
 export class CrmStaffComponent {
   private readonly staffsService = inject(CRMStaffsService);
   private readonly serviceType = inject(CRMServiceTypeService);
+  private readonly scheduleService = inject(ScheduleService);
   private readonly router = inject(Router);
 
   protected first = 0;
@@ -94,6 +99,42 @@ export class CrmStaffComponent {
             .pipe(tap(() => this.servicesByStaffEmitter.next(o.staff_id)))
         )
       ),
+    { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
+  );
+
+  protected readonly staffSchedulesEmitter =
+    new Subject<StaffScheduleEmitter>();
+  protected readonly staffSchedules = toSignal(
+    this.staffSchedulesEmitter
+      .asObservable()
+      .pipe(switchMap(o => this.scheduleService.schedulesByStaff(o))),
+    { initialValue: { state: ApiState.LOADED } as ApiResponse<Schedule[]> }
+  );
+
+  protected readonly createScheduleEmitter =
+    new Subject<CreateUpdateScheduleModel>();
+  protected readonly createSchedule = toSignal(
+    this.createScheduleEmitter
+      .asObservable()
+      .pipe(switchMap(o => this.scheduleService.create(o))),
+    { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
+  );
+
+  protected readonly updateScheduleEmitter =
+    new Subject<CreateUpdateScheduleModel>();
+  protected readonly updateSchedule = toSignal(
+    this.createScheduleEmitter
+      .asObservable()
+      .pipe(switchMap(o => this.scheduleService.update(o))),
+    { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
+  );
+
+  protected readonly deleteScheduleEmitter =
+    new Subject<number>();
+  protected readonly deleteSchedule = toSignal(
+    this.deleteScheduleEmitter
+      .asObservable()
+      .pipe(switchMap(o => this.scheduleService.delete(o))),
     { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
   );
 }
