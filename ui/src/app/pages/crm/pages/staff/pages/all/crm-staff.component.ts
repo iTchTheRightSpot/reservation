@@ -129,8 +129,7 @@ export class CrmStaffComponent {
     { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
   );
 
-  protected readonly deleteScheduleEmitter =
-    new Subject<number>();
+  protected readonly deleteScheduleEmitter = new Subject<number>();
   protected readonly deleteSchedule = toSignal(
     this.deleteScheduleEmitter
       .asObservable()
