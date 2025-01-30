@@ -60,6 +60,7 @@ func (dep *ScheduleHandler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dep.logger.Log("new schedule created")
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -77,6 +78,7 @@ func (dep *ScheduleHandler) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dep.logger.Log("schedule updated")
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -94,6 +96,7 @@ func (dep *ScheduleHandler) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dep.logger.Log("schedule deleted")
 	w.WriteHeader(http.StatusNoContent)
 }
 

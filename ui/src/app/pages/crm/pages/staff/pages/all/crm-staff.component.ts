@@ -17,9 +17,15 @@ import { map, Subject, switchMap, tap } from 'rxjs';
 import { ServiceTypeToStaffPayload } from './ui/shared/link-service/link-service.model';
 import { CRMServiceTypeService } from '@crm/pages/service-type/crm-service-type.service';
 import { ScheduleService } from '@crm/pages/account/pages/schedule/schedule.service';
-import { StaffScheduleEmitter } from './ui/shared/staff-schedule/staff-schedule.model';
-import { Schedule } from '@crm/pages/account/pages/schedule/schedule.model';
-import { CreateUpdateScheduleModel } from '@crm/pages/staff/pages/all/ui/shared/staff-schedule/ui/shared/shared-create-update-schedule.model';
+import {
+  DeleteScheduleModel,
+  StaffScheduleEmitter
+} from './ui/shared/staff-schedule/staff-schedule.model';
+import {
+  CreateScheduleModel,
+  Schedule,
+  UpdateScheduleModel
+} from '@crm/pages/account/pages/schedule/schedule.model';
 
 @Component({
   selector: 'app-crm-staff',
@@ -111,29 +117,72 @@ export class CrmStaffComponent {
     { initialValue: { state: ApiState.LOADED } as ApiResponse<Schedule[]> }
   );
 
-  protected readonly createScheduleEmitter =
-    new Subject<CreateUpdateScheduleModel>();
+  protected readonly createScheduleEmitter = new Subject<CreateScheduleModel>();
   protected readonly createSchedule = toSignal(
-    this.createScheduleEmitter
-      .asObservable()
-      .pipe(switchMap(o => this.scheduleService.create(o))),
+    this.createScheduleEmitter.asObservable().pipe(
+      switchMap(o =>
+        this.scheduleService.create(o).pipe(
+          tap(s => {
+            if (s.state === ApiState.LOADED) {
+              ScheduleService.SchedulesByStaffCache.clear();
+              ScheduleService.AllSchedulesCache.clear();
+              this.staffSchedulesEmitter.next({
+                staff_id: o.staff_id,
+                date: new Date(),
+                page: 0,
+                size: 10
+              });
+            }
+          })
+        )
+      )
+    ),
     { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
   );
 
-  protected readonly updateScheduleEmitter =
-    new Subject<CreateUpdateScheduleModel>();
+  protected readonly updateScheduleEmitter = new Subject<UpdateScheduleModel>();
   protected readonly updateSchedule = toSignal(
-    this.createScheduleEmitter
-      .asObservable()
-      .pipe(switchMap(o => this.scheduleService.update(o))),
+    this.updateScheduleEmitter.asObservable().pipe(
+      switchMap(o =>
+        this.scheduleService.update(o).pipe(
+          tap(s => {
+            if (s.state === ApiState.LOADED) {
+              ScheduleService.SchedulesByStaffCache.clear();
+              ScheduleService.AllSchedulesCache.clear();
+              this.staffSchedulesEmitter.next({
+                staff_id: o.staff_id,
+                date: new Date(),
+                page: 0,
+                size: 10
+              });
+            }
+          })
+        )
+      )
+    ),
     { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
   );
 
-  protected readonly deleteScheduleEmitter = new Subject<number>();
+  protected readonly deleteScheduleEmitter = new Subject<DeleteScheduleModel>();
   protected readonly deleteSchedule = toSignal(
-    this.deleteScheduleEmitter
-      .asObservable()
-      .pipe(switchMap(o => this.scheduleService.delete(o))),
+    this.deleteScheduleEmitter.asObservable().pipe(
+      switchMap(o =>
+        this.scheduleService.delete(o.schedule_id).pipe(
+          tap(s => {
+            if (s.state === ApiState.LOADED) {
+              ScheduleService.SchedulesByStaffCache.clear();
+              ScheduleService.AllSchedulesCache.clear();
+              this.staffSchedulesEmitter.next({
+                staff_id: o.staff_id,
+                date: o.date,
+                page: o.page,
+                size: o.size
+              });
+            }
+          })
+        )
+      )
+    ),
     { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
   );
 }

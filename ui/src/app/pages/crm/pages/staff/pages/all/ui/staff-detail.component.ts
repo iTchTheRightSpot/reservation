@@ -13,9 +13,15 @@ import { LinkServiceComponent } from './shared/link-service/link-service.compone
 import { ServiceTypeToStaffPayload } from './shared/link-service/link-service.model';
 import { ApiResponse, ApiState } from '@root/app.model';
 import { StaffScheduleComponent } from './shared/staff-schedule/staff-schedule.component';
-import { StaffScheduleEmitter } from '@crm/pages/staff/pages/all/ui/shared/staff-schedule/staff-schedule.model';
-import { Schedule } from '@crm/pages/account/pages/schedule/schedule.model';
-import { CreateUpdateScheduleModel } from '@crm/pages/staff/pages/all/ui/shared/staff-schedule/ui/shared/shared-create-update-schedule.model';
+import {
+  DeleteScheduleModel,
+  StaffScheduleEmitter
+} from '@crm/pages/staff/pages/all/ui/shared/staff-schedule/staff-schedule.model';
+import {
+  CreateScheduleModel,
+  Schedule,
+  UpdateScheduleModel
+} from '@crm/pages/account/pages/schedule/schedule.model';
 
 @Component({
   selector: 'app-staff-detail-holder',
@@ -73,6 +79,7 @@ import { CreateUpdateScheduleModel } from '@crm/pages/staff/pages/all/ui/shared/
             (dateClicked)="schedulesEmitter.emit($event)"
             (createScheduleEmitter)="createScheduleEmitter.emit($event)"
             (updateScheduleEmitter)="updateScheduleEmitter.emit($event)"
+            (deleteScheduleEmitter)="deleteScheduleEmitter.emit($event)"
           />
         </p-tabpanel>
       </p-tabpanels>
@@ -89,10 +96,12 @@ export class StaffDetailComponent {
   staffSchedules = input.required<ApiResponse<Schedule[]>>();
   createScheduleLoadingState = input.required<ApiState>();
   updateScheduleLoadingState = input.required<ApiState>();
+  deleteScheduleState = input.required<ApiState>();
 
   readonly deLinkServiceFromStaffEmitter = output<ServiceTypeToStaffPayload>();
   readonly linkServiceToStaffEmitter = output<ServiceTypeToStaffPayload>();
   readonly schedulesEmitter = output<StaffScheduleEmitter>();
-  readonly createScheduleEmitter = output<CreateUpdateScheduleModel>();
-  readonly updateScheduleEmitter = output<CreateUpdateScheduleModel>();
+  readonly createScheduleEmitter = output<CreateScheduleModel>();
+  readonly updateScheduleEmitter = output<UpdateScheduleModel>();
+  readonly deleteScheduleEmitter = output<DeleteScheduleModel>();
 }

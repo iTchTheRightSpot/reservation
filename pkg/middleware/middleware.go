@@ -32,7 +32,8 @@ type Middleware struct {
 }
 
 func (dep *Middleware) Initialize(router *http.ServeMux) http.Handler {
-	return dep.logging(dep.timeout(router))
+	//return dep.logging(dep.timeout(router))
+	return dep.logging(router)
 }
 
 // https://stackoverflow.com/questions/27234861/correct-way-of-getting-clients-ip-addresses-from-http-request

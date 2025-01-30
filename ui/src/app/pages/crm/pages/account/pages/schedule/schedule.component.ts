@@ -56,8 +56,8 @@ export class ScheduleComponent {
     { initialValue: { state: ApiState.LOADED } as ApiResponse<Schedule[]> }
   );
 
-  protected readonly fm = (d: number) =>
-    new Date(d).toLocaleDateString('en-US', {
+  protected readonly fm = (d: string) =>
+    new Date(Number(d)).toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',

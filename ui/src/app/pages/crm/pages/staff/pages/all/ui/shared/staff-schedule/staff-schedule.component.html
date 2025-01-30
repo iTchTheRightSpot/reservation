@@ -23,7 +23,8 @@
                 date: $event,
                 page: (first = 0),
                 size: rows
-              })
+              });
+              date = $event
             "
             size="small"
             id="over_label"
@@ -38,6 +39,7 @@
         <p-button type="button" icon="pi pi-refresh" (click)="first = 0" text />
       </div>
     </ng-template>
+
     <ng-template #header>
       <tr>
         @for (h of thead; track h) {
@@ -48,9 +50,9 @@
     </ng-template>
 
     <ng-template #body let-model>
-      <tr class="cursor-pointer">
-        <td>{{ fm(model.from) }}</td>
-        <td>{{ fm(model.to) }}</td>
+      <tr>
+        <td>{{ fm(model.start) }}</td>
+        <td>{{ fm(model.end) }}</td>
         <td>
           <p-badge
             [value]="model.is_visible"
@@ -64,12 +66,27 @@
           />
         </td>
         <td>
-          <p-button
-            (onClick)="deleteScheduleEmitter.emit(model.schedule_id)"
-            icon="pi pi-trash"
-            severity="secondary"
-            rounded
-          />
+          <div class="flex gap-1">
+            <p-button
+              (onClick)="
+                selectedSchedule = model;
+                toggleEditSchedule = !toggleEditSchedule
+              "
+              icon="pi pi-pencil"
+              severity="secondary"
+              rounded
+            />
+
+            <div>
+              <p-confirm-popup />
+              <p-button
+                (onClick)="delete($event, model.schedule_id, staffId())"
+                icon="pi pi-trash"
+                severity="secondary"
+                rounded
+              />
+            </div>
+          </div>
         </td>
       </tr>
     </ng-template>
@@ -107,10 +124,13 @@
     [(visible)]="toggleEditSchedule"
     [style]="{ width: '40rem' }"
   >
-    <app-edit-schedule
-      [staffId]="staffId()"
-      [loadingState]="updateScheduleLoadingState()"
-      (updateScheduleEmitter)="updateScheduleEmitter.emit($event)"
-    />
+    @if (selectedSchedule; as s) {
+      <app-edit-schedule
+        [schedule]="s"
+        [staffId]="staffId()"
+        [loadingState]="updateScheduleLoadingState()"
+        (updateScheduleEmitter)="updateScheduleEmitter.emit($event)"
+      />
+    }
   </p-dialog>
 }

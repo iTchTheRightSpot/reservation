@@ -4,3 +4,7 @@ export interface StaffScheduleEmitter {
   page: number;
   size: number;
 }
+
+export interface DeleteScheduleModel extends StaffScheduleEmitter {
+  schedule_id: number;
+}

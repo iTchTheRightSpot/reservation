@@ -49,9 +49,9 @@
     </ng-template>
 
     <ng-template #body let-model>
-      <tr class="cursor-pointer">
-        <td>{{ fm(model.from) }}</td>
-        <td>{{ fm(model.to) }}</td>
+      <tr>
+        <td>{{ fm(model.start) }}</td>
+        <td>{{ fm(model.end) }}</td>
         <td>
           <p-badge
             [value]="model.is_visible"

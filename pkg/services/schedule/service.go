@@ -32,8 +32,9 @@ func (dep *scheduleService) Schedules(ctx context.Context, p *schedule.AllSchedu
 		return nil, &utils.NotFoundError{Message: "invalid staff id"}
 	}
 
-	start := time.Date(p.Year, time.Month(p.Month), 1, 0, 0, 0, 0, dep.logger.Timezone())
-	schedules, err := dep.adapters.ScheduleStore.SchedulesInRange(ctx, s.StaffId, start, start.AddDate(0, 1, -1))
+	from := time.Date(p.Year, time.Month(p.Month), 1, 0, 0, 0, 0, dep.logger.Timezone())
+	to := time.Date(from.Year(), from.Month()+1, 0, 23, 59, 59, 999999999, from.Location())
+	schedules, err := dep.adapters.ScheduleStore.SchedulesInRange(ctx, s.StaffId, from, to)
 	if err != nil {
 		return nil, &utils.BadRequestError{Message: err.Error()}
 	}
