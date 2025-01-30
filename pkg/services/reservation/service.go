@@ -216,11 +216,6 @@ func (dep *reservationService) sumUpServiceDuration(s []*service_type.ServiceTyp
 		maxCleanup = int(math.Max(float64(maxCleanup), float64(e.CleanUpTime)))
 	}
 	return count + maxCleanup
-	//count := 0
-	//for _, entity := range s {
-	//	count += entity.Duration + entity.CleanUpTime
-	//}
-	//return count
 }
 
 func (dep *reservationService) sumUpServicePrice(s []*service_type.ServiceTypeEntity) float64 {
