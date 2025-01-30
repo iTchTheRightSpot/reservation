@@ -6,7 +6,9 @@ import {
   catchError,
   concat,
   concatMap,
+  delay,
   map,
+  merge,
   of,
   startWith,
   switchMap,
@@ -17,6 +19,7 @@ import { ActiveUser, ApiResponse, ApiState } from '@root/app.model';
 import { err } from '@root/app.util';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Permission, Role } from '@crm/pages/staff/pages/all/crm-staff.model';
+import { ToastEnum, ToastService } from './toast.service';
 
 export interface LoginModel {
   email: string;
@@ -35,6 +38,7 @@ export interface RegisterModel {
 })
 export class AuthService {
   private readonly http = inject(HttpClient);
+  private readonly toast = inject(ToastService);
 
   private readonly cache = new BehaviorSubject<ActiveUser | undefined>(
     undefined
@@ -125,5 +129,27 @@ export class AuthService {
               )
             )
           )
+        );
+
+  readonly logout = () =>
+    environment.production
+      ? this.http
+          .post<
+            ApiResponse<any>
+          >(`${environment.domain}logout`, {}, { withCredentials: true })
+          .pipe(
+            map(() => <ApiResponse<any>>{ state: ApiState.LOADED }),
+            startWith(<ApiResponse<any>>{ state: ApiState.LOADING }),
+            catchError(e => {
+              this.toast.message({
+                message: e.message,
+                state: ToastEnum.ERROR
+              });
+              return of(err<any>(e));
+            })
+          )
+      : merge(
+          of({ state: ApiState.LOADING }),
+          of({ state: ApiState.LOADED }).pipe(delay(2000))
         );
 }

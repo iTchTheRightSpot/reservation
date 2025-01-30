@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  output
+} from '@angular/core';
 import { Avatar } from 'primeng/avatar';
 import { LightDarkModeComponent } from '@shared/ui/light-dark-mode.component';
 import { MenuItem } from 'primeng/api';
@@ -19,6 +24,7 @@ import {
   ALL_STAFFS_ROUTE,
   REGISTER_ROUTE
 } from '@crm/pages/staff/staff-core.routes';
+import { ApiState } from '@root/app.model';
 
 @Component({
   selector: 'app-crm-nav-bar',
@@ -41,6 +47,9 @@ import {
 })
 export class CrmNavBarComponent {
   imageKey = input.required<string | null | undefined>();
+  logoutState = input.required<ApiState>();
+
+  readonly logout = output<void>();
 
   protected readonly items: MenuItem[] = [
     {
@@ -87,6 +96,11 @@ export class CrmNavBarComponent {
           label: 'Settings',
           icon: 'pi pi-spin pi-cog',
           routerLink: `/${CRM_ROUTE}/${ACCOUNT_ROUTE}/${SETTINGS_ROUTE}`
+        },
+        {
+          label: 'Logout',
+          icon: 'pi pi-power-off',
+          command: () => this.logout.emit()
         }
       ]
     }
