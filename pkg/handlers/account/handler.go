@@ -43,6 +43,27 @@ func (dep *AccountHandler) Register() {
 			&models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 		),
 	))
+
+	m3 := middleware.RequestBodyMiddleware[models.AddRoleAndPermissionPayload]{Logger: dep.logger}
+	dep.mux.Handle("POST /account/role-permission", dep.ware.Authentication(
+		dep.ware.HasRoleAndPermissions(
+			m3.RequestBody(http.HandlerFunc(dep.addRoleAndPermission)),
+			&models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
+		),
+	))
+
+	dep.mux.Handle("DELETE /account/role", dep.ware.Authentication(
+		dep.ware.HasRoleAndPermissions(
+			http.HandlerFunc(dep.deleteRole),
+			&models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.DELETE}},
+		),
+	))
+	dep.mux.Handle("DELETE /account/permission/{permission_id}", dep.ware.Authentication(
+		dep.ware.HasRoleAndPermissions(
+			http.HandlerFunc(dep.deletePermission),
+			&models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.DELETE}},
+		),
+	))
 }
 
 func (dep *AccountHandler) activeUser(w http.ResponseWriter, r *http.Request) {
@@ -130,4 +151,16 @@ func (dep *AccountHandler) logout(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, cookie)
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (dep *AccountHandler) addRoleAndPermission(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+func (dep *AccountHandler) deleteRole(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+func (dep *AccountHandler) deletePermission(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
 }
