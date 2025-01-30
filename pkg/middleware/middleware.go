@@ -32,8 +32,8 @@ type Middleware struct {
 }
 
 func (dep *Middleware) Initialize(router *http.ServeMux) http.Handler {
-	//return dep.logging(dep.timeout(router))
-	return dep.logging(router)
+	return dep.logging(dep.timeout(router))
+	//return dep.logging(router)
 }
 
 // https://stackoverflow.com/questions/27234861/correct-way-of-getting-clients-ip-addresses-from-http-request
@@ -106,7 +106,7 @@ func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 
 		obj, err := dep.Auth.Decode(cookie.Value)
 		if err != nil {
-			dep.Logger.Error(err)
+			dep.Logger.Error(err.Error())
 			utils.ErrorResponse(w, &utils.AuthenticationError{})
 			return
 		}
@@ -118,7 +118,7 @@ func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 		isLogout := strings.HasSuffix(r.URL.Path, "/logout")
 		if !isLogout && isTokenExpiringSoon(dep.Logger.Date(), *obj.ExpireAt, utils.TwoDaysInSeconds) {
 			if o, err := dep.Auth.Encode(obj, utils.TwoDaysInSeconds); err != nil {
-				dep.Logger.Error(fmt.Sprintf("failed to refresh token %s", err))
+				dep.Logger.Error("failed to refresh token", err.Error())
 			} else {
 				cookie.Value = o.Token
 				cookie.Expires = o.ExpireAt

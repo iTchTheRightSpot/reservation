@@ -26,19 +26,20 @@ func NewReservationHandler(mux *http.ServeMux, l utils.ILogger, w *middleware.Mi
 }
 
 func (dep *ReservationHandler) Register() {
-	rp := models.RolePermissionEnum{
-		Role:        models.STAFF,
-		Permissions: []models.PermissionEnum{models.WRITE},
-	}
 	dep.mux.HandleFunc("GET /reservation", dep.availableDates)
 	dep.mux.HandleFunc("POST /reservation/cancel/{reservation_id}", dep.cancel)
-	ware1 := middleware.RequestBodyMiddleware[model.ReservationPayload]{Logger: dep.logger}
-	dep.mux.Handle("POST /reservation", ware1.RequestBody(http.HandlerFunc(dep.create)))
+	m1 := middleware.RequestBodyMiddleware[model.ReservationPayload]{Logger: dep.logger}
+	dep.mux.Handle("POST /reservation", m1.RequestBody(http.HandlerFunc(dep.create)))
 
+	// protected routes
+	rp := models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}}
+	// read
 	dep.mux.Handle("GET /crm/reservation", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(http.HandlerFunc(dep.bookings), &rp)))
 
-	ware2 := middleware.RequestBodyMiddleware[model.UpdateBookingPayload]{Logger: dep.logger}
-	dep.mux.Handle("PUT /crm/reservation", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(ware2.RequestBody(http.HandlerFunc(dep.updateBookingStatus)), &rp)))
+	// write
+	dep.mux.Handle("POST /crm/reservation", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(m1.RequestBody(http.HandlerFunc(dep.manualCreate)), &rp)))
+	m2 := middleware.RequestBodyMiddleware[model.UpdateBookingPayload]{Logger: dep.logger}
+	dep.mux.Handle("PUT /crm/reservation", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(m2.RequestBody(http.HandlerFunc(dep.updateBookingStatus)), &rp)))
 }
 
 func (dep *ReservationHandler) create(w http.ResponseWriter, r *http.Request) {
@@ -229,4 +230,23 @@ func (dep *ReservationHandler) updateBookingStatus(w http.ResponseWriter, r *htt
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (dep *ReservationHandler) manualCreate(w http.ResponseWriter, r *http.Request) {
+	dto, err := pkg.ReadBody[model.ReservationPayload](r)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, err)
+		return
+	}
+
+	err = dep.service.ManualCreate(r.Context(), dto)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, err)
+		return
+	}
+
+	dep.logger.Log("manually created reservation")
+	w.WriteHeader(http.StatusCreated)
 }

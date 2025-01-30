@@ -26,18 +26,23 @@ func NewAccountHandler(mux *http.ServeMux, w *middleware.Middleware, l utils.ILo
 }
 
 func (dep *AccountHandler) Register() {
-	rp := &models.RolePermissionEnum{
-		Role:        models.STAFF,
-		Permissions: []models.PermissionEnum{models.WRITE},
-	}
+	// public
+	m1 := middleware.RequestBodyMiddleware[models.Login]{Logger: dep.logger}
+	dep.mux.Handle("POST /account/login", m1.RequestBody(http.HandlerFunc(dep.login)))
 
+	// protected
+	// read
 	dep.mux.Handle("GET /active", dep.ware.Authentication(http.HandlerFunc(dep.activeUser)))
 
-	ware1 := middleware.RequestBodyMiddleware[models.ProfilePayload]{Logger: dep.logger}
-	dep.mux.Handle("POST /account/register", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(ware1.RequestBody(http.HandlerFunc(dep.register)), rp)))
-
-	ware2 := middleware.RequestBodyMiddleware[models.Login]{Logger: dep.logger}
-	dep.mux.Handle("POST /account/login", ware2.RequestBody(http.HandlerFunc(dep.login)))
+	// write
+	dep.mux.Handle("POST /logout", dep.ware.Authentication(http.HandlerFunc(dep.logout)))
+	m2 := middleware.RequestBodyMiddleware[models.ProfilePayload]{Logger: dep.logger}
+	dep.mux.Handle("POST /account/register", dep.ware.Authentication(
+		dep.ware.HasRoleAndPermissions(
+			m2.RequestBody(http.HandlerFunc(dep.register)),
+			&models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
+		),
+	))
 }
 
 func (dep *AccountHandler) activeUser(w http.ResponseWriter, r *http.Request) {
@@ -100,4 +105,29 @@ func (dep *AccountHandler) login(w http.ResponseWriter, r *http.Request) {
 
 	pkg.WriteCookie(w, dep.env.CookieParam, o.Token, o.ExpireAt)
 	w.WriteHeader(http.StatusCreated)
+}
+
+func (dep *AccountHandler) logout(w http.ResponseWriter, r *http.Request) {
+	if r.Cookies() == nil || len(r.Cookies()) == 0 {
+		dep.logger.Error("cookie present")
+		utils.ErrorResponse(w, &utils.AuthenticationError{})
+		return
+	}
+
+	cookie, err := r.Cookie(dep.env.CookieParam.CookieName)
+	if err != nil || cookie == nil {
+		dep.logger.Error(err)
+		utils.ErrorResponse(w, &utils.AuthenticationError{Message: "invalid cookie"})
+		return
+	}
+
+	// max-age takes higher precedence to expires https://stackoverflow.com/questions/70715904/golang-cookie-max-age-vs-expire
+	cookie.MaxAge = -1 // expire now
+	cookie.Path = "/"
+	cookie.HttpOnly = true
+	cookie.SameSite = dep.env.CookieParam.SameSite
+	cookie.Secure = dep.env.CookieParam.CookieSecure
+
+	http.SetCookie(w, cookie)
+	w.WriteHeader(http.StatusNoContent)
 }

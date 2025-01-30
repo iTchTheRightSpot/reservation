@@ -22,6 +22,7 @@ import (
 
 type IReservationService interface {
 	Create(ctx context.Context, p *reservation.ReservationPayload) error
+	ManualCreate(ctx context.Context, p *reservation.ReservationPayload) error
 	AvailableDates(ctx context.Context, o *reservation.AvailableTimesPayload) ([]*reservation.ReservationTimeSlots, error)
 	Cancel(ctx context.Context, reservationId uint64) error
 	Bookings(ctx context.Context, m *reservation.CRMBookingsPayload) (interface{}, error)
@@ -362,4 +363,8 @@ func (dep *reservationService) UpdateBookingStatus(ctx context.Context, dto *res
 
 	dep.logger.Log("number of booking status rows affected", num)
 	return nil
+}
+
+func (dep *reservationService) ManualCreate(ctx context.Context, p *reservation.ReservationPayload) error {
+	return &utils.InsertionError{Message: "service layer implemented"}
 }
