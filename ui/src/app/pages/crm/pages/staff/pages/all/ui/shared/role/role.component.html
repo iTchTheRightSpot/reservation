@@ -1,1 +1,50 @@
-<p>role works!</p>
+<div class="w-full">
+  @for (r of staff().access_controls; let idx = $index; track r.role) {
+    <h4 class="underline underline-offset-4">Role</h4>
+    <div class="w-full flex items-center justify-between">
+      <span class="text-sm">{{ r.role }}</span>
+
+      <div class="flex gap-1">
+        <p-button type="button" icon="pi pi-plus" severity="secondary" text />
+        <p-button type="button" icon="pi pi-trash" severity="secondary" text />
+        <p-button
+          (onClick)="dropdown[idx] = !dropdown[idx]"
+          type="button"
+          [icon]="dropdown[idx] ? 'pi pi-angle-down' : 'pi pi-angle-up'"
+          severity="secondary"
+          text
+        />
+      </div>
+    </div>
+    <p-divider />
+
+    @if (dropdown[idx]) {
+      <h4 class="underline underline-offset-4">Permissions</h4>
+      @for (p of r.permissions; track p) {
+        <div class="px-4 w-full flex items-center justify-between">
+          <span class="text-sm">{{ p }}</span>
+
+          <p-button
+            type="button"
+            icon="pi pi-trash"
+            severity="secondary"
+            text
+          />
+        </div>
+        <p-divider />
+      }
+    }
+  }
+
+  <p-button type="button" icon="pi pi-plus" text />
+</div>
+
+@defer {
+  <p-dialog
+    header="New Role & Permissions"
+    [modal]="true"
+    [(ngModel)]="toggleNewRolePermission"
+  >
+    <app-new-role-permission />
+  </p-dialog>
+}

@@ -26,6 +26,7 @@ import {
   Schedule,
   UpdateScheduleModel
 } from '@crm/pages/account/pages/schedule/schedule.model';
+import { AccountService } from '@crm/pages/account/account.service';
 
 @Component({
   selector: 'app-crm-staff',
@@ -38,6 +39,7 @@ export class CrmStaffComponent {
   private readonly serviceType = inject(CRMServiceTypeService);
   private readonly scheduleService = inject(ScheduleService);
   private readonly router = inject(Router);
+  private readonly accountService = inject(AccountService);
 
   protected first = 0;
   protected rows = 5;
