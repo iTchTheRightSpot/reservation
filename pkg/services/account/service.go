@@ -16,6 +16,7 @@ type IAccountService interface {
 	Register(ctx context.Context, obj *models.ProfilePayload) error
 	Login(ctx context.Context, obj *models.Login) (*models.JwtResponse, error)
 	ActiveUser(ctx context.Context, obj *models.JwtObj) (*models.ActiveUser, error)
+	AddRoleAndPermission(ctx context.Context, o *models.AddRoleAndPermissionPayload) error
 }
 
 type accountService struct {

@@ -80,19 +80,17 @@ func TestAccountHandler(t *testing.T) {
 		Password:  "pa(ssworD123#",
 	}
 
-	t.Run("should register a user", func(t *testing.T) {
-		cred := []models.RolePermissionEnum{
-			{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
-		}
-
-		obj, err := jwtSer.Encode(
-			&models.JwtObj{
-				UserId:         p.Firstname,
-				AccessControls: cred,
+	jwtObj, _ := jwtSer.Encode(
+		&models.JwtObj{
+			UserId: p.Firstname,
+			AccessControls: []models.RolePermissionEnum{
+				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 			},
-			utils.TwoDaysInSeconds,
-		)
+		},
+		utils.TwoDaysInSeconds,
+	)
 
+	t.Run("should register a user", func(t *testing.T) {
 		pl, err := json.Marshal(p)
 		if err != nil {
 			t.Errorf("failed to marshal ProfilePayload: %s", err)
@@ -100,7 +98,7 @@ func TestAccountHandler(t *testing.T) {
 		}
 
 		req := httptest.NewRequest(http.MethodPost, "/account/register", bytes.NewBuffer(pl))
-		req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+		req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: jwtObj.Token})
 		req.Header.Set("Content-Type", "application/json")
 
 		rr := httptest.NewRecorder()
@@ -178,6 +176,44 @@ func TestAccountHandler(t *testing.T) {
 
 		if len(rr.Body.String()) < 1 {
 			t.Error("expected not empty body, received empty body")
+		}
+	})
+
+	t.Run("should add role to user", func(t *testing.T) {
+		ctx := context.Background()
+
+		pr, err := adp.ProfileStore.ProfileByEmail(ctx, p.Email)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+
+		st, err := adp.StaffStore.StaffByProfileId(ctx, pr.ProfileId)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+
+		pl, err := json.Marshal(models.AddRoleAndPermissionPayload{
+			UserId: st.UUID.String(),
+			RolePermission: []models.RolePermissionEnum{
+				{Role: models.DEVELOPER, Permissions: []models.PermissionEnum{models.DELETE}},
+			},
+		})
+		if err != nil {
+			t.Errorf("failed to marshal Login: %s", err)
+			return
+		}
+
+		req := httptest.NewRequest(http.MethodPost, "/account/role-permission", bytes.NewBuffer(pl))
+		req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: jwtObj.Token})
+		req.Header.Set("Content-Type", "application/json")
+
+		rr := httptest.NewRecorder()
+
+		mux.ServeHTTP(rr, req)
+
+		// assert
+		if rr.Code != http.StatusNoContent {
+			t.Errorf("expected %d, received %d", http.StatusNoContent, rr.Code)
 		}
 	})
 }

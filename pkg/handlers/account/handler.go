@@ -154,7 +154,19 @@ func (dep *AccountHandler) logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (dep *AccountHandler) addRoleAndPermission(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotImplemented)
+	p, err := pkg.ReadBody[models.AddRoleAndPermissionPayload](r)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		return
+	}
+
+	if err = dep.service.AddRoleAndPermission(r.Context(), p); err != nil {
+		utils.ErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (dep *AccountHandler) deleteRole(w http.ResponseWriter, r *http.Request) {

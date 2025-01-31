@@ -45,7 +45,7 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 	}
 
 	rollback := func() {
-		if err := tx.Rollback(); err != nil {
+		if err = tx.Rollback(); err != nil {
 			return
 		}
 	}
@@ -192,7 +192,7 @@ func TestScheduleStore(t *testing.T) {
 
 		// method to test
 		start = time.Date(mockLog.Date().Year(), mockLog.Date().Month(), 1, 0, 0, 0, 0, mockLog.Timezone())
-		end := start.AddDate(0, 1, -1)
+		end := time.Date(start.Year(), start.Month()+1, 0, 23, 59, 59, 999999999, start.Location())
 		schs, err := store.SchedulesInRange(ctx, staffObj.StaffId, start, end)
 
 		// assert
