@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
+	staffModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
+	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -14,6 +16,7 @@ func TestAccountService(t *testing.T) {
 	t.Parallel()
 
 	lg := utils.NewMockLogger()
+	cac := pkg.NewInMemoryCache[string, []*staffModel.AllStaffsEntity](lg, 10, 0)
 	ctx := context.Background()
 
 	t.Run("should return error when adding role & permission. Invalid staff id", func(t *testing.T) {
@@ -28,7 +31,7 @@ func TestAccountService(t *testing.T) {
 		}
 
 		// method to test
-		err := ac.AddRoleAndPermission(ctx, &models.AddRoleAndPermissionPayload{UserId: "staff-id"})
+		err := ac.AddRoleAndPermission(ctx, &models.RoleAndPermissionPayload{UserId: "staff-id"})
 
 		// assert
 		if err == nil {
@@ -42,7 +45,7 @@ func TestAccountService(t *testing.T) {
 
 	t.Run("should save role & permission as they do not exist", func(t *testing.T) {
 		// given
-		payload := models.AddRoleAndPermissionPayload{
+		payload := models.RoleAndPermissionPayload{
 			RolePermission: []models.RolePermissionEnum{
 				{Role: models.DEVELOPER, Permissions: []models.PermissionEnum{models.READ, models.WRITE}},
 			},
@@ -63,7 +66,8 @@ func TestAccountService(t *testing.T) {
 		rStore := profile.MockRoleStore{}
 		pStore := profile.MockPermissionStore{}
 		ac := accountService{
-			logger: lg,
+			logger:     lg,
+			staffCache: cac,
 			adp: &stores.Adapters{
 				ProfileStore: &profile.MockProfileStore{
 					ProfileRolesAndPermissionByStaffUUIDObj:   &en,
@@ -95,7 +99,7 @@ func TestAccountService(t *testing.T) {
 
 	t.Run("should only permission as it does not exist", func(t *testing.T) {
 		// given
-		payload := models.AddRoleAndPermissionPayload{
+		payload := models.RoleAndPermissionPayload{
 			RolePermission: []models.RolePermissionEnum{
 				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.READ, models.WRITE}},
 			},
@@ -116,7 +120,8 @@ func TestAccountService(t *testing.T) {
 		rStore := profile.MockRoleStore{}
 		pStore := profile.MockPermissionStore{}
 		ac := accountService{
-			logger: lg,
+			logger:     lg,
+			staffCache: cac,
 			adp: &stores.Adapters{
 				ProfileStore: &profile.MockProfileStore{
 					ProfileRolesAndPermissionByStaffUUIDObj:   &en,

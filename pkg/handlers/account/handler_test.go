@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
@@ -12,6 +13,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
+	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/account"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
@@ -65,7 +67,7 @@ func TestAccountHandler(t *testing.T) {
 	adp := stores.NewAdapters(l, db, prov)
 	jwtSer := auth.NewJwtService(l, env)
 	ps := auth.NewPasswordService(l)
-	acs := account.NewAccountService(l, adp, jwtSer, ps)
+	acs := account.NewAccountService(l, adp, jwtSer, ps, pkg.NewInMemoryCache[string, []*staff.AllStaffsEntity](l, 10, 10))
 
 	// register handler
 	m := &middleware.Middleware{Logger: l, Auth: jwtSer, Param: env.CookieParam}
@@ -80,17 +82,17 @@ func TestAccountHandler(t *testing.T) {
 		Password:  "pa(ssworD123#",
 	}
 
-	jwtObj, _ := jwtSer.Encode(
-		&models.JwtObj{
-			UserId: p.Firstname,
-			AccessControls: []models.RolePermissionEnum{
-				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
-			},
-		},
-		utils.TwoDaysInSeconds,
-	)
-
 	t.Run("should register a user", func(t *testing.T) {
+		jwtObj, _ := jwtSer.Encode(
+			&models.JwtObj{
+				UserId: p.Firstname,
+				AccessControls: []models.RolePermissionEnum{
+					{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
+				},
+			},
+			utils.TwoDaysInSeconds,
+		)
+
 		pl, err := json.Marshal(p)
 		if err != nil {
 			t.Errorf("failed to marshal ProfilePayload: %s", err)
@@ -179,20 +181,75 @@ func TestAccountHandler(t *testing.T) {
 		}
 	})
 
+	jwtObj, _ := jwtSer.Encode(
+		&models.JwtObj{
+			UserId: p.Firstname,
+			AccessControls: []models.RolePermissionEnum{
+				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
+				{Role: models.DEVELOPER, Permissions: []models.PermissionEnum{models.WRITE}},
+			},
+		},
+		utils.TwoDaysInSeconds,
+	)
+
+	pr, err := adp.ProfileStore.ProfileRolesAndPermissionByEmail(context.Background(), p.Email)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	if pr == nil {
+		t.Fatal("profile is nil")
+	}
+
+	staf, err := adp.StaffStore.StaffByProfileId(context.Background(), pr.Profile.ProfileId)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	t.Run("should delete permission", func(t *testing.T) {
+		url := fmt.Sprintf("/account/permission/%s/%s/%s",
+			staf.UUID.String(),
+			pr.RolePermission[0].Role.Role,
+			pr.RolePermission[0].Permissions[0].Permission)
+		req := httptest.NewRequest(http.MethodDelete, url, nil)
+		req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: jwtObj.Token})
+		req.Header.Set("Content-Type", "application/json")
+
+		rr := httptest.NewRecorder()
+
+		mux.ServeHTTP(rr, req)
+
+		// assert
+		if rr.Code != http.StatusNoContent {
+			t.Errorf("expected %d, received %d", http.StatusNoContent, rr.Code)
+			t.Log(rr.Body.String())
+		}
+	})
+
+	t.Run("should delete role", func(t *testing.T) {
+		url := fmt.Sprintf("/account/role/%s/%s", staf.UUID.String(), pr.RolePermission[0].Role.Role)
+		req := httptest.NewRequest(http.MethodDelete, url, nil)
+		req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: jwtObj.Token})
+		req.Header.Set("Content-Type", "application/json")
+
+		rr := httptest.NewRecorder()
+
+		mux.ServeHTTP(rr, req)
+
+		// assert
+		if rr.Code != http.StatusNoContent {
+			t.Errorf("expected %d, received %d", http.StatusNoContent, rr.Code)
+			t.Log(rr.Body.String())
+		}
+	})
+
 	t.Run("should add role to user", func(t *testing.T) {
-		ctx := context.Background()
-
-		pr, err := adp.ProfileStore.ProfileByEmail(ctx, p.Email)
+		st, err := adp.StaffStore.StaffByProfileId(context.Background(), pr.Profile.ProfileId)
 		if err != nil {
 			t.Errorf(err.Error())
 		}
 
-		st, err := adp.StaffStore.StaffByProfileId(ctx, pr.ProfileId)
-		if err != nil {
-			t.Errorf(err.Error())
-		}
-
-		pl, err := json.Marshal(models.AddRoleAndPermissionPayload{
+		pl, err := json.Marshal(models.RoleAndPermissionPayload{
 			UserId: st.UUID.String(),
 			RolePermission: []models.RolePermissionEnum{
 				{Role: models.DEVELOPER, Permissions: []models.PermissionEnum{models.DELETE}},

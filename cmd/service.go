@@ -34,13 +34,14 @@ func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *
 	p := auth.NewPasswordService(l)
 	j := auth.NewJwtService(l, e)
 
+	staffCache := pkg.NewInMemoryCache[string, []*staffModel.AllStaffsEntity](l, 10, 10)
 	return &serviceRegistry{
 		JwtService:         j,
 		ScheduleService:    schedule.NewScheduleService(l, a),
 		ServiceImpl:        service_type.NewServiceImpl(l, a),
-		StaffService:       staff.NewStaffService(l, a, pkg.NewInMemoryCache[string, []*staffModel.AllStaffsEntity](l, 10, 10)),
+		StaffService:       staff.NewStaffService(l, a, staffCache),
 		ReservationService: reservation.NewReservationService(l, a, pkg.NewInMemoryCache[string, []*model.ReservationTimeSlots](l, 30, 30), m),
-		AccountService:     account.NewAccountService(l, a, j, p),
+		AccountService:     account.NewAccountService(l, a, j, p, staffCache),
 		PasswordService:    p,
 		MailService:        m,
 	}

@@ -9,7 +9,7 @@ import (
 )
 
 type IStaffService interface {
-	AllStaffs(ctx context.Context) ([]*staff.AllStaffsEntity, error)
+	AllUsers(ctx context.Context) ([]*staff.AllStaffsEntity, error)
 }
 
 type staffService struct {
@@ -23,7 +23,7 @@ func NewStaffService(l utils.ILogger, a *stores.Adapters, c pkg.ICache[string, [
 	return &staffService{logger: l, adapters: a, cache: c, key: "key"}
 }
 
-func (dep *staffService) AllStaffs(ctx context.Context) ([]*staff.AllStaffsEntity, error) {
+func (dep *staffService) AllUsers(ctx context.Context) ([]*staff.AllStaffsEntity, error) {
 	val := dep.cache.Get(dep.key)
 	if val != nil {
 		return *val, nil

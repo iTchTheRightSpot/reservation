@@ -10,6 +10,7 @@ import (
 
 type IRoleStore interface {
 	Save(ctx context.Context, r *models.RoleEntity) error
+	Delete(ctx context.Context, roleId uint64) (int64, error)
 }
 
 type roleStore struct {
@@ -40,4 +41,13 @@ func (dep *roleStore) Save(ctx context.Context, r *models.RoleEntity) error {
 	}
 
 	return nil
+}
+
+func (dep *roleStore) Delete(ctx context.Context, roleId uint64) (int64, error) {
+	res, err := dep.db.ExecContext(ctx, "DELETE FROM role WHERE role_id = $1", roleId)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return 0, errors.New("error deleting role")
+	}
+	return res.RowsAffected()
 }

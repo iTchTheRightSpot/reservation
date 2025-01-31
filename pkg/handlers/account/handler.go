@@ -44,25 +44,20 @@ func (dep *AccountHandler) Register() {
 		),
 	))
 
-	m3 := middleware.RequestBodyMiddleware[models.AddRoleAndPermissionPayload]{Logger: dep.logger}
+	m3 := middleware.RequestBodyMiddleware[models.RoleAndPermissionPayload]{Logger: dep.logger}
+	dev := models.DEVELOPER
 	dep.mux.Handle("POST /account/role-permission", dep.ware.Authentication(
-		dep.ware.HasRoleAndPermissions(
+		dep.ware.HasRole(
 			m3.RequestBody(http.HandlerFunc(dep.addRoleAndPermission)),
-			&models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
+			&dev,
 		),
 	))
 
-	dep.mux.Handle("DELETE /account/role", dep.ware.Authentication(
-		dep.ware.HasRoleAndPermissions(
-			http.HandlerFunc(dep.deleteRole),
-			&models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.DELETE}},
-		),
+	dep.mux.Handle("DELETE /account/role/{staff_id}/{role}", dep.ware.Authentication(
+		dep.ware.HasRole(http.HandlerFunc(dep.deleteRole), &dev),
 	))
-	dep.mux.Handle("DELETE /account/permission/{permission_id}", dep.ware.Authentication(
-		dep.ware.HasRoleAndPermissions(
-			http.HandlerFunc(dep.deletePermission),
-			&models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.DELETE}},
-		),
+	dep.mux.Handle("DELETE /account/permission/{staff_id}/{role}/{permission}", dep.ware.Authentication(
+		dep.ware.HasRole(http.HandlerFunc(dep.deletePermission), &dev),
 	))
 }
 
@@ -154,7 +149,7 @@ func (dep *AccountHandler) logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (dep *AccountHandler) addRoleAndPermission(w http.ResponseWriter, r *http.Request) {
-	p, err := pkg.ReadBody[models.AddRoleAndPermissionPayload](r)
+	p, err := pkg.ReadBody[models.RoleAndPermissionPayload](r)
 	if err != nil {
 		dep.logger.Error(err.Error())
 		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
@@ -170,9 +165,21 @@ func (dep *AccountHandler) addRoleAndPermission(w http.ResponseWriter, r *http.R
 }
 
 func (dep *AccountHandler) deleteRole(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotImplemented)
+	err := dep.service.DeleteRole(r.Context(), r.PathValue("staff_id"), r.PathValue("role"))
+	if err != nil {
+		utils.ErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (dep *AccountHandler) deletePermission(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotImplemented)
+	err := dep.service.DeletePermission(r.Context(), r.PathValue("staff_id"), r.PathValue("role"), r.PathValue("permission"))
+	if err != nil {
+		utils.ErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

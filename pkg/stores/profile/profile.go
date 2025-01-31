@@ -59,8 +59,8 @@ func (dep *profileStore) ProfileRolesAndPermissionByEmail(ctx context.Context, e
               )
           ) AS role_perm
       FROM profile p
-      INNER JOIN role r ON r.profile_id = p.profile_id
-      INNER JOIN (
+      LEFT JOIN role r ON r.profile_id = p.profile_id
+      LEFT JOIN (
           SELECT
               r.role_id,
               json_agg(perm.*) AS permissions
@@ -169,8 +169,8 @@ func (dep *profileStore) ProfileRolesAndPermissionByStaffUUID(ctx context.Contex
           ) AS role_perm
         FROM profile p
         INNER JOIN staff st ON st.profile_id = p.profile_id
-		INNER JOIN role r ON r.profile_id = p.profile_id
-		INNER JOIN (
+		LEFT JOIN role r ON r.profile_id = p.profile_id
+		LEFT JOIN (
 			SELECT
 				r.role_id,
 			json_agg(perm.*) AS permissions

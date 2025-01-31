@@ -27,7 +27,7 @@ func (dep *StaffHandler) Register() {
 }
 
 func (dep *StaffHandler) allStaffs(w http.ResponseWriter, r *http.Request) {
-	arr, err := dep.service.AllStaffs(r.Context())
+	arr, err := dep.service.AllUsers(r.Context())
 	if err != nil {
 		utils.ErrorResponse(w, err)
 		return

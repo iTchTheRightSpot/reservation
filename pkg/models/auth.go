@@ -25,7 +25,7 @@ type Login struct {
 	Password string `json:"password" validate:"required,min=8,max=15"`
 }
 
-type AddRoleAndPermissionPayload struct {
+type RoleAndPermissionPayload struct {
 	UserId         string               `json:"user_id" validate:"required"`
 	RolePermission []RolePermissionEnum `json:"role_permission" validate:"required"`
 }

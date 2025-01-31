@@ -10,6 +10,7 @@ import (
 
 type IPermissionStore interface {
 	Save(ctx context.Context, p *models.PermissionEntity) error
+	Delete(ctx context.Context, permissionId uint64) (int64, error)
 }
 
 type permissionStore struct {
@@ -39,4 +40,13 @@ func (dep *permissionStore) Save(ctx context.Context, p *models.PermissionEntity
 	}
 
 	return nil
+}
+
+func (dep *permissionStore) Delete(ctx context.Context, permissionId uint64) (int64, error) {
+	res, err := dep.db.ExecContext(ctx, "DELETE FROM permission WHERE permission_id = $1", permissionId)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return 0, errors.New("error deleting permission")
+	}
+	return res.RowsAffected()
 }

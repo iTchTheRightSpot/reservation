@@ -47,6 +47,10 @@ func (dep *MockPermissionStore) Save(context.Context, *models.PermissionEntity) 
 	return dep.MockPermissionSaveError
 }
 
+func (dep *MockPermissionStore) Delete(context.Context, uint64) (int64, error) {
+	return 0, nil
+}
+
 type MockRoleStore struct {
 	MockRoleSave       *models.RoleEntity
 	MockRoleSaveError  error
@@ -56,4 +60,8 @@ type MockRoleStore struct {
 func (dep *MockRoleStore) Save(context.Context, *models.RoleEntity) error {
 	dep.MockRoleSaveCalled = true
 	return dep.MockRoleSaveError
+}
+
+func (dep *MockRoleStore) Delete(context.Context, uint64) (int64, error) {
+	return 0, nil
 }
