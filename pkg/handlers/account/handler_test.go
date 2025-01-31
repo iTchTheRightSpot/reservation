@@ -133,7 +133,7 @@ func TestAccountHandler(t *testing.T) {
 		}
 	})
 
-	t.Run(" should return active user", func(t *testing.T) {
+	t.Run("should return active user", func(t *testing.T) {
 		ctx := context.Background()
 
 		pr, err := adp.ProfileStore.ProfileByEmail(ctx, p.Email)

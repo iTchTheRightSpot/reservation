@@ -6,9 +6,12 @@ import (
 )
 
 type MockProfileStore struct {
-	MockProfileSave       *models.ProfileEntity
-	MockProfileSaveError  error
-	MockProfileSaveCalled bool
+	MockProfileSave                            *models.ProfileEntity
+	MockProfileSaveError                       error
+	MockProfileSaveCalled                      bool
+	ProfileRolesAndPermissionByStaffUUIDCalled bool
+	ProfileRolesAndPermissionByStaffUUIDObj    *models.ProfileRolePermissionEntity
+	ProfileRolesAndPermissionByStaffUUIDError  error
 }
 
 func (dep *MockProfileStore) ProfileByEmail(context.Context, string) (*models.ProfileEntity, error) {
@@ -17,6 +20,11 @@ func (dep *MockProfileStore) ProfileByEmail(context.Context, string) (*models.Pr
 
 func (dep *MockProfileStore) ProfileRolesAndPermissionByEmail(context.Context, string) (*models.ProfileRolePermissionEntity, error) {
 	return nil, nil
+}
+
+func (dep *MockProfileStore) ProfileRolesAndPermissionByStaffUUID(context.Context, string) (*models.ProfileRolePermissionEntity, error) {
+	dep.ProfileRolesAndPermissionByStaffUUIDCalled = true
+	return dep.ProfileRolesAndPermissionByStaffUUIDObj, dep.ProfileRolesAndPermissionByStaffUUIDError
 }
 
 func (dep *MockProfileStore) ProfileByStaffUUID(context.Context, string) (*models.ProfileEntity, error) {

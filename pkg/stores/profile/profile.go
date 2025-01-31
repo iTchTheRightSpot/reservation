@@ -15,6 +15,7 @@ type IProfileStore interface {
 	ProfileByEmail(ctx context.Context, email string) (*models.ProfileEntity, error)
 	ProfileRolesAndPermissionByEmail(ctx context.Context, email string) (*models.ProfileRolePermissionEntity, error)
 	ProfileByStaffUUID(ctx context.Context, userId string) (*models.ProfileEntity, error)
+	ProfileRolesAndPermissionByStaffUUID(ctx context.Context, email string) (*models.ProfileRolePermissionEntity, error)
 }
 
 type profileStore struct {
@@ -154,4 +155,78 @@ func (dep *profileStore) Save(ctx context.Context, p *models.ProfileEntity) erro
 	}
 
 	return nil
+}
+
+func (dep *profileStore) ProfileRolesAndPermissionByStaffUUID(ctx context.Context, uid string) (*models.ProfileRolePermissionEntity, error) {
+	q := `
+        SELECT
+          row_to_json(p.*) AS profile,
+          json_agg(
+              json_build_object(
+                  'role', row_to_json(r),
+                  'permissions', permissions.permissions
+              )
+          ) AS role_perm
+        FROM profile p
+        INNER JOIN staff st ON st.profile_id = p.profile_id
+		INNER JOIN role r ON r.profile_id = p.profile_id
+		INNER JOIN (
+			SELECT
+				r.role_id,
+			json_agg(perm.*) AS permissions
+			FROM permission perm
+			INNER JOIN role r ON r.role_id = perm.role_id
+			GROUP BY r.role_id
+		) permissions ON permissions.role_id = r.role_id
+	  	WHERE st.uuid = $1
+		GROUP BY p.profile_id;
+    `
+
+	rows, err := dep.db.QueryContext(ctx, q, uid)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return nil, errors.New("error retrieving profile, roles, and permissions")
+	}
+
+	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
+
+	var result *models.ProfileRolePermissionEntity
+
+	for rows.Next() {
+		var profileData json.RawMessage
+		var rolePermData json.RawMessage
+
+		if err = rows.Scan(&profileData, &rolePermData); err != nil {
+			dep.logger.Error(err.Error())
+			return nil, errors.New("error scanning database rows")
+		}
+
+		var pro models.ProfileEntity
+		if err = json.Unmarshal(profileData, &pro); err != nil {
+			dep.logger.Error(err.Error())
+			return nil, errors.New("error unmarshalling profile data")
+		}
+
+		var rolePerms []models.RolePermissionEntity
+		if err = json.Unmarshal(rolePermData, &rolePerms); err != nil {
+			dep.logger.Error(err.Error())
+			return nil, errors.New("error unmarshalling role permissions data")
+		}
+
+		result = &models.ProfileRolePermissionEntity{
+			Profile:        pro,
+			RolePermission: rolePerms,
+		}
+	}
+
+	if err = rows.Err(); err != nil {
+		dep.logger.Error(err.Error())
+		return nil, errors.New("error iterating through rows")
+	}
+
+	if result == nil {
+		return nil, errors.New("profile not found")
+	}
+
+	return result, nil
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"slices"
 )
 
 type IAccountService interface {
@@ -122,5 +123,58 @@ func (dep *accountService) Register(ctx context.Context, obj *models.ProfilePayl
 		}
 		bio := "Ready to put a smile on your face 🌞"
 		return adps.StaffStore.Save(ctx, &staff.StaffEntity{ProfileId: &p.ProfileId, UUID: uuid.New(), Bio: &bio})
+	})
+}
+
+func (dep *accountService) AddRoleAndPermission(ctx context.Context, o *models.AddRoleAndPermissionPayload) error {
+	prp, err := dep.adp.ProfileStore.ProfileRolesAndPermissionByStaffUUID(ctx, o.UserId)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return &utils.NotFoundError{Message: "invalid staff id"}
+	}
+
+	return dep.adp.Transaction.RunInTransaction(func(adps *stores.Adapters) error {
+		for _, enum := range o.RolePermission {
+			idx := slices.IndexFunc(prp.RolePermission, func(e models.RolePermissionEntity) bool {
+				return e.Role.Role == enum.Role
+			})
+
+			// validate if role does not exist
+			if idx != -1 {
+				rp := prp.RolePermission[idx]
+				for _, p := range enum.Permissions {
+					e := slices.ContainsFunc(rp.Permissions, func(pe models.PermissionEntity) bool {
+						return pe.Permission == p
+					})
+
+					if !e {
+						err = adps.PermissionStore.Save(ctx, &models.PermissionEntity{RoleId: rp.Role.RoleId, Permission: p})
+						if err != nil {
+							dep.logger.Error(err.Error())
+							return &utils.InsertionError{Message: "error saving permission " + string(p)}
+						}
+					}
+				}
+			} else {
+				// save normally
+				r := models.RoleEntity{ProfileId: prp.Profile.ProfileId, Role: enum.Role}
+				err = adps.RoleStore.Save(ctx, &r)
+
+				if err != nil {
+					dep.logger.Error(err.Error())
+					return &utils.InsertionError{Message: "error saving role " + string(enum.Role)}
+				}
+
+				for _, p := range enum.Permissions {
+					err = adps.PermissionStore.Save(ctx, &models.PermissionEntity{RoleId: r.RoleId, Permission: p})
+
+					if err != nil {
+						dep.logger.Error(err.Error())
+						return &utils.InsertionError{Message: "error saving permission " + string(p)}
+					}
+				}
+			}
+		}
+		return nil
 	})
 }
