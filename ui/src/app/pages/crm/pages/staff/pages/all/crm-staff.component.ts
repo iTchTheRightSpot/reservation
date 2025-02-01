@@ -27,6 +27,7 @@ import {
   UpdateScheduleModel
 } from '@crm/pages/account/pages/schedule/schedule.model';
 import { AccountService } from '@crm/pages/account/account.service';
+import { RoleAndPermissionPayload } from '@crm/pages/account/account.model';
 
 @Component({
   selector: 'app-crm-staff',
@@ -179,6 +180,30 @@ export class CrmStaffComponent {
                 date: o.date,
                 page: o.page,
                 size: o.size
+              });
+            }
+          })
+        )
+      )
+    ),
+    { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
+  );
+
+  protected readonly createRolesAndPermissionsEmitter =
+    new Subject<RoleAndPermissionPayload>();
+  protected readonly createRolesAndPermissions = toSignal(
+    this.createRolesAndPermissionsEmitter.asObservable().pipe(
+      switchMap(o =>
+        this.accountService.createRoleAndPermission(o).pipe(
+          tap(s => {
+            if (s.state === ApiState.LOADED) {
+              ScheduleService.SchedulesByStaffCache.clear();
+              ScheduleService.AllSchedulesCache.clear();
+              this.staffSchedulesEmitter.next({
+                staff_id: o.user_id,
+                date: new Date(),
+                page: 0,
+                size: 10
               });
             }
           })

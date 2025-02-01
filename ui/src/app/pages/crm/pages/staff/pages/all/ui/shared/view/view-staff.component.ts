@@ -19,9 +19,9 @@ import { Textarea } from 'primeng/textarea';
     InputIcon,
     InputText,
     Select,
-    FormsModule,
     Avatar,
-    Textarea
+    Textarea,
+    FormsModule
   ],
   templateUrl: './view-staff.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -34,11 +34,10 @@ export class ViewStaffComponent {
   protected readonly roles = (ac: RolePermissionEntity[]) =>
     ac.map(r => r.role);
 
-  protected readonly permissions = (ac: RolePermissionEntity[]) => {
-    const r = this.selectedRole;
-    if (!r) return [];
-    return ac
-      .filter(a => a.role === r)
-      .flatMap(rp => rp.permissions.map(p => p));
-  };
+  protected readonly permissions = (ac: RolePermissionEntity[]) =>
+    !this.selectedRole
+      ? []
+      : ac
+          .filter(a => a.role === this.selectedRole)
+          .flatMap(rp => rp.permissions.map(p => p));
 }

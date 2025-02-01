@@ -17,7 +17,7 @@ import { ConfirmationService } from 'primeng/api';
 
 @Component({
   selector: 'app-link-service',
-  imports: [Button, Select, FormsModule, Divider, Skeleton, ConfirmPopup],
+  imports: [Button, Select, Divider, Skeleton, ConfirmPopup, FormsModule],
   providers: [ConfirmationService],
   templateUrl: './link-service.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush

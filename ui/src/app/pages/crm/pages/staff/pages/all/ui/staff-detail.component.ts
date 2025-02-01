@@ -22,6 +22,7 @@ import {
   Schedule,
   UpdateScheduleModel
 } from '@crm/pages/account/pages/schedule/schedule.model';
+import { RoleAndPermissionPayload } from '@crm/pages/account/account.model';
 
 @Component({
   selector: 'app-staff-detail-holder',
@@ -55,7 +56,13 @@ import {
           <app-view-staff [staff]="staff()" />
         </p-tabpanel>
         <p-tabpanel value="1">
-          <app-role [staff]="staff()" />
+          <app-role
+            [staff]="staff()"
+            [createRolesAndPermissionState]="createRolesAndPermissionState()"
+            (createRolesAndPermissionsEmitter)="
+              createRolesAndPermissionsEmitter.emit($event)
+            "
+          />
         </p-tabpanel>
         <p-tabpanel value="2">
           <app-link-service
@@ -92,6 +99,7 @@ export class StaffDetailComponent {
   linkServiceToStaffLoadingState = input.required<ApiState>();
   servicesByStaff = input.required<ApiResponse<string[]>>();
   allServices = input.required<ApiResponse<string[]>>();
+  createRolesAndPermissionState = input.required<ApiState>();
   deLinkServiceFromStaffState = input.required<ApiState>();
   staffSchedules = input.required<ApiResponse<Schedule[]>>();
   createScheduleLoadingState = input.required<ApiState>();
@@ -100,6 +108,8 @@ export class StaffDetailComponent {
 
   readonly deLinkServiceFromStaffEmitter = output<ServiceTypeToStaffPayload>();
   readonly linkServiceToStaffEmitter = output<ServiceTypeToStaffPayload>();
+  readonly createRolesAndPermissionsEmitter =
+    output<RoleAndPermissionPayload>();
   readonly schedulesEmitter = output<StaffScheduleEmitter>();
   readonly createScheduleEmitter = output<CreateScheduleModel>();
   readonly updateScheduleEmitter = output<UpdateScheduleModel>();
