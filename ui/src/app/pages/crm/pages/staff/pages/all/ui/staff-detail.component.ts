@@ -22,7 +22,11 @@ import {
   Schedule,
   UpdateScheduleModel
 } from '@crm/pages/account/pages/schedule/schedule.model';
-import { RoleAndPermissionPayload } from '@crm/pages/account/account.model';
+import {
+  DeletePermission,
+  DeleteRole,
+  RoleAndPermissionPayload
+} from '@crm/pages/account/account.model';
 
 @Component({
   selector: 'app-staff-detail-holder',
@@ -59,9 +63,15 @@ import { RoleAndPermissionPayload } from '@crm/pages/account/account.model';
           <app-role
             [staff]="staff()"
             [createRolesAndPermissionState]="createRolesAndPermissionState()"
+            [addPermissionsState]="addPermissionsState()"
+            [deleteRoleState]="deleteRoleState()"
+            [deletePermissionState]="deletePermissionState()"
             (createRolesAndPermissionsEmitter)="
               createRolesAndPermissionsEmitter.emit($event)
             "
+            (addPermissionsEmitter)="addPermissionsEmitter.emit($event)"
+            (deleteRoleEmitter)="deleteRoleEmitter.emit($event)"
+            (deletePermissionEmitter)="deletePermissionEmitter.emit($event)"
           />
         </p-tabpanel>
         <p-tabpanel value="2">
@@ -105,11 +115,17 @@ export class StaffDetailComponent {
   createScheduleLoadingState = input.required<ApiState>();
   updateScheduleLoadingState = input.required<ApiState>();
   deleteScheduleState = input.required<ApiState>();
+  addPermissionsState = input.required<ApiState>();
+  deleteRoleState = input.required<ApiState>();
+  deletePermissionState = input.required<ApiState>();
 
   readonly deLinkServiceFromStaffEmitter = output<ServiceTypeToStaffPayload>();
   readonly linkServiceToStaffEmitter = output<ServiceTypeToStaffPayload>();
   readonly createRolesAndPermissionsEmitter =
     output<RoleAndPermissionPayload>();
+  readonly addPermissionsEmitter = output<RoleAndPermissionPayload>();
+  readonly deleteRoleEmitter = output<DeleteRole>();
+  readonly deletePermissionEmitter = output<DeletePermission>();
   readonly schedulesEmitter = output<StaffScheduleEmitter>();
   readonly createScheduleEmitter = output<CreateScheduleModel>();
   readonly updateScheduleEmitter = output<UpdateScheduleModel>();

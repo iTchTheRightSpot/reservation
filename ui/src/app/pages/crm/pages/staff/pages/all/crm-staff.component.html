@@ -92,6 +92,9 @@
         [createScheduleLoadingState]="createSchedule().state"
         [updateScheduleLoadingState]="updateSchedule().state"
         [deleteScheduleState]="deleteSchedule().state"
+        [addPermissionsState]="addPermissionsState().state"
+        [deleteRoleState]="deleteRoleState().state"
+        [deletePermissionState]="deletePermissionState().state"
         (linkServiceToStaffEmitter)="linkServiceToStaffEmitter.next($event)"
         (deLinkServiceFromStaffEmitter)="
           deLinkServiceFromStaffEmitter.next($event)
@@ -103,6 +106,9 @@
         (createRolesAndPermissionsEmitter)="
           createRolesAndPermissionsEmitter.next($event)
         "
+        (addPermissionsEmitter)="addPermissionsEmitter.next($event)"
+        (deleteRoleEmitter)="deleteRoleEmitter.next($event)"
+        (deletePermissionEmitter)="deletePermissionEmitter.next($event)"
       />
     } @else {
       invalid staff selected

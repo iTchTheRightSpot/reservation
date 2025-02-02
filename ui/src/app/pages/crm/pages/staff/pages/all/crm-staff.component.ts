@@ -27,7 +27,11 @@ import {
   UpdateScheduleModel
 } from '@crm/pages/account/pages/schedule/schedule.model';
 import { AccountService } from '@crm/pages/account/account.service';
-import { RoleAndPermissionPayload } from '@crm/pages/account/account.model';
+import {
+  DeletePermission,
+  DeleteRole,
+  RoleAndPermissionPayload
+} from '@crm/pages/account/account.model';
 
 @Component({
   selector: 'app-crm-staff',
@@ -195,6 +199,76 @@ export class CrmStaffComponent {
     this.createRolesAndPermissionsEmitter.asObservable().pipe(
       switchMap(o =>
         this.accountService.createRoleAndPermission(o).pipe(
+          tap(s => {
+            if (s.state === ApiState.LOADED) {
+              ScheduleService.SchedulesByStaffCache.clear();
+              ScheduleService.AllSchedulesCache.clear();
+              this.staffSchedulesEmitter.next({
+                staff_id: o.user_id,
+                date: new Date(),
+                page: 0,
+                size: 10
+              });
+            }
+          })
+        )
+      )
+    ),
+    { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
+  );
+
+  protected readonly addPermissionsEmitter =
+    new Subject<RoleAndPermissionPayload>();
+  protected readonly addPermissionsState = toSignal(
+    this.addPermissionsEmitter.asObservable().pipe(
+      switchMap(o =>
+        this.accountService.createRoleAndPermission(o).pipe(
+          tap(s => {
+            if (s.state === ApiState.LOADED) {
+              ScheduleService.SchedulesByStaffCache.clear();
+              ScheduleService.AllSchedulesCache.clear();
+              this.staffSchedulesEmitter.next({
+                staff_id: o.user_id,
+                date: new Date(),
+                page: 0,
+                size: 10
+              });
+            }
+          })
+        )
+      )
+    ),
+    { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
+  );
+
+  protected readonly deleteRoleEmitter = new Subject<DeleteRole>();
+  protected readonly deleteRoleState = toSignal(
+    this.deleteRoleEmitter.asObservable().pipe(
+      switchMap(o =>
+        this.accountService.deleteRole(o).pipe(
+          tap(s => {
+            if (s.state === ApiState.LOADED) {
+              ScheduleService.SchedulesByStaffCache.clear();
+              ScheduleService.AllSchedulesCache.clear();
+              this.staffSchedulesEmitter.next({
+                staff_id: o.user_id,
+                date: new Date(),
+                page: 0,
+                size: 10
+              });
+            }
+          })
+        )
+      )
+    ),
+    { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
+  );
+
+  protected readonly deletePermissionEmitter = new Subject<DeletePermission>();
+  protected readonly deletePermissionState = toSignal(
+    this.deletePermissionEmitter.asObservable().pipe(
+      switchMap(o =>
+        this.accountService.deletePermission(o).pipe(
           tap(s => {
             if (s.state === ApiState.LOADED) {
               ScheduleService.SchedulesByStaffCache.clear();
