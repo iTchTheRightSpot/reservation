@@ -1,0 +1,183 @@
+<svg
+  class="fixed left-0 top-0 min-h-screen min-w-screen z-[-1]"
+  xmlns="http://www.w3.org/2000/svg"
+  width="100%"
+  height="100%"
+  viewBox="0 0 1000 120"
+>
+  <rect fill="#000000" width="1000" height="120" />
+  <g fill="none" stroke="#222" stroke-width="10" stroke-opacity="0.75">
+    <path
+      d="M-500 75c0 0 125-30 250-30S0 75 0 75s125 30 250 30s250-30 250-30s125-30 250-30s250 30 250 30s125 30 250 30s250-30 250-30"
+    />
+    <path
+      d="M-500 45c0 0 125-30 250-30S0 45 0 45s125 30 250 30s250-30 250-30s125-30 250-30s250 30 250 30s125 30 250 30s250-30 250-30"
+    />
+    <path
+      d="M-500 105c0 0 125-30 250-30S0 105 0 105s125 30 250 30s250-30 250-30s125-30 250-30s250 30 250 30s125 30 250 30s250-30 250-30"
+    />
+    <path
+      d="M-500 15c0 0 125-30 250-30S0 15 0 15s125 30 250 30s250-30 250-30s125-30 250-30s250 30 250 30s125 30 250 30s250-30 250-30"
+    />
+    <path
+      d="M-500-15c0 0 125-30 250-30S0-15 0-15s125 30 250 30s250-30 250-30s125-30 250-30s250 30 250 30s125 30 250 30s250-30 250-30"
+    />
+    <path
+      d="M-500 135c0 0 125-30 250-30S0 135 0 135s125 30 250 30s250-30 250-30s125-30 250-30s250 30 250 30s125 30 250 30s250-30 250-30"
+    />
+  </g>
+</svg>
+
+<div class="pt-10 min-h-screen flex justify-center">
+  <div
+    class="max-w-2xl h-fit px-10 md:px-20 py-7 flex flex-col item-center justify-center rounded-md border shadow-2xl"
+  >
+    <div class="text-left mb-4">
+      <p class="mb-2 text-xl md:text-2xl font-bold">Register</p>
+      <span class="font-medium opacity-50">Please enter your details</span>
+    </div>
+
+    <form
+      [formGroup]="form"
+      class="w-full flex flex-col gap-4 text-center md:text-left"
+    >
+      <div class="w-full flex flex-col gap-4">
+        <div class="">
+          <p-iconfield styleClass="mb-0">
+            <p-inputicon styleClass="pi pi-envelope" />
+            <input
+              class="w-full"
+              type="text"
+              formControlName="email"
+              pInputText
+              placeholder="Email"
+            />
+          </p-iconfield>
+          @if (
+            form.controls['email'].invalid && !form.controls['email'].untouched
+          ) {
+            <p-message severity="error" variant="simple" size="small">
+              Email is required
+            </p-message>
+          }
+        </div>
+
+        <div
+          class="w-full flex flex-col md:flex-row items-center justify-center gap-2"
+        >
+          <div class="w-full">
+            <p-iconfield styleClass="mb-0">
+              <p-inputicon styleClass="pi pi-user" />
+              <input
+                type="text"
+                class="w-full"
+                formControlName="firstname"
+                pInputText
+                placeholder="Firstname"
+              />
+            </p-iconfield>
+            @if (
+              form.controls['firstname'].invalid &&
+              !form.controls['firstname'].untouched
+            ) {
+              <p-message severity="error" variant="simple" size="small">
+                Firstname is required
+              </p-message>
+            }
+          </div>
+
+          <div class="w-full">
+            <p-iconfield styleClass="mb-0">
+              <p-inputicon styleClass="pi pi-user" />
+              <input
+                class="w-full"
+                type="text"
+                formControlName="lastname"
+                pInputText
+                placeholder="Lastname"
+              />
+            </p-iconfield>
+            @if (
+              form.controls['lastname'].invalid &&
+              !form.controls['lastname'].untouched
+            ) {
+              <p-message severity="error" variant="simple" size="small">
+                Lastname is required
+              </p-message>
+            }
+          </div>
+        </div>
+
+        <div class="w-full grid gap-2 grid-cols-1 md:grid-cols-2">
+          <div class="w-full">
+            <p-floatlabel variant="on">
+              <p-password
+                formControlName="password"
+                [toggleMask]="true"
+                id="on_label"
+                inputId="on_label"
+              />
+              <label for="on_label">Password</label>
+            </p-floatlabel>
+            @if (
+              form.controls['password'].invalid &&
+              !form.controls['password'].untouched
+            ) {
+              <p-message severity="error" variant="simple" size="small">
+                Password is required
+              </p-message>
+            } @else if (!form.controls['password'].untouched && !match()) {
+              <p-message severity="error" variant="simple" size="small">
+                Passwords do not match
+              </p-message>
+            }
+          </div>
+
+          <div class="w-full">
+            <p-floatlabel variant="on">
+              <p-password
+                formControlName="confirm_password"
+                [toggleMask]="true"
+                id="c_on_label"
+                inputId="c_on_label"
+              />
+              <label for="c_on_label">Confirm password</label>
+            </p-floatlabel>
+            @if (
+              form.controls['confirm_password'].invalid &&
+              !form.controls['confirm_password'].untouched
+            ) {
+              <p-message severity="error" variant="simple" size="small">
+                Password is required
+              </p-message>
+            } @else if (
+              !form.controls['confirm_password'].untouched && !match()
+            ) {
+              <p-message severity="error" variant="simple" size="small">
+                Passwords do not match
+              </p-message>
+            }
+          </div>
+        </div>
+      </div>
+
+      <p-button
+        [className]="'text-right'"
+        (onClick)="submit()"
+        [disabled]="form.invalid || !match()"
+      >
+        @if (register().state === state.LOADING) {
+          <i class="pi pi-spin pi-spinner" style="font-size: 1rem"></i>
+        } @else {
+          Register
+        }
+      </p-button>
+    </form>
+
+    @if (register().state === state.ERROR) {
+      <p-message severity="error" variant="simple">
+        {{ register().message }}
+      </p-message>
+    }
+  </div>
+</div>

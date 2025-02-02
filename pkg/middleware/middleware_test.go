@@ -233,8 +233,8 @@ func TestMiddleware(t *testing.T) {
 			t.Parallel()
 
 			// given
-			cred := make([]models.RolePermission, 1)
-			cred[0] = models.RolePermission{
+			cred := make([]models.RolePermissionEnum, 1)
+			cred[0] = models.RolePermissionEnum{
 				Role:        models.STAFF,
 				Permissions: []models.PermissionEnum{models.READ, models.DELETE},
 			}
@@ -268,8 +268,8 @@ func TestMiddleware(t *testing.T) {
 			t.Parallel()
 
 			// given
-			cred := make([]models.RolePermission, 1)
-			cred[0] = models.RolePermission{
+			cred := make([]models.RolePermissionEnum, 1)
+			cred[0] = models.RolePermissionEnum{
 				Role:        models.STAFF,
 				Permissions: []models.PermissionEnum{models.READ, models.DELETE, models.WRITE},
 			}
@@ -328,7 +328,7 @@ func TestMiddleware(t *testing.T) {
 			t.Parallel()
 
 			// given
-			arr := []models.RolePermission{
+			arr := []models.RolePermissionEnum{
 				{
 					Role:        models.STAFF,
 					Permissions: []models.PermissionEnum{models.READ, models.DELETE},
@@ -364,7 +364,7 @@ func TestMiddleware(t *testing.T) {
 			t.Parallel()
 
 			// given
-			cred := []models.RolePermission{
+			cred := []models.RolePermissionEnum{
 				{
 					Role:        models.STAFF,
 					Permissions: []models.PermissionEnum{models.READ, models.DELETE, models.WRITE},
@@ -400,7 +400,7 @@ func TestMiddleware(t *testing.T) {
 	t.Run("HasRoleAndPermissions middleware", func(t *testing.T) {
 		t.Parallel()
 
-		t.Run("reject request RolePermission", func(t *testing.T) {
+		t.Run("reject request RolePermissionEnum", func(t *testing.T) {
 			t.Parallel()
 
 			t.Run("is nil", func(t *testing.T) {
@@ -428,8 +428,8 @@ func TestMiddleware(t *testing.T) {
 				t.Parallel()
 
 				// given
-				cred := make([]models.RolePermission, 1)
-				cred[0] = models.RolePermission{
+				cred := make([]models.RolePermissionEnum, 1)
+				cred[0] = models.RolePermissionEnum{
 					Role:        models.USER,
 					Permissions: []models.PermissionEnum{},
 				}
@@ -451,7 +451,7 @@ func TestMiddleware(t *testing.T) {
 				middleware := Middleware{Logger: logger}
 
 				// method to test
-				param := &models.RolePermission{}
+				param := &models.RolePermissionEnum{}
 				middleware.HasRoleAndPermissions(mockHandler, param).ServeHTTP(resp, req)
 
 				if resp.Code != http.StatusForbidden {
@@ -463,8 +463,8 @@ func TestMiddleware(t *testing.T) {
 				t.Parallel()
 
 				// given
-				cred := make([]models.RolePermission, 1)
-				cred[0] = models.RolePermission{
+				cred := make([]models.RolePermissionEnum, 1)
+				cred[0] = models.RolePermissionEnum{
 					Role:        models.USER,
 					Permissions: []models.PermissionEnum{},
 				}
@@ -486,7 +486,7 @@ func TestMiddleware(t *testing.T) {
 				middleware := Middleware{Logger: logger}
 
 				// method to test
-				param := &models.RolePermission{Role: models.USER}
+				param := &models.RolePermissionEnum{Role: models.USER}
 				middleware.HasRoleAndPermissions(mockHandler, param).ServeHTTP(resp, req)
 
 				if resp.Code != http.StatusForbidden {
@@ -509,7 +509,7 @@ func TestMiddleware(t *testing.T) {
 			middleware := Middleware{Logger: logger}
 
 			// method to test
-			middleware.HasRoleAndPermissions(mockHandler, &models.RolePermission{}).ServeHTTP(resp, req)
+			middleware.HasRoleAndPermissions(mockHandler, &models.RolePermissionEnum{}).ServeHTTP(resp, req)
 
 			if resp.Code != http.StatusUnauthorized {
 				t.Errorf("expected status code %d, got %d", http.StatusUnauthorized, resp.Code)
@@ -520,12 +520,12 @@ func TestMiddleware(t *testing.T) {
 			t.Parallel()
 
 			// given
-			cred := make([]models.RolePermission, 2)
-			cred[0] = models.RolePermission{
+			cred := make([]models.RolePermissionEnum, 2)
+			cred[0] = models.RolePermissionEnum{
 				Role:        models.USER,
 				Permissions: []models.PermissionEnum{},
 			}
-			cred[1] = models.RolePermission{
+			cred[1] = models.RolePermissionEnum{
 				Role:        models.STAFF,
 				Permissions: []models.PermissionEnum{models.READ, models.DELETE},
 			}
@@ -547,7 +547,7 @@ func TestMiddleware(t *testing.T) {
 			middleware := Middleware{Logger: logger}
 
 			// method to test
-			param := &models.RolePermission{Role: models.DEVELOPER}
+			param := &models.RolePermissionEnum{Role: models.DEVELOPER}
 			middleware.HasRoleAndPermissions(mockHandler, param).ServeHTTP(resp, req)
 
 			if resp.Code != http.StatusForbidden {
@@ -559,12 +559,12 @@ func TestMiddleware(t *testing.T) {
 			t.Parallel()
 
 			// given
-			cred := make([]models.RolePermission, 2)
-			cred[0] = models.RolePermission{
+			cred := make([]models.RolePermissionEnum, 2)
+			cred[0] = models.RolePermissionEnum{
 				Role:        models.USER,
 				Permissions: []models.PermissionEnum{},
 			}
-			cred[1] = models.RolePermission{
+			cred[1] = models.RolePermissionEnum{
 				Role:        models.STAFF,
 				Permissions: []models.PermissionEnum{models.READ, models.WRITE},
 			}
@@ -586,7 +586,7 @@ func TestMiddleware(t *testing.T) {
 			middleware := Middleware{Logger: logger}
 
 			// method to test
-			param := &models.RolePermission{
+			param := &models.RolePermissionEnum{
 				Role:        models.STAFF,
 				Permissions: []models.PermissionEnum{models.READ, models.WRITE, models.DELETE},
 			}
@@ -601,8 +601,8 @@ func TestMiddleware(t *testing.T) {
 			t.Parallel()
 
 			// given
-			cred := make([]models.RolePermission, 2)
-			cred[0] = models.RolePermission{
+			cred := make([]models.RolePermissionEnum, 2)
+			cred[0] = models.RolePermissionEnum{
 				Role:        models.STAFF,
 				Permissions: []models.PermissionEnum{models.READ, models.WRITE},
 			}
@@ -624,7 +624,7 @@ func TestMiddleware(t *testing.T) {
 			middleware := Middleware{Logger: logger}
 
 			// method to test
-			param := &models.RolePermission{
+			param := &models.RolePermissionEnum{
 				Role:        models.STAFF,
 				Permissions: []models.PermissionEnum{models.WRITE},
 			}

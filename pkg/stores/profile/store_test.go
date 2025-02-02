@@ -6,7 +6,6 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"log"
 	"reflect"
@@ -61,25 +60,21 @@ func TestProfileStore(t *testing.T) {
 
 		// given
 		key := "image-key"
-		p := profile.Profile{
+		p := models.ProfileEntity{
 			Firstname: "frog",
 			Lastname:  "lastname",
 			Email:     "frog@email.com",
 			ImageKey:  &key,
+			Password:  "password",
 		}
 
 		// method to test
-		save, err := repo.Save(context.Background(), &p)
-		if err != nil {
+		if err := repo.Save(context.Background(), &p); err != nil {
 			t.Errorf("%s", err)
 		}
 
-		if save.ProfileId < 1 {
-			t.Errorf("profile not saved. Expected ProfileId > 0, got %d", save.ProfileId)
-		}
-
-		if !reflect.DeepEqual(&p, save) {
-			t.Errorf("staff not saved correctly. expected: %+v, Got: %+v", p, save)
+		if p.ProfileId < 1 {
+			t.Errorf("profile not saved. Expected ProfileId > 0, got %d", p.ProfileId)
 		}
 	})
 
@@ -90,77 +85,136 @@ func TestProfileStore(t *testing.T) {
 		repo := NewProfileStore(mockLog, con)
 
 		// given
-		p := profile.Profile{
+		p := models.ProfileEntity{
 			Firstname: "frog",
 			Lastname:  "lastname",
+			Password:  "password",
 			Email:     "frog@email.com",
 		}
 
 		// method to test
-		save, err := repo.Save(context.Background(), &p)
-		if err != nil {
-			t.Errorf("%s", err)
+		if err := repo.Save(context.Background(), &p); err != nil {
+			t.Error(err.Error())
 		}
 
-		if save.ProfileId < 1 {
-			t.Errorf("profile not saved. Expected ProfileId > 0, got %d", save.ProfileId)
-		}
-
-		if !reflect.DeepEqual(&p, save) {
-			t.Errorf("staff not saved correctly. expected: %+v, Got: %+v", p, save)
+		if p.ProfileId < 1 {
+			t.Errorf("profile not saved. Expected ProfileId > 0, got %d", p.ProfileId)
 		}
 	})
 
-	t.Run("test saving profile, role & permissions", func(t *testing.T) {
-		con, fn := setupTest(t)
-		defer fn()
+	t.Run("account flow", func(t *testing.T) {
+		t.Run("saving profile, role & permissions", func(t *testing.T) {
+			con, fn := setupTest(t)
+			defer fn()
 
-		ctx := context.Background()
-		profileRepo := NewProfileStore(mockLog, con)
-		roleRepo := NewRoleStore(mockLog, con)
-		permissionRepo := NewPermissionStore(mockLog, con)
+			ctx := context.Background()
+			profileRepo := NewProfileStore(mockLog, con)
+			roleRepo := NewRoleStore(mockLog, con)
+			permissionRepo := NewPermissionStore(mockLog, con)
 
-		p := profile.Profile{
-			Firstname: "frog",
-			Lastname:  "lastname",
-			Email:     "frog@email.com",
-		}
+			p := models.ProfileEntity{
+				Password:  "password",
+				Firstname: "frog",
+				Lastname:  "lastname",
+				Email:     "frog@email.com",
+			}
 
-		// save profile
-		if _, err := profileRepo.Save(ctx, &p); err != nil {
-			t.Errorf("%s", err)
-		}
+			// save profile
+			if err := profileRepo.Save(ctx, &p); err != nil {
+				t.Errorf("%s", err)
+			}
 
-		// save role & assert it is saved
-		r := models.Role{Role: models.STAFF, ProfileId: p.ProfileId}
+			// save role & assert it is saved
+			r := models.RoleEntity{Role: models.STAFF, ProfileId: p.ProfileId}
 
-		save, err := roleRepo.Save(ctx, &r)
-		if err != nil {
-			t.Errorf("%s", err)
-		}
+			if err := roleRepo.Save(ctx, &r); err != nil {
+				t.Errorf("%s", err)
+			}
 
-		if save.RoleId < 1 {
-			t.Errorf("role not saved. Expected RoleId > 0, got %d", save.RoleId)
-		}
+			if r.RoleId < 1 {
+				t.Errorf("role not saved. Expected RoleId > 0, got %d", r.RoleId)
+			}
 
-		if !reflect.DeepEqual(&r, save) {
-			t.Errorf("role not saved correctly. expected: %+v, Got: %+v", r, save)
-		}
+			// save permission & assert
+			per := models.PermissionEntity{Permission: models.WRITE, RoleId: r.RoleId}
 
-		// save permission & assert
-		per := models.Permission{Permission: models.WRITE, RoleId: r.RoleId}
+			if err := permissionRepo.Save(ctx, &per); err != nil {
+				t.Errorf("%s", err)
+			}
 
-		savePer, err := permissionRepo.Save(ctx, &per)
-		if err != nil {
-			t.Errorf("%s", err)
-		}
+			if per.PermissionId < 1 {
+				t.Errorf("permission not saved. Expected PermissionId > 0, got %d", per.PermissionId)
+			}
+		})
 
-		if savePer.PermissionId < 1 {
-			t.Errorf("permission not saved. Expected PermissionId > 0, got %d", savePer.PermissionId)
-		}
+		t.Run("ProfileRolesAndPermissionByEmail", func(t *testing.T) {
+			tx, fn := setupTest(t)
+			defer fn()
 
-		if !reflect.DeepEqual(&per, savePer) {
-			t.Errorf("permission not saved correctly. expected: %+v, Got: %+v", r, save)
-		}
+			ctx := context.Background()
+			profileRepo := NewProfileStore(mockLog, tx)
+			roleRepo := NewRoleStore(mockLog, tx)
+			permissionRepo := NewPermissionStore(mockLog, tx)
+
+			// save profile
+			p := models.ProfileEntity{
+				Password:  "password",
+				Firstname: "frog",
+				Lastname:  "lastname",
+				Email:     "frog@email.com",
+			}
+			_ = profileRepo.Save(ctx, &p)
+
+			// save role1 & permission1
+			r1 := models.RoleEntity{Role: models.STAFF, ProfileId: p.ProfileId}
+			_ = roleRepo.Save(ctx, &r1)
+			p1 := models.PermissionEntity{Permission: models.WRITE, RoleId: r1.RoleId}
+			_ = permissionRepo.Save(ctx, &p1)
+
+			// save role2 & permission2
+			r2 := models.RoleEntity{Role: models.DEVELOPER, ProfileId: p.ProfileId}
+			_ = roleRepo.Save(ctx, &r2)
+			p2 := models.PermissionEntity{Permission: models.READ, RoleId: r2.RoleId}
+			_ = permissionRepo.Save(ctx, &p2)
+
+			// method to test & assert
+			prsSave, err := profileRepo.ProfileRolesAndPermissionByEmail(ctx, p.Email)
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+			prs := models.ProfileRolePermissionEntity{
+				Profile: p,
+				RolePermission: []models.RolePermissionEntity{
+					{
+						Role:        r1,
+						Permissions: []models.PermissionEntity{p1},
+					},
+					{
+						Role:        r2,
+						Permissions: []models.PermissionEntity{p2},
+					},
+				},
+			}
+
+			if !reflect.DeepEqual(prs, *prsSave) {
+				if prs.Profile != prsSave.Profile {
+					t.Errorf("Profile mismatch: %+v != %+v", prs.Profile, prsSave.Profile)
+				}
+
+				for i, rp := range prs.RolePermission {
+					if i >= len(prsSave.RolePermission) {
+						t.Errorf("Extra role in expected: %+v", rp)
+						continue
+					}
+					if !reflect.DeepEqual(rp, prsSave.RolePermission[i]) {
+						t.Errorf("RolePermission[%d] mismatch: %+v != %+v", i, rp, prsSave.RolePermission[i])
+					}
+				}
+				if len(prsSave.RolePermission) > len(prs.RolePermission) {
+					t.Errorf("Extra roles in actual: %+v", prsSave.RolePermission[len(prs.RolePermission):])
+				}
+			}
+		})
 	})
 }

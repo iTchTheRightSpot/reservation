@@ -2,6 +2,8 @@ package reservation
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
@@ -15,7 +17,8 @@ type IReservationStore interface {
 	CountReservationsInRange(ctx context.Context, staffId uint64, start, end time.Time, statuses ...reservation.ReservationEnum) (int, error)
 	Save(ctx context.Context, r *reservation.Reservation) error
 	ReservationById(ctx context.Context, reservationId uint64) (*reservation.Reservation, error)
-	UpdateReservationStatus(ctx context.Context, reservationId uint64, status reservation.ReservationEnum) error
+	UpdateReservationStatus(ctx context.Context, reservationId uint64, status reservation.ReservationEnum) (int64, error)
+	BookingsInRange(ctx context.Context, staffId uint64, from time.Time, to time.Time) ([]*reservation.CRMBookingsResponse, error)
 }
 
 type reservationStore struct {
@@ -27,16 +30,93 @@ func NewReservationStore(l utils.ILogger, db pkg.Db) IReservationStore {
 	return &reservationStore{logger: l, db: db}
 }
 
-func (dep *reservationStore) UpdateReservationStatus(ctx context.Context, reservationId uint64, status reservation.ReservationEnum) error {
-	q := "UPDATE reservation SET status = $2 WHERE reservation_id = $1"
+func (dep *reservationStore) BookingsInRange(ctx context.Context, staffId uint64, from time.Time, to time.Time) ([]*reservation.CRMBookingsResponse, error) {
+	q := `
+		SELECT
+		    p.firstname as staff_name,
+		    p.image_key,
+			r.reservation_id,
+			r.name,
+			r.email,
+			r.description,
+			r.phone,
+			r.price,
+			r.status,
+			r.scheduled_for,
+			r.expire_at,
+			json_agg(s.name) as services
+		FROM reservation r
+		INNER JOIN reservation_service rs ON rs.reservation_id = r.reservation_id
+		INNER JOIN service_type s ON s.service_id = rs.service_id
+		INNER JOIN staff st ON st.staff_id = r.staff_id
+		INNER JOIN profile p ON p.profile_id = st.profile_id
+		WHERE r.staff_id = $1 AND (r.scheduled_for BETWEEN $2 AND $3)
+		GROUP BY p.firstname, p.image_key, r.reservation_id, r.name, r.email, r.description, r.phone, r.price, r.status, r.scheduled_for, r.expire_at
+	`
 
-	_, err := dep.db.ExecContext(ctx, q, reservationId, status)
+	rows, err := dep.db.QueryContext(ctx, q, staffId, from, to)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return errors.New("error updating reservation status")
+		return nil, errors.New("error retrieving bookings")
 	}
 
-	return nil
+	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
+
+	var arr []*reservation.CRMBookingsResponse
+
+	for rows.Next() {
+		var o reservation.CRMBookingsResponse
+		var data json.RawMessage
+
+		if err = rows.Scan(
+			&o.StaffFirstname,
+			&o.ImageKey,
+			&o.ReservationId,
+			&o.Name,
+			&o.Email,
+			&o.Description,
+			&o.Phone,
+			&o.Price,
+			&o.Status,
+			&o.ScheduledFor,
+			&o.ExpireAt,
+			&data,
+		); err != nil {
+			dep.logger.Error(err.Error())
+			return nil, errors.New("error scanning database rows")
+		}
+
+		if err = json.Unmarshal(data, &o.Services); err != nil {
+			dep.logger.Error(err.Error())
+			return nil, errors.New("error unmarshalling services from bookings")
+		}
+
+		arr = append(arr, &o)
+	}
+
+	if err = rows.Err(); err != nil {
+		dep.logger.Error(err.Error())
+		return nil, errors.New("error iterating through bookings rows")
+	}
+
+	return arr, err
+}
+
+func (dep *reservationStore) UpdateReservationStatus(ctx context.Context, reservationId uint64, status reservation.ReservationEnum) (int64, error) {
+	q := "UPDATE reservation SET status = $2 WHERE reservation_id = $1"
+
+	r, err := dep.db.ExecContext(ctx, q, reservationId, status)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return 0, errors.New("error updating reservation status")
+	}
+
+	num, err := r.RowsAffected()
+	if err != nil {
+		return 0, errors.New("error displaying rows affected")
+	}
+
+	return num, nil
 }
 
 func (dep *reservationStore) ReservationById(ctx context.Context, reservationId uint64) (*reservation.Reservation, error) {
@@ -46,7 +126,7 @@ func (dep *reservationStore) ReservationById(ctx context.Context, reservationId 
 	row := dep.db.QueryRowContext(ctx, q, reservationId)
 
 	err := row.Scan(
-		&r.ReservationId, &r.Name, &r.Email, &r.Description, &r.Address, &r.Phone, &r.ImageKey, &r.Price, &r.Status, &r.CreatedAt, &r.ScheduledFor, &r.ExpireAt, &r.StaffId)
+		&r.ReservationId, &r.Name, &r.Email, &r.Description, &r.Phone, &r.Price, &r.Status, &r.CreatedAt, &r.ScheduledFor, &r.ExpireAt, &r.StaffId)
 
 	if err != nil {
 		dep.logger.Error(err.Error())
@@ -88,16 +168,16 @@ func (dep *reservationStore) Save(ctx context.Context, r *reservation.Reservatio
 	}
 
 	q := `
-        INSERT INTO reservation (staff_id, name, email, description, address, phone, image_key, price, status, created_at, scheduled_for, expire_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-        RETURNING reservation_id, staff_id, name, email, description, address, phone, image_key, price, status, created_at, scheduled_for, expire_at;
+        INSERT INTO reservation (staff_id, name, email, description, phone, price, status, created_at, scheduled_for, expire_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        RETURNING reservation_id, staff_id, name, email, description, phone, price, status, created_at, scheduled_for, expire_at;
     `
 
 	row := dep.db.QueryRowContext(
-		ctx, q, r.StaffId, r.Name, r.Email, r.Description, r.Address, r.Phone, r.ImageKey, r.Price, r.Status, r.CreatedAt, r.ScheduledFor, r.ExpireAt)
+		ctx, q, r.StaffId, r.Name, r.Email, r.Description, r.Phone, r.Price, r.Status, r.CreatedAt, r.ScheduledFor, r.ExpireAt)
 
 	err := row.Scan(
-		&r.ReservationId, &r.StaffId, &r.Name, &r.Email, &r.Description, &r.Address, &r.Phone, &r.ImageKey, &r.Price, &r.Status, &r.CreatedAt, &r.ScheduledFor, &r.ExpireAt)
+		&r.ReservationId, &r.StaffId, &r.Name, &r.Email, &r.Description, &r.Phone, &r.Price, &r.Status, &r.CreatedAt, &r.ScheduledFor, &r.ExpireAt)
 
 	if err != nil {
 		dep.logger.Error(err.Error())

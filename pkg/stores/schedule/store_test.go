@@ -45,7 +45,7 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 	}
 
 	rollback := func() {
-		if err := tx.Rollback(); err != nil {
+		if err = tx.Rollback(); err != nil {
 			return
 		}
 	}
@@ -66,12 +66,12 @@ func TestScheduleStore(t *testing.T) {
 		defer fn()
 
 		// given
-		staffObj := staff.Staff{UUID: uuid.New()}
-		if _, err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
+		staffObj := staff.StaffEntity{UUID: uuid.New()}
+		if err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
 			t.Errorf("%s", err)
 		}
 
-		s := &schedule.Schedule{
+		s := &schedule.ScheduleEntity{
 			StaffId: staffObj.StaffId,
 			Start:   mockLog.Date(),
 			End:     mockLog.Date().Add(time.Duration(8) * time.Hour),
@@ -99,13 +99,13 @@ func TestScheduleStore(t *testing.T) {
 		ctx := context.Background()
 
 		// given
-		staffObj := staff.Staff{UUID: uuid.New()}
-		if _, err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
+		staffObj := staff.StaffEntity{UUID: uuid.New()}
+		if err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
 			t.Errorf("%s", err)
 		}
 
 		date := mockLog.Date()
-		s := &schedule.Schedule{
+		s := &schedule.ScheduleEntity{
 			StaffId: staffObj.StaffId,
 			Start:   date,
 			End:     mockLog.Date().Add(time.Duration(8) * time.Hour),
@@ -135,13 +135,13 @@ func TestScheduleStore(t *testing.T) {
 		store := NewScheduleStore(mockLog, tx)
 		ctx := context.Background()
 
-		staffObj := staff.Staff{UUID: uuid.New()}
-		if _, err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
+		staffObj := staff.StaffEntity{UUID: uuid.New()}
+		if err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
 			t.Errorf("%s", err)
 		}
 
 		date := mockLog.Date()
-		s := &schedule.Schedule{
+		s := &schedule.ScheduleEntity{
 			StaffId: staffObj.StaffId,
 			Start:   date,
 			End:     mockLog.Date().Add(time.Duration(8) * time.Hour),
@@ -175,13 +175,13 @@ func TestScheduleStore(t *testing.T) {
 		ctx := context.Background()
 
 		// given
-		staffObj := staff.Staff{UUID: uuid.New()}
-		if _, err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
+		staffObj := staff.StaffEntity{UUID: uuid.New()}
+		if err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
 			t.Errorf("%s", err)
 		}
 
 		start := mockLog.Date()
-		s := schedule.Schedule{
+		s := schedule.ScheduleEntity{
 			StaffId: staffObj.StaffId,
 			Start:   start,
 			End:     start.Add(time.Duration(8) * time.Hour),
@@ -192,7 +192,7 @@ func TestScheduleStore(t *testing.T) {
 
 		// method to test
 		start = time.Date(mockLog.Date().Year(), mockLog.Date().Month(), 1, 0, 0, 0, 0, mockLog.Timezone())
-		end := start.AddDate(0, 1, -1)
+		end := time.Date(start.Year(), start.Month()+1, 0, 23, 59, 59, 999999999, start.Location())
 		schs, err := store.SchedulesInRange(ctx, staffObj.StaffId, start, end)
 
 		// assert
@@ -220,13 +220,13 @@ func TestScheduleStore(t *testing.T) {
 		ctx := context.Background()
 
 		// given
-		staffObj := staff.Staff{UUID: uuid.New()}
-		if _, err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
+		staffObj := staff.StaffEntity{UUID: uuid.New()}
+		if err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
 			t.Errorf("%s", err)
 		}
 
 		start := mockLog.Date()
-		err := store.Save(ctx, &schedule.Schedule{
+		err := store.Save(ctx, &schedule.ScheduleEntity{
 			StaffId: staffObj.StaffId,
 			Start:   start,
 			End:     start.Add(time.Duration(8) * time.Hour),
@@ -273,15 +273,15 @@ func TestScheduleStore(t *testing.T) {
 		ctx := context.Background()
 
 		// given
-		staffObj := staff.Staff{UUID: uuid.New()}
-		if _, err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
+		staffObj := staff.StaffEntity{UUID: uuid.New()}
+		if err := staffStore.NewStaffStore(mockLog, tx).Save(ctx, &staffObj); err != nil {
 			t.Errorf("%s", err)
 		}
 
 		// pre-save schedules
 		for i := 0; i < 5; i++ {
 			start := time.Date(mockLog.Date().Year(), mockLog.Date().Month(), i+1, 0, 0, 0, 0, mockLog.Timezone())
-			err := store.Save(ctx, &schedule.Schedule{
+			err := store.Save(ctx, &schedule.ScheduleEntity{
 				StaffId:   staffObj.StaffId,
 				Start:     start,
 				End:       start.Add(time.Duration(8) * time.Hour),

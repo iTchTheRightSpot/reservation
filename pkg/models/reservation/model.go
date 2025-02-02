@@ -15,9 +15,7 @@ type Reservation struct {
 	Name          string          `json:"name"`
 	Email         string          `json:"email"`
 	Description   *string         `json:"description"`
-	Address       *string         `json:"address"`
 	Phone         *string         `json:"phone"`
-	ImageKey      *string         `json:"image_key"`
 	Price         float64         `json:"price"`
 	Status        ReservationEnum `json:"status"`
 	CreatedAt     time.Time       `json:"created_at"`
@@ -33,10 +31,9 @@ type ReservationServiceEntity struct {
 
 type ReservationPayload struct {
 	StaffId     string   `json:"staff_id" validate:"required,min=36,max=37"`
-	Name        string   `json:"name" validate:"required"`
+	Name        string   `json:"name" validate:"required,max=50"`
 	Email       string   `json:"email" validate:"required,max=320"`
-	Description string   `json:"description" validate:"max=255"`
-	Address     string   `json:"address" validate:"required,max=255"`
+	Description *string  `json:"description" validate:"omitempty,max=255"`
 	Phone       string   `json:"phone" validate:"required,max=20"`
 	Services    []string `json:"services" validate:"required,min=1,dive,required"`
 	Timezone    string   `json:"timezone"`
@@ -61,4 +58,31 @@ type AvailableTimesPayload struct {
 type Chunks struct {
 	Start time.Time
 	Times []time.Time
+}
+
+type CRMBookingsPayload struct {
+	StaffId  string `json:"staff_id" validate:"required,min=36,max=37"`
+	Month    int    `json:"month" validate:"required,min=1,max=31"`
+	Year     int    `json:"year" validate:"required"`
+	Timezone *time.Location
+}
+
+type CRMBookingsResponse struct {
+	StaffFirstname string          `json:"staff_name"`
+	ImageKey       *string         `json:"image_key"`
+	ReservationId  uint64          `json:"reservation_id"`
+	Name           string          `json:"name"`
+	Email          string          `json:"email"`
+	Description    *string         `json:"description"`
+	Phone          *string         `json:"phone"`
+	Price          float64         `json:"price"`
+	Status         ReservationEnum `json:"status"`
+	ScheduledFor   time.Time       `json:"scheduled_for"`
+	ExpireAt       time.Time       `json:"expire_at"`
+	Services       []string        `json:"services"`
+}
+
+type UpdateBookingPayload struct {
+	ReservationId uint64          `json:"reservation_id" validate:"required"`
+	Status        ReservationEnum `json:"status" validate:"required"`
 }

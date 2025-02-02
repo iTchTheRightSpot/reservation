@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -70,7 +70,7 @@ func TestServiceStore(t *testing.T) {
 		ctx := context.Background()
 
 		// given
-		s := service.ServiceTypeEntity{
+		s := service_type.ServiceTypeEntity{
 			Name:        "name",
 			Price:       1000.95,
 			Duration:    3600,
@@ -87,7 +87,7 @@ func TestServiceStore(t *testing.T) {
 			t.Errorf("expect id to be >= 1 given %v", s.ServiceId)
 		}
 
-		find, err := store.ServiceByName(ctx, "name")
+		find, err := store.ServiceTypeByName(ctx, "name")
 		if err != nil {
 			t.Error(err)
 		}
@@ -110,7 +110,7 @@ func TestServiceStore(t *testing.T) {
 		ss := staff.NewStaffServiceStore(logger, tx)
 
 		// given
-		s := service.ServiceTypeEntity{
+		s := service_type.ServiceTypeEntity{
 			Name:        "name",
 			Price:       1000.95,
 			Duration:    3600,
@@ -121,17 +121,17 @@ func TestServiceStore(t *testing.T) {
 			t.Error(err.Error())
 		}
 
-		se := model.Staff{UUID: uuid.New()}
-		if _, err := staffStore.Save(ctx, &se); err != nil {
+		se := model.StaffEntity{UUID: uuid.New()}
+		if err := staffStore.Save(ctx, &se); err != nil {
 			t.Error(err.Error())
 		}
 
-		if _, err := ss.Save(ctx, &model.StaffServiceEntity{ServiceId: s.ServiceId, StaffId: se.StaffId}); err != nil {
+		if err := ss.Save(ctx, &model.StaffServiceEntity{ServiceId: s.ServiceId, StaffId: se.StaffId}); err != nil {
 			t.Error(err.Error())
 		}
 
 		// method to test
-		arr, err := store.ServicesByStaffId(ctx, se.StaffId, false)
+		arr, err := store.ServiceTypesByStaffId(ctx, se.StaffId, false)
 
 		// assert
 		if err != nil {
@@ -153,7 +153,7 @@ func TestServiceStore(t *testing.T) {
 		ctx := context.Background()
 
 		// given
-		s := service.ServiceTypeEntity{
+		s := service_type.ServiceTypeEntity{
 			Name:  "name",
 			Price: 10001.95,
 		}

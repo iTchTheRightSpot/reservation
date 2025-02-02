@@ -7,10 +7,10 @@ import (
 )
 
 type MockScheduleStore struct {
-	ScheduleSave                                     *schedule.Schedule
+	ScheduleSave                                     *schedule.ScheduleEntity
 	ScheduleSaveError                                error
 	ScheduleSaveCalled                               bool
-	SchedulesInRangeReturn                           []*schedule.Schedule
+	SchedulesInRangeReturn                           []*schedule.ScheduleEntity
 	SchedulesInRangeError                            error
 	SchedulesInRangeCalled                           bool
 	CountExistingSchedulesForStaffReturn             int
@@ -19,17 +19,25 @@ type MockScheduleStore struct {
 	CountSchedulesInRangeAndVisibilityReturn         int
 	CountSchedulesInRangeAndVisibilityError          error
 	CountSchedulesInRangeAndVisibilityCalled         bool
-	SchedulesInRangeAndVisibilityAndDifferenceReturn []*schedule.Schedule
+	SchedulesInRangeAndVisibilityAndDifferenceReturn []*schedule.ScheduleEntity
 	SchedulesInRangeAndVisibilityAndDifferenceError  error
 	SchedulesInRangeAndVisibilityAndDifferenceCalled bool
 }
 
-func (dep *MockScheduleStore) Save(context.Context, *schedule.Schedule) error {
+func (dep *MockScheduleStore) Save(context.Context, *schedule.ScheduleEntity) error {
 	dep.ScheduleSaveCalled = true
 	return dep.ScheduleSaveError
 }
 
-func (dep *MockScheduleStore) SchedulesInRange(context.Context, uint64, time.Time, time.Time) ([]*schedule.Schedule, error) {
+func (dep *MockScheduleStore) Update(context.Context, *schedule.ScheduleEntity) (int64, error) {
+	return 0, nil
+}
+
+func (dep *MockScheduleStore) Delete(context.Context, uint64) (int64, error) {
+	return 0, nil
+}
+
+func (dep *MockScheduleStore) SchedulesInRange(context.Context, uint64, time.Time, time.Time) ([]*schedule.ScheduleEntity, error) {
 	dep.SchedulesInRangeCalled = true
 	return dep.SchedulesInRangeReturn, dep.SchedulesInRangeError
 }
@@ -44,7 +52,11 @@ func (dep *MockScheduleStore) CountSchedulesInRangeAndVisibility(context.Context
 	return dep.CountSchedulesInRangeAndVisibilityReturn, dep.CountSchedulesInRangeAndVisibilityError
 }
 
-func (dep *MockScheduleStore) SchedulesWithinTimeframe(context.Context, uint64, time.Time, time.Time, bool, int) ([]*schedule.Schedule, error) {
+func (dep *MockScheduleStore) SchedulesWithinTimeframe(context.Context, uint64, time.Time, time.Time, bool, int) ([]*schedule.ScheduleEntity, error) {
 	dep.SchedulesInRangeAndVisibilityAndDifferenceCalled = true
 	return dep.SchedulesInRangeAndVisibilityAndDifferenceReturn, dep.SchedulesInRangeAndVisibilityAndDifferenceError
+}
+
+func (dep *MockScheduleStore) ScheduleByScheduleId(context.Context, uint64) (*schedule.ScheduleEntity, error) {
+	return nil, nil
 }

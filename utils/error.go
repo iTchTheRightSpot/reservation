@@ -49,10 +49,15 @@ func (e *AuthenticationError) Error() string {
 	return e.Message
 }
 
-type AccessDeniedError struct{}
+type AccessDeniedError struct {
+	Message string
+}
 
 func (e *AccessDeniedError) Error() string {
-	return "access denied"
+	if e.Message == "" {
+		return "access denied"
+	}
+	return e.Message
 }
 
 func errorStatus(err error) int {

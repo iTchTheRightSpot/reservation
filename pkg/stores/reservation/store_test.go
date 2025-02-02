@@ -6,9 +6,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	profileStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"
 	serviceStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/service_type"
@@ -56,33 +56,34 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 	}
 }
 
-func preSaveStaff(ps profileStore.IProfileStore, st staffStore.IStaffStore) (*staff.Staff, error) {
+func preSaveStaff(ps profileStore.IProfileStore, st staffStore.IStaffStore) (*staff.StaffEntity, error) {
 	ctx := context.Background()
 
-	p := profile.Profile{
+	p := models.ProfileEntity{
+		Password:  "password",
 		Firstname: "erp",
 		Lastname:  "erp",
 		Email:     "erp@email.com",
 	}
 
-	if _, err := ps.Save(ctx, &p); err != nil {
+	if err := ps.Save(ctx, &p); err != nil {
 		return nil, err
 	}
 
-	s := staff.Staff{
+	s := staff.StaffEntity{
 		UUID:      uuid.New(),
 		ProfileId: &p.ProfileId,
 	}
 
-	if _, err := st.Save(ctx, &s); err != nil {
+	if err := st.Save(ctx, &s); err != nil {
 		return nil, err
 	}
 
 	return &s, nil
 }
 
-func preSaveService(a serviceStore.IServiceTypeStore) (*service.ServiceTypeEntity, error) {
-	s := service.ServiceTypeEntity{
+func preSaveService(a serviceStore.IServiceTypeStore) (*service_type.ServiceTypeEntity, error) {
+	s := service_type.ServiceTypeEntity{
 		Name:        "erp",
 		Price:       19.56,
 		Duration:    3600,

@@ -13,12 +13,12 @@ type MockJwtService struct {
 	ValidateJwtError  error
 }
 
-func (m *MockJwtService) GenerateJwt(*models.JwtObj, int) (*models.JwtResponse, error) {
+func (m *MockJwtService) Encode(*models.JwtObj, int) (*models.JwtResponse, error) {
 	m.GenerateJwtCalled = true
 	return m.JwtResponse, m.GenerateJwtError
 }
 
-func (m *MockJwtService) ValidateJwt(string) (*models.JwtObj, error) {
+func (m *MockJwtService) Decode(string) (*models.JwtObj, error) {
 	m.ValidateJwtCalled = true
 	return m.StaffJwtObj, m.ValidateJwtError
 }

@@ -20,6 +20,7 @@ type CookieParam struct {
 	CookieName   string
 	CookieDomain string
 	CookieSecure bool
+	SameSite     http.SameSite
 }
 
 func ErrorResponse(w http.ResponseWriter, err error) {
@@ -27,8 +28,8 @@ func ErrorResponse(w http.ResponseWriter, err error) {
 		Status:  errorStatus(err),
 		Message: err.Error(),
 	}
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(obj.Status)
 	res, _ := json.Marshal(obj)
-	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(res)
 }

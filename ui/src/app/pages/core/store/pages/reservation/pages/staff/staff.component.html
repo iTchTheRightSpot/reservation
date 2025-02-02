@@ -1,0 +1,82 @@
+<div class="w-full mt-3">
+  @switch (staffs().state) {
+    @case (state.LOADING) {
+      <div
+        class="rounded border border-surface-200 dark:border-surface-700 p-6 bg-surface-0 dark:bg-surface-900"
+      >
+        <ul class="m-0 p-0 list-none">
+          <li class="mb-4">
+            <div class="flex">
+              <p-skeleton shape="circle" size="4rem" styleClass="mr-2" />
+              <div class="self-center" style="flex: 1">
+                <p-skeleton width="100%" styleClass="mb-2" />
+                <p-skeleton width="75%" />
+              </div>
+            </div>
+          </li>
+          <li>
+            <div class="flex">
+              <p-skeleton shape="circle" size="4rem" styleClass="mr-2" />
+              <div class="self-center" style="flex: 1">
+                <p-skeleton width="100%" styleClass="mb-2" />
+                <p-skeleton width="75%" />
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    }
+    @case (state.ERROR) {
+      <p-message severity="error">{{ staffs().message }}</p-message>
+    }
+    @case (state.LOADED) {
+      <div class="w-full pb-3">
+        <ul class="m-0 p-0 list-none">
+          @for (s of staffs().data; track s.staff_id) {
+            <li class="mt-4 cursor-pointer" tabindex="0" (click)="staff.set(s)">
+              <p-card>
+                <div class="m-0 flex gap-3">
+                  @if (s.image_key) {
+                    <p-avatar
+                      [image]="s.image_key"
+                      class="mr-2"
+                      size="xlarge"
+                      shape="circle"
+                    />
+                  } @else {
+                    <p-avatar
+                      icon="pi pi-user"
+                      class="mr-2"
+                      size="large"
+                      shape="circle"
+                    />
+                  }
+                  <div class="flex-1">
+                    <h4 class="capitalize font-semibold">{{ s.name }}</h4>
+                    <div class="mt-2 flex justify-between">
+                      <p>{{ s.bio }}</p>
+
+                      <p-radio-button
+                        [name]="s.name"
+                        [ngModel]="staff()"
+                        [value]="s"
+                        (ngModelChange)="staff.set(s)"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </p-card>
+            </li>
+          } @empty {
+            <p class="font-semibold">
+              No staff(s) available for the service(s)
+            </p>
+          }
+        </ul>
+        <div class="w-full mt-4 text-right" [ngClass]="{ hidden: !staff() }">
+          <p-button label="Add" (click)="submit()" [disabled]="!staff()" />
+        </div>
+      </div>
+    }
+  }
+</div>

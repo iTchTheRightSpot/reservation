@@ -1,0 +1,186 @@
+<div class="w-full flex flex-col gap-4">
+  <h1 class="text-lg font-semibold underline">Staff</h1>
+
+  <!-- staff image & name -->
+  <div class="w-full flex gap-2 items-center">
+    @if (booking().image_key; as k) {
+      <p-avatar [image]="k" class="mr-2" shape="circle" />
+    } @else {
+      <p-avatar icon="pi pi-user" class="mr-2" shape="circle" />
+    }
+
+    <div class="flex-1">
+      <p-iconfield styleClass="mb-0">
+        <p-inputicon styleClass="pi pi-user" />
+        <input
+          class="w-full"
+          type="text"
+          [value]="booking().staff_name"
+          pInputText
+          [disabled]="true"
+        />
+      </p-iconfield>
+    </div>
+  </div>
+
+  <p-divider />
+
+  <h1 class="text-lg font-semibold underline">Customer</h1>
+
+  <!-- phone -->
+  <div>
+    <p-iconfield styleClass="mb-0">
+      <p-inputicon styleClass="pi pi-phone" />
+      <input
+        class="w-full"
+        type="number"
+        [value]="booking().phone"
+        pInputText
+        placeholder="(999) 999-9999*"
+        [disabled]="true"
+      />
+    </p-iconfield>
+  </div>
+
+  <!-- name & email -->
+  <div
+    class="w-full flex flex-col md:flex-row items-center justify-center gap-2"
+  >
+    <div class="w-full">
+      <p-iconfield styleClass="mb-0">
+        <p-inputicon styleClass="pi pi-user" />
+        <input
+          [disabled]="true"
+          [value]="booking().name"
+          type="text"
+          class="w-full"
+          pInputText
+          placeholder="name*"
+        />
+      </p-iconfield>
+    </div>
+
+    <div class="w-full">
+      <p-iconfield styleClass="mb-0">
+        <p-inputicon styleClass="pi pi-envelope" />
+        <input
+          [disabled]="true"
+          [value]="booking().email"
+          class="w-full"
+          type="text"
+          pInputText
+          placeholder="email*"
+        />
+      </p-iconfield>
+    </div>
+  </div>
+
+  <p-divider />
+
+  <h1 class="text-lg font-semibold underline">
+    Booking
+    @if (booking().status === state.CONFIRMED) {
+      <p-tag icon="pi pi-check" severity="success" [value]="state.CONFIRMED" />
+    } @else {
+      <p-tag icon="pi pi-times" severity="danger" [value]="state.CANCELLED" />
+    }
+  </h1>
+
+  <!-- status -->
+  <div class="w-full flex gap-2 items-end">
+    <div class="w-full">
+      <label for="statuses" class="block">Update Status</label>
+      <p-select
+        id="statuses"
+        placeholder="Select a status"
+        [(ngModel)]="selectedBookingStatus"
+        [options]="statuses(booking().status)"
+        class="w-full"
+      />
+    </div>
+
+    <p-confirm-popup />
+    <p-button
+      label="Update"
+      (onClick)="confirm($event, booking().reservation_id)"
+    />
+  </div>
+
+  <!-- from & to -->
+  <div class="w-full flex gap-2 flex-col md:flex-row items-end">
+    <div class="w-full">
+      <div class="flex-auto">
+        <label class="block" for="from">From</label>
+        <input
+          id="from"
+          [disabled]="true"
+          [value]="fm(booking().scheduled_for)"
+          type="text"
+          class="w-full"
+          pInputText
+          placeholder="name*"
+        />
+      </div>
+    </div>
+
+    <div class="w-full">
+      <div class="flex-auto">
+        <label class="block" for="expire">To</label>
+        <input
+          [disabled]="true"
+          [value]="fm(booking().expire_at)"
+          type="text"
+          id="expire"
+          class="w-full"
+          pInputText
+          placeholder="expire at"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- total & services -->
+  <div class="w-full flex gap-2 flex-col md:flex-row items-end">
+    <div class="w-full">
+      <div class="flex-auto">
+        <label class="block" for="amount"> Estimated total </label>
+        <p-input-number
+          id="amount"
+          class="w-full"
+          [(ngModel)]="booking().price"
+          [disabled]="true"
+          inputId="currency-ngn"
+          mode="currency"
+          currency="NGN"
+          locale="en-NG"
+        />
+      </div>
+    </div>
+
+    <!-- services -->
+    <div class="w-full">
+      <label for="services" class="block">Services</label>
+      <p-select
+        id="services"
+        inputId="on_label"
+        [options]="booking().services"
+        class="w-full"
+      />
+    </div>
+  </div>
+
+  <!-- appointment notes -->
+  <div>
+    <label class="block" for="notes">Appointment note</label>
+    <textarea
+      [disabled]="true"
+      pTextarea
+      id="notes"
+      [value]="booking().description || ''"
+      rows="5"
+      cols="30"
+      style="resize: none"
+      class="h-full w-full"
+    ></textarea>
+  </div>
+</div>

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -16,18 +17,29 @@ import (
 type ReservationHandler struct {
 	mux     *http.ServeMux
 	logger  utils.ILogger
+	ware    *middleware.Middleware
 	service reservation.IReservationService
 }
 
-func NewReservationHandler(mux *http.ServeMux, l utils.ILogger, s reservation.IReservationService) *ReservationHandler {
-	return &ReservationHandler{mux: mux, logger: l, service: s}
+func NewReservationHandler(mux *http.ServeMux, l utils.ILogger, w *middleware.Middleware, s reservation.IReservationService) *ReservationHandler {
+	return &ReservationHandler{mux: mux, logger: l, service: s, ware: w}
 }
 
 func (dep *ReservationHandler) Register() {
-	ware := middleware.RequestBodyMiddleware[model.ReservationPayload]{Logger: dep.logger}
 	dep.mux.HandleFunc("GET /reservation", dep.availableDates)
-	dep.mux.Handle("POST /reservation", ware.RequestBody(http.HandlerFunc(dep.create)))
 	dep.mux.HandleFunc("POST /reservation/cancel/{reservation_id}", dep.cancel)
+	m1 := middleware.RequestBodyMiddleware[model.ReservationPayload]{Logger: dep.logger}
+	dep.mux.Handle("POST /reservation", m1.RequestBody(http.HandlerFunc(dep.create)))
+
+	// protected routes
+	rp := models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}}
+	// read
+	dep.mux.Handle("GET /crm/reservation", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(http.HandlerFunc(dep.bookings), &rp)))
+
+	// write
+	dep.mux.Handle("POST /crm/reservation", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(m1.RequestBody(http.HandlerFunc(dep.manualCreate)), &rp)))
+	m2 := middleware.RequestBodyMiddleware[model.UpdateBookingPayload]{Logger: dep.logger}
+	dep.mux.Handle("PUT /crm/reservation", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(m2.RequestBody(http.HandlerFunc(dep.updateBookingStatus)), &rp)))
 }
 
 func (dep *ReservationHandler) create(w http.ResponseWriter, r *http.Request) {
@@ -98,9 +110,9 @@ func (dep *ReservationHandler) availableDates(w http.ResponseWriter, r *http.Req
 	}
 
 	p.StartDateTime = time.Date(p.Year, time.Month(p.Month), day, 0, 0, 0, 0, location)
-	p.EndDateTime = p.StartDateTime.AddDate(0, 1, -1)
+	p.EndDateTime = time.Date(p.StartDateTime.Year(), p.StartDateTime.Month()+1, 0, 23, 59, 59, 999999999, p.StartDateTime.Location())
 
-	arr, err := dep.service.AvailableDates(r.Context(), &p)
+	dates, err := dep.service.AvailableDates(r.Context(), &p)
 	if err != nil {
 		dep.logger.Error(err.Error())
 		utils.ErrorResponse(w, err)
@@ -109,8 +121,15 @@ func (dep *ReservationHandler) availableDates(w http.ResponseWriter, r *http.Req
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	response, _ := json.Marshal(arr)
-	if _, err = w.Write(response); err != nil {
+
+	if dates == nil || len(dates) < 1 {
+		if err = json.NewEncoder(w).Encode(make([]model.ReservationTimeSlots, 0)); err != nil {
+			dep.logger.Error(err.Error())
+		}
+		return
+	}
+
+	if err = json.NewEncoder(w).Encode(dates); err != nil {
 		dep.logger.Error(err.Error())
 	}
 }
@@ -134,4 +153,100 @@ func (dep *ReservationHandler) cancel(w http.ResponseWriter, r *http.Request) {
 	if _, err = w.Write([]byte("reservation cancelled")); err != nil {
 		dep.logger.Error(err.Error())
 	}
+}
+
+func (dep *ReservationHandler) bookings(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+
+	month, err := strconv.Atoi(query.Get("month"))
+	if err != nil {
+		dep.logger.Error("month missing err: ", err.Error())
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: "month missing"})
+		return
+	}
+
+	year, err := strconv.Atoi(query.Get("year"))
+	if err != nil {
+		dep.logger.Error("year missing err: ", err.Error())
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: "year missing"})
+		return
+	}
+
+	var location *time.Location
+	zone := query.Get("timezone")
+	if zone == "" {
+		dep.logger.Error("timezone missing")
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: "timezone missing"})
+		return
+	} else {
+		location, err = time.LoadLocation(zone)
+		if err != nil {
+			dep.logger.Error(err.Error())
+			utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+			return
+		}
+	}
+
+	p := model.CRMBookingsPayload{
+		StaffId:  strings.TrimSpace(query.Get("user_id")),
+		Month:    month,
+		Year:     year,
+		Timezone: location,
+	}
+
+	if err = middleware.ValidatorInstance.Struct(p); err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		return
+	}
+
+	dates, err := dep.service.Bookings(r.Context(), &p)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	if err = json.NewEncoder(w).Encode(dates); err != nil {
+		dep.logger.Error(err.Error())
+	}
+}
+
+func (dep *ReservationHandler) updateBookingStatus(w http.ResponseWriter, r *http.Request) {
+	dto, err := pkg.ReadBody[model.UpdateBookingPayload](r)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, err)
+		return
+	}
+
+	if err = dep.service.UpdateBookingStatus(r.Context(), dto); err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (dep *ReservationHandler) manualCreate(w http.ResponseWriter, r *http.Request) {
+	dto, err := pkg.ReadBody[model.ReservationPayload](r)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, err)
+		return
+	}
+
+	err = dep.service.ManualCreate(r.Context(), dto)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, err)
+		return
+	}
+
+	dep.logger.Log("manually created reservation")
+	w.WriteHeader(http.StatusCreated)
 }

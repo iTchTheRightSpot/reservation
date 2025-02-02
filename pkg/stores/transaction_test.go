@@ -53,11 +53,11 @@ func TestTransactionProvider(t *testing.T) {
 		// method to test
 		ctx := context.Background()
 		err := adap.Transaction.RunInTransaction(func(adapters *Adapters) error {
-			save, err := adapters.StaffStore.Save(ctx, &staff.Staff{UUID: uuid.UUID{}})
-			if err != nil {
+			s := staff.StaffEntity{UUID: uuid.UUID{}}
+			if err := adapters.StaffStore.Save(ctx, &s); err != nil {
 				return err
 			}
-			staffId = save.StaffId
+			staffId = s.StaffId
 			return nil
 		})
 
@@ -80,15 +80,14 @@ func TestTransactionProvider(t *testing.T) {
 		ctx := context.Background()
 		err := adap.Transaction.RunInTransaction(func(adapters *Adapters) error {
 			uu := uuid.UUID{}
-			save, err := adapters.StaffStore.Save(ctx, &staff.Staff{UUID: uu})
-			if err != nil {
+			s := staff.StaffEntity{UUID: uu}
+			if err := adapters.StaffStore.Save(ctx, &s); err != nil {
 				return err
 			}
-			staffId = save.StaffId
+			staffId = s.StaffId
 
 			// save role with profile id that does not exist
-			_, err = adapters.RoleStore.Save(ctx, &models.Role{Role: models.STAFF, ProfileId: 0})
-			if err != nil {
+			if err := adapters.RoleStore.Save(ctx, &models.RoleEntity{Role: models.STAFF, ProfileId: 0}); err != nil {
 				return err
 			}
 

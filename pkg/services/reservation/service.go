@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/mail"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"math"
 	"reflect"
 	"slices"
 	"strconv"
@@ -21,21 +22,24 @@ import (
 
 type IReservationService interface {
 	Create(ctx context.Context, p *reservation.ReservationPayload) error
-	AvailableDates(ctx context.Context, o *reservation.AvailableTimesPayload) (*[]reservation.ReservationTimeSlots, error)
+	ManualCreate(ctx context.Context, p *reservation.ReservationPayload) error
+	AvailableDates(ctx context.Context, o *reservation.AvailableTimesPayload) ([]*reservation.ReservationTimeSlots, error)
 	Cancel(ctx context.Context, reservationId uint64) error
+	Bookings(ctx context.Context, m *reservation.CRMBookingsPayload) (interface{}, error)
+	UpdateBookingStatus(ctx context.Context, dto *reservation.UpdateBookingPayload) error
 }
 
 type reservationService struct {
 	logger   utils.ILogger
 	adapters *stores.Adapters
-	cache    pkg.ICache[string, []reservation.ReservationTimeSlots]
+	cache    pkg.ICache[string, []*reservation.ReservationTimeSlots]
 	mail     mail.IMailService
 }
 
 func NewReservationService(
 	l utils.ILogger,
 	a *stores.Adapters,
-	c pkg.ICache[string, []reservation.ReservationTimeSlots],
+	c pkg.ICache[string, []*reservation.ReservationTimeSlots],
 	m mail.IMailService,
 ) IReservationService {
 	return &reservationService{logger: l, adapters: a, cache: c, mail: m}
@@ -45,22 +49,22 @@ func (dep *reservationService) createKey(o *reservation.AvailableTimesPayload) s
 	return fmt.Sprintf("%s_%v_%v_%v_%v_%s", strings.Join(o.Services, "_"), o.StaffId, o.Day, o.Month, o.Year, o.StartDateTime.Location().String())
 }
 
-func (dep *reservationService) generateChunks(schedules []*schedule.Schedule, duration int) []*reservation.Chunks {
+func (dep *reservationService) generateChunks(schedules []*schedule.ScheduleEntity, duration int) []*reservation.Chunks {
 	var arr []*reservation.Chunks
 	var wg sync.WaitGroup
 	var mu sync.Mutex // to ensure safe concurrent access to 'arr'
 
 	for _, sch := range schedules {
 		wg.Add(1)
-		go func(sch *schedule.Schedule) {
+		go func(sch *schedule.ScheduleEntity) {
 			defer wg.Done()
 
 			var times []time.Time
-			tempStart := sch.Start
-
-			for tempStart.Before(sch.End) {
-				times = append(times, tempStart)
-				tempStart = tempStart.Add(time.Duration(duration) * time.Second)
+			add := time.Duration(duration) * time.Second
+			start := sch.Start
+			for start.Before(sch.End) && start.Add(add).Before(sch.End) {
+				times = append(times, start)
+				start = start.Add(add)
 			}
 
 			mu.Lock()
@@ -76,10 +80,10 @@ func (dep *reservationService) generateChunks(schedules []*schedule.Schedule, du
 	return arr
 }
 
-func (dep *reservationService) filterChunks(ctx context.Context, staffId uint64, duration int, chunks []*reservation.Chunks, location *time.Location) (*[]reservation.ReservationTimeSlots, error) {
+func (dep *reservationService) filterChunks(ctx context.Context, staffId uint64, duration int, chunks []*reservation.Chunks, location *time.Location) (*[]*reservation.ReservationTimeSlots, error) {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
-	var results []reservation.ReservationTimeSlots
+	var results []*reservation.ReservationTimeSlots
 	errChan := make(chan error, len(chunks))
 
 	for _, chunk := range chunks {
@@ -106,7 +110,7 @@ func (dep *reservationService) filterChunks(ctx context.Context, staffId uint64,
 
 			if len(validTimes) > 0 {
 				mu.Lock()
-				results = append(results, reservation.ReservationTimeSlots{
+				results = append(results, &reservation.ReservationTimeSlots{
 					Date:  fmt.Sprintf("%v", chunk.Start.In(location).UnixMilli()),
 					Times: validTimes,
 				})
@@ -121,11 +125,11 @@ func (dep *reservationService) filterChunks(ctx context.Context, staffId uint64,
 	return &results, <-errChan
 }
 
-func (dep *reservationService) AvailableDates(ctx context.Context, o *reservation.AvailableTimesPayload) (*[]reservation.ReservationTimeSlots, error) {
+func (dep *reservationService) AvailableDates(ctx context.Context, o *reservation.AvailableTimesPayload) ([]*reservation.ReservationTimeSlots, error) {
 	key := dep.createKey(o)
 	val := dep.cache.Get(key)
 	if val != nil {
-		return val, nil
+		return *val, nil
 	}
 
 	staf, err := dep.adapters.StaffStore.StaffByUUID(ctx, o.StaffId)
@@ -155,17 +159,16 @@ func (dep *reservationService) AvailableDates(ctx context.Context, o *reservatio
 	}
 
 	dep.cache.Put(key, *filter)
-
-	return filter, nil
+	return *filter, nil
 }
 
-func (dep *reservationService) matchStaffServices(ctx context.Context, requestedServices []string, staffObj *staff.Staff) ([]*service.ServiceTypeEntity, error) {
-	serviceEntities, err := dep.adapters.ServiceStore.ServicesByStaffId(ctx, staffObj.StaffId, true)
+func (dep *reservationService) matchStaffServices(ctx context.Context, requestedServices []string, staffObj *staff.StaffEntity) ([]*service_type.ServiceTypeEntity, error) {
+	serviceEntities, err := dep.adapters.ServiceStore.ServiceTypesByStaffId(ctx, staffObj.StaffId, true)
 	if err != nil {
 		return nil, &utils.NotFoundError{Message: "invalid service for staff"}
 	}
 
-	arr := make([]*service.ServiceTypeEntity, 0)
+	arr := make([]*service_type.ServiceTypeEntity, 0)
 
 	for _, entity := range serviceEntities {
 		match := slices.ContainsFunc(requestedServices, func(s string) bool {
@@ -206,15 +209,17 @@ func (dep *reservationService) dateInTimezone(p *reservation.ReservationPayload)
 	return time.UnixMilli(num).In(l).In(dep.logger.Timezone()), nil
 }
 
-func (dep *reservationService) sumUpServiceDuration(s []*service.ServiceTypeEntity) int {
+func (dep *reservationService) sumUpServiceDuration(s []*service_type.ServiceTypeEntity) int {
+	maxCleanup := s[0].CleanUpTime
 	count := 0
-	for _, entity := range s {
-		count += entity.Duration + entity.CleanUpTime
+	for _, e := range s {
+		count += e.Duration
+		maxCleanup = int(math.Max(float64(maxCleanup), float64(e.CleanUpTime)))
 	}
-	return count
+	return count + maxCleanup
 }
 
-func (dep *reservationService) sumUpServicePrice(s []*service.ServiceTypeEntity) float64 {
+func (dep *reservationService) sumUpServicePrice(s []*service_type.ServiceTypeEntity) float64 {
 	var count float64
 	for _, entity := range s {
 		count += entity.Price
@@ -222,7 +227,7 @@ func (dep *reservationService) sumUpServicePrice(s []*service.ServiceTypeEntity)
 	return count
 }
 
-func (dep *reservationService) createReservation(ctx context.Context, p *reservation.ReservationPayload, matchedServices []*service.ServiceTypeEntity, s *staff.Staff, start time.Time, end time.Time) error {
+func (dep *reservationService) createReservation(ctx context.Context, p *reservation.ReservationPayload, matchedServices []*service_type.ServiceTypeEntity, s *staff.StaffEntity, start time.Time, end time.Time) error {
 	return dep.adapters.Transaction.RunInTransaction(func(adapters *stores.Adapters) error {
 		priceSum := dep.sumUpServicePrice(matchedServices)
 
@@ -230,10 +235,8 @@ func (dep *reservationService) createReservation(ctx context.Context, p *reserva
 			StaffId:      s.StaffId,
 			Name:         strings.TrimSpace(p.Name),
 			Email:        strings.TrimSpace(p.Email),
-			Description:  &p.Description,
-			Address:      &p.Address,
+			Description:  p.Description,
 			Phone:        &p.Phone,
-			ImageKey:     nil,
 			Price:        priceSum,
 			Status:       reservation.CONFIRMED,
 			CreatedAt:    dep.logger.Date(),
@@ -315,7 +318,7 @@ func (dep *reservationService) Cancel(ctx context.Context, reservationId uint64)
 		return &utils.BadRequestError{Message: "reservation already cancelled"}
 	}
 
-	err = dep.adapters.ReservationStore.UpdateReservationStatus(ctx, r.ReservationId, reservation.CANCELLED)
+	_, err = dep.adapters.ReservationStore.UpdateReservationStatus(ctx, r.ReservationId, reservation.CANCELLED)
 	if err != nil {
 		dep.logger.Error(err.Error())
 		return &utils.InsertionError{Message: "error cancelling reservation"}
@@ -323,4 +326,45 @@ func (dep *reservationService) Cancel(ctx context.Context, reservationId uint64)
 
 	dep.cache.Clear()
 	return nil
+}
+
+func (dep *reservationService) Bookings(ctx context.Context, o *reservation.CRMBookingsPayload) (interface{}, error) {
+	staf, err := dep.adapters.StaffStore.StaffByUUID(ctx, o.StaffId)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return nil, &utils.NotFoundError{Message: "invalid staff id"}
+	}
+
+	from := time.Date(o.Year, time.Month(o.Month), 1, 0, 0, 0, 0, o.Timezone)
+	to := time.Date(from.Year(), from.Month()+1, 0, 23, 59, 59, 999999999, o.Timezone)
+
+	arr, err := dep.adapters.ReservationStore.BookingsInRange(ctx, staf.StaffId, from, to)
+	if err != nil {
+		return nil, &utils.NotFoundError{Message: "error retrieving bookings"}
+	}
+
+	if len(arr) == 0 {
+		return []interface{}{}, nil
+	}
+
+	return arr, nil
+}
+
+func (dep *reservationService) UpdateBookingStatus(ctx context.Context, dto *reservation.UpdateBookingPayload) error {
+	num, err := dep.adapters.ReservationStore.UpdateReservationStatus(ctx, dto.ReservationId, dto.Status)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return &utils.InsertionError{Message: "error updating booking status"}
+	}
+
+	if num == 0 {
+		return &utils.NotFoundError{Message: "update failed. invalid reservation id"}
+	}
+
+	dep.logger.Log("number of booking status rows affected", num)
+	return nil
+}
+
+func (dep *reservationService) ManualCreate(ctx context.Context, p *reservation.ReservationPayload) error {
+	return &utils.InsertionError{Message: "service layer implemented"}
 }

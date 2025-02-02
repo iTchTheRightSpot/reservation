@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	profileStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -71,37 +71,33 @@ func TestStaffStore(t *testing.T) {
 		profileRepo := profileStore.NewProfileStore(mockLog, con)
 
 		// given
-		p := profile.Profile{
+		p := models.ProfileEntity{
+			Password:  "password",
 			Firstname: "frog",
 			Lastname:  "lastname",
 			Email:     "frog@email.com",
 		}
 
-		if _, err := profileRepo.Save(ctx, &p); err != nil {
+		if err := profileRepo.Save(ctx, &p); err != nil {
 			t.Errorf("%s", err)
 		}
 
-		s := staff.Staff{
+		s := staff.StaffEntity{
 			UUID:      uuid.New(),
 			ProfileId: &p.ProfileId,
 		}
 
 		// method to test
-		save, err := staffRepo.Save(ctx, &s)
-		if err != nil {
-			t.Errorf("%s", err)
+		if err := staffRepo.Save(ctx, &s); err != nil {
+			t.Error(err.Error())
 		}
 
-		if save.StaffId < 1 {
-			t.Errorf("staff not saved. Expected StaffId > 0, got %d", save.StaffId)
-		}
-
-		if !reflect.DeepEqual(&s, save) {
-			t.Errorf("staff not saved correctly. expected: %+v, Got: %+v", s, save)
+		if s.StaffId < 1 {
+			t.Errorf("staff not saved. Expected StaffId > 0, got %d", s.StaffId)
 		}
 
 		// method to test
-		if _, err = staffRepo.StaffByUUID(ctx, uuid.New().String()); err == nil {
+		if _, err := staffRepo.StaffByUUID(ctx, uuid.New().String()); err == nil {
 			t.Errorf("should not find staff that does not exist")
 		}
 
@@ -110,8 +106,8 @@ func TestStaffStore(t *testing.T) {
 			t.Error(err)
 		}
 
-		if !reflect.DeepEqual(save, find) {
-			t.Errorf("expected: %+v, Got: %+v", save, find)
+		if !reflect.DeepEqual(s, *find) {
+			t.Errorf("expected: %+v, Got: %+v", s, find)
 		}
 	})
 }

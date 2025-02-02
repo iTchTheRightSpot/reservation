@@ -3,6 +3,7 @@ package schedule
 import (
 	"context"
 	"fmt"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -12,6 +13,8 @@ import (
 type IScheduleService interface {
 	Schedules(ctx context.Context, payload *schedule.AllSchedulesPayload) ([]*schedule.ScheduleResponse, error)
 	Create(ctx context.Context, dto *schedule.SchedulePayload) error
+	Update(ctx context.Context, p *schedule.UpdateSchedulePayload) error
+	Delete(ctx context.Context, scheduleId uint64) error
 }
 
 type scheduleService struct {
@@ -29,8 +32,9 @@ func (dep *scheduleService) Schedules(ctx context.Context, p *schedule.AllSchedu
 		return nil, &utils.NotFoundError{Message: "invalid staff id"}
 	}
 
-	start := time.Date(p.Year, time.Month(p.Month), 1, 0, 0, 0, 0, dep.logger.Timezone())
-	schedules, err := dep.adapters.ScheduleStore.SchedulesInRange(ctx, s.StaffId, start, start.AddDate(0, 1, -1))
+	from := time.Date(p.Year, time.Month(p.Month), 1, 0, 0, 0, 0, dep.logger.Timezone())
+	to := time.Date(from.Year(), from.Month()+1, 0, 23, 59, 59, 999999999, from.Location())
+	schedules, err := dep.adapters.ScheduleStore.SchedulesInRange(ctx, s.StaffId, from, to)
 	if err != nil {
 		return nil, &utils.BadRequestError{Message: err.Error()}
 	}
@@ -63,7 +67,7 @@ func (dep *scheduleService) Create(ctx context.Context, dto *schedule.SchedulePa
 
 	return dep.adapters.Transaction.RunInTransaction(func(adapters *stores.Adapters) error {
 		for _, segment := range segments {
-			err = adapters.ScheduleStore.Save(ctx, &schedule.Schedule{
+			err = adapters.ScheduleStore.Save(ctx, &schedule.ScheduleEntity{
 				StaffId:   staff.StaffId,
 				Start:     segment.Start,
 				End:       segment.End,
@@ -75,4 +79,55 @@ func (dep *scheduleService) Create(ctx context.Context, dto *schedule.SchedulePa
 		}
 		return nil
 	})
+}
+
+func (dep *scheduleService) Update(ctx context.Context, p *schedule.UpdateSchedulePayload) error {
+	o, err := dep.adapters.ScheduleStore.ScheduleByScheduleId(ctx, p.ScheduleId)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return &utils.NotFoundError{Message: "invalid schedule_id"}
+	}
+
+	if o.IsVisible == p.IsVisible && o.IsReoccurring == p.IsReoccurring {
+		return nil
+	}
+
+	o.IsVisible = p.IsVisible
+	o.IsReoccurring = p.IsReoccurring
+
+	_, err = dep.adapters.ScheduleStore.Update(ctx, o)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return &utils.InsertionError{Message: "error updating schedule"}
+	}
+
+	return nil
+}
+
+func (dep *scheduleService) Delete(ctx context.Context, scheduleId uint64) error {
+	o, err := dep.adapters.ScheduleStore.ScheduleByScheduleId(ctx, scheduleId)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return &utils.NotFoundError{Message: "invalid schedule_id"}
+	}
+
+	count, err := dep.adapters.ReservationStore.CountReservationsInRange(ctx, o.StaffId, o.Start, o.End, reservation.CONFIRMED, reservation.CANCELLED)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return &utils.NotFoundError{Message: "validation checks failed before attempting deletion"}
+	}
+
+	if count > 0 {
+		m := "deletion failed. schedule references reservations"
+		dep.logger.Error(m)
+		return &utils.InsertionError{Message: m}
+	}
+
+	_, err = dep.adapters.ScheduleStore.Delete(ctx, o.ScheduleId)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return &utils.InsertionError{Message: "error deleting schedule"}
+	}
+
+	return nil
 }

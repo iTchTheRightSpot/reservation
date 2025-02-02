@@ -1,0 +1,150 @@
+<div class="card mt-3">
+  <p-table
+    #dt1
+    selectionMode="single"
+    dataKey="id"
+    [loading]="bookings().state === apiState.LOADING"
+    [value]="bookings().data || []"
+    [paginator]="true"
+    [first]="first"
+    [rows]="rows"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    [showCurrentPageReport]="true"
+    (onPage)="first = $event.first; rows = $event.rows"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+    [rowsPerPageOptions]="[5, 10, 20]"
+  >
+    <ng-template #caption>
+      <div class="flex items-center justify-between">
+        <div class="flex gap-2">
+          <p-floatlabel variant="on">
+            <p-date-picker
+              (onSelect)="onSelectedDate($event)"
+              [(ngModel)]="selectedDate"
+              size="small"
+              id="over_label"
+              inputId="over_label"
+              showIcon
+              iconDisplay="input"
+              view="month"
+              dateFormat="mm/yy"
+            />
+            <label for="over_label">Date</label>
+          </p-floatlabel>
+
+          <p-floatlabel class="w-full md:w-56" variant="on">
+            <p-select
+              id="on_label"
+              [loading]="staffs().state === apiState.LOADING"
+              [options]="staffs().data"
+              [(ngModel)]="selectedStaff"
+              (onChange)="onSelectedStaff()"
+              optionLabel="firstname"
+              class="w-full md:w-56"
+            >
+              <ng-template #selectedItem let-sel>
+                <div class="flex items-center gap-2">
+                  @if (sel.image_key?.length > 0) {
+                    <p-avatar
+                      [image]="sel.image_key"
+                      class="mr-2"
+                      shape="circle"
+                    />
+                  } @else {
+                    <p-avatar icon="pi pi-user" class="mr-2" shape="circle" />
+                  }
+                  <div>{{ sel.firstname }}</div>
+                </div>
+              </ng-template>
+              <ng-template let-staff #item>
+                <div class="flex items-center gap-2">
+                  @if (staff.image_key?.length > 0) {
+                    <p-avatar
+                      [image]="staff.image_key"
+                      class="mr-2"
+                      shape="circle"
+                    />
+                  } @else {
+                    <p-avatar icon="pi pi-user" class="mr-2" shape="circle" />
+                  }
+                  <div>{{ staff.firstname }}</div>
+                </div>
+              </ng-template>
+            </p-select>
+            <label for="on_label">Staff</label>
+          </p-floatlabel>
+        </div>
+
+        <p-button type="button" icon="pi pi-refresh" (click)="first = 0" text />
+      </div>
+    </ng-template>
+
+    <ng-template #header>
+      <tr>
+        @for (h of thead; track h) {
+          <th style="width: 25%">{{ h }}</th>
+        }
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-model>
+      <tr
+        class="cursor-pointer"
+        (click)="
+          selectedBooking = model; toggleBookingDetails = !toggleBookingDetails
+        "
+      >
+        <td>{{ model.name }}</td>
+        <td>{{ fm(model.scheduled_for) }}</td>
+        <td>{{ fm(model.expire_at) }}</td>
+        <td>
+          <p-badge
+            [value]="model.status"
+            [severity]="
+              model.status === bookingState.CONFIRMED ? 'success' : 'danger'
+            "
+          />
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #paginatorleft>
+      <p-button
+        type="button"
+        (onClick)="toggleNewBookings = !toggleNewBookings"
+        icon="pi pi-plus"
+        text
+      />
+    </ng-template>
+  </p-table>
+</div>
+
+@defer {
+  <p-drawer
+    header="Booking Detail"
+    [(visible)]="toggleBookingDetails"
+    position="right"
+    styleClass="!w-full md:!w-[40rem] lg:!w-[50rem]"
+  >
+    @if (selectedBooking; as sb) {
+      <app-booking-detail
+        [booking]="sb"
+        [updateStatus]="(updateBookingStatus$ | async)?.state"
+        (emitter)="updateBookingStatus($event)"
+      />
+    } @else {
+      <p>error displaying booking details</p>
+    }
+  </p-drawer>
+}
+
+@defer {
+  <p-dialog
+    header="Create New Booking"
+    [modal]="true"
+    [(visible)]="toggleNewBookings"
+    [style]="{ width: '25rem' }"
+  >
+    <app-create-booking [staffs]="staffs().data || []" />
+  </p-dialog>
+}

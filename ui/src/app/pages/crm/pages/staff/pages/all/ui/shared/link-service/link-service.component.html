@@ -1,0 +1,70 @@
+<div class="w-full flex flex-col gap-2">
+  <div class="w-full flex gap-2 items-end justify-between">
+    <div class="flex-1">
+      <label for="service" class="mb-2 block font-semibold">Link service</label>
+      <p-select
+        id="service"
+        placeholder="select a service"
+        [loading]="allServices().state === state.LOADING"
+        [(ngModel)]="selectedService"
+        [options]="filter(allServices().data || [], staffServices().data || [])"
+        class="w-full"
+      />
+      @if (allServices().state === state.ERROR) {
+        {{ allServices().message }}
+      }
+    </div>
+
+    <p-button
+      [disabled]="
+        selectedService === undefined ||
+        linkServiceLoadingState() === state.LOADING ||
+        staffServices().state === state.LOADING
+      "
+      (onClick)="
+        linkServiceToStaffEmitter.emit({
+          staff_id: staffId(),
+          service: selectedService || ''
+        })
+      "
+    >
+      @if (linkServiceLoadingState() === state.LOADING) {
+        <i class="pi pi-spin pi-spinner" style="font-size: 1rem"></i>
+      } @else {
+        Link
+      }
+    </p-button>
+  </div>
+
+  <p-divider />
+
+  <h1 class="mb-2 font-semibold">Current Services Linked</h1>
+  <div class="w-full flex flex-wrap gap-2">
+    @switch (staffServices().state) {
+      @case (state.LOADING) {
+        <p-skeleton size="4rem" styleClass="mr-2" />
+        <p-skeleton size="4rem" styleClass="mr-2" />
+        <p-skeleton size="4rem" styleClass="mr-2" />
+        <p-skeleton size="4rem" styleClass="mr-2" />
+        <p-skeleton size="4rem" styleClass="mr-2" />
+      }
+      @case (state.ERROR) {
+        <p class="text-red-600">{{ staffServices().message }}</p>
+      }
+      @case (state.LOADED) {
+        <p-confirm-popup />
+        @for (s of staffServices().data || []; track s) {
+          <p-button
+            (onClick)="confirm($event, s, staffId())"
+            [label]="s"
+            severity="secondary"
+            icon="pi pi-times"
+            iconPos="right"
+          />
+        } @empty {
+          <p class="text-red-600">no services linked</p>
+        }
+      }
+    }
+  </div>
+</div>

@@ -1,0 +1,116 @@
+<div class="mb-4">
+  <p-button
+    type="button"
+    icon="pi pi-chevron-left"
+    (click)="first = first - rows"
+    [disabled]="models().data ? first === 0 : true"
+    text
+  />
+  <p-button type="button" icon="pi pi-refresh" (click)="first = 0" text />
+  <p-button
+    type="button"
+    icon="pi pi-chevron-right"
+    (click)="first = first + rows"
+    [disabled]="
+      models().data ? first + rows >= (models().data?.length || 0) : true
+    "
+    text
+  />
+</div>
+
+<div class="card">
+  <p-table
+    [value]="data(models())"
+    [paginator]="true"
+    [rows]="rows"
+    [first]="first"
+    [showCurrentPageReport]="true"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+    (onPage)="first = $event.first; rows = $event.rows"
+    [rowsPerPageOptions]="[5, 10, 20]"
+  >
+    <ng-template #header>
+      <tr>
+        @for (h of thead; track h) {
+          <th style="width: 25%">{{ h }}</th>
+        }
+      </tr>
+    </ng-template>
+    <ng-template #body let-model>
+      @switch (models().state) {
+        @case (state.LOADING) {
+          <tr>
+            @for (h of thead; track h) {
+              <td><p-skeleton /></td>
+            }
+          </tr>
+        }
+        @case (state.ERROR) {
+          <tr>
+            <td>{{ models().message }}</td>
+          </tr>
+        }
+        @case (state.LOADED) {
+          <tr
+            class="cursor-pointer hover:bg-primary hover:text-primary-contrast"
+            (click)="
+              toggleEditServiceTypeView = !toggleEditServiceTypeView;
+              clickedServiceType.set(model)
+            "
+          >
+            <td>{{ model.name }}</td>
+            <td>₦{{ model.price }}</td>
+            <td>
+              <p-badge
+                [value]="model.is_visible"
+                [severity]="model.is_visible ? 'success' : 'danger'"
+              />
+            </td>
+            <td>{{ formatseconds(model.duration) }}</td>
+            <td>{{ formatseconds(model.clean_up_time) }}</td>
+          </tr>
+        }
+      }
+    </ng-template>
+    <ng-template #paginatorleft>
+      <p-button
+        type="button"
+        icon="pi pi-plus"
+        text
+        (click)="toggleNewServiceTypeView = !toggleNewServiceTypeView"
+      />
+    </ng-template>
+  </p-table>
+</div>
+
+@defer {
+  <p-dialog
+    header="New Service"
+    [modal]="true"
+    [(visible)]="toggleNewServiceTypeView"
+    [style]="{ width: '40rem' }"
+  >
+    <app-new-service-type
+      [(visible)]="toggleNewServiceTypeView"
+      [apiState]="createApiState().state"
+      (emitter)="create.next($event)"
+    />
+  </p-dialog>
+}
+
+@defer {
+  <p-dialog
+    header="{{ clickedServiceType()?.name }}"
+    [modal]="true"
+    [(visible)]="toggleEditServiceTypeView"
+    [style]="{ width: '50rem' }"
+  >
+    <app-edit-service-type
+      [(visible)]="toggleEditServiceTypeView"
+      [service]="clickedServiceType()"
+      [apiState]="updateApiState().state"
+      (emitter)="update.next($event)"
+    />
+  </p-dialog>
+}

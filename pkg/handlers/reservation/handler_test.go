@@ -15,7 +15,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
 	scheduleModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service"
+	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
@@ -80,7 +80,7 @@ func TestReservationHandler(t *testing.T) {
 	jwtSer := auth.NewJwtService(logger, env)
 	ware := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
 	s := schedule.NewScheduleService(logger, adapters)
-	cache := pkg.NewInMemoryCache[string, []model.ReservationTimeSlots](logger, 30, 30)
+	cache := pkg.NewInMemoryCache[string, []*model.ReservationTimeSlots](logger, 30, 30)
 	mailService := &mail.MockMailService{}
 	rs := reservation.NewReservationService(logger, adapters, cache, mailService)
 
@@ -112,7 +112,7 @@ func TestReservationHandler(t *testing.T) {
 	scheduleHandler.NewScheduleHandler(mux, ware, logger, s).Register()
 
 	// register reservation handler
-	NewReservationHandler(mux, logger, rs).Register()
+	NewReservationHandler(mux, logger, ware, rs).Register()
 
 	date := logger.Date()
 	d := time.Date(date.Year(), date.Month(), date.Day(), 9, 0, 0, 0, logger.Timezone()).Add(24 * time.Hour)
@@ -125,20 +125,45 @@ func TestReservationHandler(t *testing.T) {
 		// create staff schedule
 		createSchedule(t, jwtSer, staff1, d, mux)
 
+		t.Run("return valid reservation dates. validate response body is not nil", func(t *testing.T) {
+			url := fmt.Sprintf(
+				"/reservation?day=%v&month=%v&year=%v&staff_id=%s&service=%s&timezone=%s",
+				1, int(d.Month()), d.Year()+1, staff1.UUID.String(), serviceType1.Name, zone.String(),
+			)
+			req := httptest.NewRequest(http.MethodGet, url, nil)
+			req.Header.Set("Content-Type", "application/json")
+			rr := httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+
+			if rr.Code != http.StatusOK {
+				t.Errorf("expected status code %d, got %d", http.StatusOK, rr.Code)
+			}
+
+			body := strings.TrimSpace(rr.Body.String())
+
+			if body == "" {
+				t.Error("expected non-empty body, got nil or empty body")
+			}
+
+			if strings.Compare(body, "[]") != 0 {
+				t.Errorf("expected empty array, got: %s", body)
+			}
+		})
+
 		t.Run("success. create a reservation single service", func(t *testing.T) {
 			// retrieve reservation times
 			types := []string{serviceType1.Name}
 			reserves := reservationTimes(t, d, staff1, types, zone.String(), mux, err)
 
 			// create reservation
+			maxT := len(reserves[0].Times)
 			createBody := model.ReservationPayload{
 				StaffId:  staff1.UUID.String(),
 				Name:     "user-name",
 				Email:    uuid.NewString() + "@email.com",
-				Address:  "123 transylvania",
 				Phone:    "0123456789",
 				Services: types,
-				Time:     reserves[0].Times[0],
+				Time:     reserves[0].Times[rand.Intn(maxT-0)+0],
 				Timezone: zone.String(),
 			}
 
@@ -164,14 +189,14 @@ func TestReservationHandler(t *testing.T) {
 			reserves := reservationTimes(t, d, staff1, types, zone.String(), mux, err)
 
 			// create reservation
+			maxT := len(reserves[0].Times)
 			payload := model.ReservationPayload{
 				StaffId:  staff1.UUID.String(),
 				Name:     "user-name",
 				Email:    uuid.NewString() + "@email.com",
-				Address:  "123 transylvania",
 				Phone:    "0123456789",
 				Services: types,
-				Time:     reserves[0].Times[0],
+				Time:     reserves[0].Times[rand.Intn(maxT-0)+0],
 				Timezone: zone.String(),
 			}
 
@@ -187,7 +212,7 @@ func TestReservationHandler(t *testing.T) {
 
 			if rr.Code != http.StatusCreated {
 				t.Errorf("expected status code %d, got %d", http.StatusCreated, rr.Code)
-				t.Errorf(rr.Body.String())
+				t.Log(rr.Body.String())
 			}
 		})
 
@@ -199,14 +224,14 @@ func TestReservationHandler(t *testing.T) {
 			types := []string{serviceType1.Name, serviceType2.Name}
 			reserves := reservationTimes(t, ddate, staff1, types, zone.String(), mux, err)
 
+			maxT := len(reserves[0].Times)
 			payload := model.ReservationPayload{
 				StaffId:  staff1.UUID.String(),
 				Name:     "user-name",
 				Email:    uuid.NewString() + "@email.com",
-				Address:  "123 transylvania",
 				Phone:    "0123456789",
 				Services: types,
-				Time:     reserves[0].Times[0],
+				Time:     reserves[0].Times[rand.Intn(maxT-0)+0],
 				Timezone: zone.String(),
 			}
 
@@ -244,66 +269,182 @@ func TestReservationHandler(t *testing.T) {
 			num := handlers.CountResponseStatus(statusArr, 201)
 			if num != 1 {
 				t.Errorf("expect 1 given %v", num)
-				t.Errorf("%v", statusArr)
-				t.Errorf("%v", errArr)
+				t.Logf("%v", statusArr)
+				t.Logf("%v", errArr)
 			}
 
 			num = handlers.CountResponseStatus(statusArr, 409)
 			if num != (randNum - 1) {
 				t.Errorf("expect %v given %v", randNum-1, num)
-				t.Errorf("%v", statusArr)
-				t.Errorf("%v", errArr)
+				t.Logf("%v", statusArr)
+				t.Logf("%v", errArr)
 			}
 		})
 
-		first, err := firstReservation(ctx)
-		if err != nil {
-			t.Errorf(err.Error())
-		}
-
-		t.Run("success. cancel reservation", func(t *testing.T) {
-			url := fmt.Sprintf("/reservation/cancel/%v", first.ReservationId)
-			req := httptest.NewRequest(http.MethodPost, url, nil)
-			req.Header.Set("Content-Type", "application/json")
-			rr := httptest.NewRecorder()
-			mux.ServeHTTP(rr, req)
-
-			if rr.Code != http.StatusNoContent {
-				t.Errorf("expected status code %d, got %d", http.StatusNoContent, rr.Code)
-			}
-		})
-
-		t.Run("reject. already cancelled reservation", func(t *testing.T) {
-			url := fmt.Sprintf("/reservation/cancel/%v", first.ReservationId)
-			req := httptest.NewRequest(http.MethodPost, url, nil)
-			req.Header.Set("Content-Type", "application/json")
-			rr := httptest.NewRecorder()
-			mux.ServeHTTP(rr, req)
-
-			if rr.Code != http.StatusBadRequest {
-				t.Errorf("expected status code %d, got %d", http.StatusBadRequest, rr.Code)
-			}
-
-			var obj utils.Error
-			if err = json.NewDecoder(rr.Body).Decode(&obj); err != nil {
+		t.Run("should cancel reservation", func(t *testing.T) {
+			first, err := firstReservation(ctx)
+			if err != nil {
 				t.Errorf(err.Error())
 			}
 
-			str := "reservation already cancelled"
-			if !strings.Contains(str, obj.Message) {
-				t.Errorf("expected to contain %s given %s", str, obj.Message)
-			}
-		})
+			t.Run("success.", func(t *testing.T) {
+				url := fmt.Sprintf("/reservation/cancel/%v", first.ReservationId)
+				req := httptest.NewRequest(http.MethodPost, url, nil)
+				req.Header.Set("Content-Type", "application/json")
+				rr := httptest.NewRecorder()
+				mux.ServeHTTP(rr, req)
 
-		t.Run("reject reservation cancellation. invalid reservation id", func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodPost, "/reservation/cancel/0", nil)
+				if rr.Code != http.StatusNoContent {
+					t.Errorf("expected status code %d, got %d", http.StatusNoContent, rr.Code)
+				}
+			})
+
+			t.Run("reject. already cancelled reservation", func(t *testing.T) {
+				url := fmt.Sprintf("/reservation/cancel/%v", first.ReservationId)
+				req := httptest.NewRequest(http.MethodPost, url, nil)
+				req.Header.Set("Content-Type", "application/json")
+				rr := httptest.NewRecorder()
+				mux.ServeHTTP(rr, req)
+
+				if rr.Code != http.StatusBadRequest {
+					t.Errorf("expected status code %d, got %d", http.StatusBadRequest, rr.Code)
+				}
+
+				var obj utils.Error
+				if err = json.NewDecoder(rr.Body).Decode(&obj); err != nil {
+					t.Errorf(err.Error())
+				}
+
+				str := "reservation already cancelled"
+				if !strings.Contains(str, obj.Message) {
+					t.Errorf("expected to contain %s given %s", str, obj.Message)
+				}
+			})
+
+			t.Run("reject. invalid reservation id", func(t *testing.T) {
+				req := httptest.NewRequest(http.MethodPost, "/reservation/cancel/0", nil)
+				req.Header.Set("Content-Type", "application/json")
+				rr := httptest.NewRecorder()
+				mux.ServeHTTP(rr, req)
+
+				if rr.Code != http.StatusNotFound {
+					t.Errorf("expected status code %d, got %d", http.StatusNotFound, rr.Code)
+				}
+			})
+		})
+	})
+
+	t.Run("CRM", func(t *testing.T) {
+		obj, _ := jwtSer.Encode(
+			&models.JwtObj{
+				UserId: staff1.UUID.String(),
+				AccessControls: []models.RolePermissionEnum{
+					{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
+				},
+			},
+			utils.TwoDaysInSeconds,
+		)
+
+		t.Run("should return bookings. empty", func(t *testing.T) {
+			url := fmt.Sprintf(
+				"/crm/reservation?&month=%v&year=%v&user_id=%s&timezone=%s",
+				int(d.Month()), d.Year()+1, staff1.UUID.String(), zone.String(),
+			)
+
+			req := httptest.NewRequest(http.MethodGet, url, nil)
+			req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
 			req.Header.Set("Content-Type", "application/json")
 			rr := httptest.NewRecorder()
 			mux.ServeHTTP(rr, req)
 
-			if rr.Code != http.StatusNotFound {
-				t.Errorf("expected status code %d, got %d", http.StatusNotFound, rr.Code)
+			if rr.Code != http.StatusOK {
+				t.Errorf("expected status code %d, got %d", http.StatusOK, rr.Code)
 			}
+
+			body := strings.TrimSpace(rr.Body.String())
+
+			if body == "" {
+				t.Error("expected non-empty body, got nil or empty body")
+			}
+
+			if strings.Compare(body, "[]") != 0 {
+				t.Errorf("expected empty array, got: %s", body)
+			}
+		})
+
+		t.Run("should return bookings", func(t *testing.T) {
+			url := fmt.Sprintf(
+				"/crm/reservation?&month=%v&year=%v&user_id=%s&timezone=%s",
+				int(d.Month()), d.Year(), staff1.UUID.String(), zone.String(),
+			)
+
+			req := httptest.NewRequest(http.MethodGet, url, nil)
+			req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+			req.Header.Set("Content-Type", "application/json")
+			rr := httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+
+			if rr.Code != http.StatusOK {
+				t.Errorf("expected status code %d, got %d", http.StatusOK, rr.Code)
+			}
+
+			bo := strings.TrimSpace(rr.Body.String())
+			if len(bo) < 2 {
+				t.Errorf("expected non-empty body, got %s", bo)
+			}
+		})
+
+		t.Run("should update booking status", func(t *testing.T) {
+			t.Run("reject invalid reservation id", func(t *testing.T) {
+				body := model.UpdateBookingPayload{
+					ReservationId: 10000,
+					Status:        model.CANCELLED,
+				}
+
+				bts, err := json.Marshal(body)
+				if err != nil {
+					t.Fatalf("failed to marshal UpdateBookingPayload: %s", err.Error())
+				}
+
+				req := httptest.NewRequest(http.MethodPut, "/crm/reservation", bytes.NewBuffer(bts))
+				req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+				req.Header.Set("Content-Type", "application/json")
+				rr := httptest.NewRecorder()
+
+				mux.ServeHTTP(rr, req)
+
+				if rr.Code != http.StatusNotFound {
+					t.Errorf("expected status code %d, got %d", http.StatusNotFound, rr.Code)
+				}
+			})
+
+			t.Run("success", func(t *testing.T) {
+				first, err := firstReservation(ctx)
+				if err != nil {
+					t.Errorf(err.Error())
+				}
+
+				body := model.UpdateBookingPayload{
+					ReservationId: first.ReservationId,
+					Status:        model.CANCELLED,
+				}
+
+				bts, err := json.Marshal(body)
+				if err != nil {
+					t.Fatalf("failed to marshal UpdateBookingPayload: %s", err.Error())
+				}
+
+				req := httptest.NewRequest(http.MethodPut, "/crm/reservation", bytes.NewBuffer(bts))
+				req.AddCookie(&http.Cookie{Name: env.CookieParam.CookieName, Value: obj.Token})
+				req.Header.Set("Content-Type", "application/json")
+				rr := httptest.NewRecorder()
+
+				mux.ServeHTTP(rr, req)
+
+				if rr.Code != http.StatusNoContent {
+					t.Errorf("expected status code %d, got %d", http.StatusNoContent, rr.Code)
+				}
+			})
 		})
 	})
 }
@@ -315,7 +456,7 @@ func firstReservation(ctx context.Context) (*model.Reservation, error) {
 	row := db.QueryRowContext(ctx, q)
 
 	err := row.Scan(
-		&r.ReservationId, &r.Name, &r.Email, &r.Description, &r.Address, &r.Phone, &r.ImageKey, &r.Price, &r.Status, &r.CreatedAt, &r.ScheduledFor, &r.ExpireAt, &r.StaffId)
+		&r.ReservationId, &r.Name, &r.Email, &r.Description, &r.Phone, &r.Price, &r.Status, &r.CreatedAt, &r.ScheduledFor, &r.ExpireAt, &r.StaffId)
 
 	if err != nil {
 		return nil, err
@@ -324,7 +465,7 @@ func firstReservation(ctx context.Context) (*model.Reservation, error) {
 	return &r, nil
 }
 
-func reservationTimes(t *testing.T, d time.Time, staff1 *staff.Staff, serviceTypes []string, zone string, mux *http.ServeMux, err error) []model.ReservationTimeSlots {
+func reservationTimes(t *testing.T, d time.Time, staff1 *staff.StaffEntity, serviceTypes []string, zone string, mux *http.ServeMux, err error) []model.ReservationTimeSlots {
 	var sb strings.Builder
 	for _, ser := range serviceTypes {
 		sb.WriteString("service=" + ser + "&")
@@ -351,12 +492,12 @@ func reservationTimes(t *testing.T, d time.Time, staff1 *staff.Staff, serviceTyp
 	return payload
 }
 
-func createSchedule(t *testing.T, jwtSer auth.IJwtService, staff1 *staff.Staff, d time.Time, mux *http.ServeMux) {
-	cred := []models.RolePermission{
+func createSchedule(t *testing.T, jwtSer auth.IJwtService, staff1 *staff.StaffEntity, d time.Time, mux *http.ServeMux) {
+	cred := []models.RolePermissionEnum{
 		{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 	}
 
-	obj, err := jwtSer.GenerateJwt(
+	obj, err := jwtSer.Encode(
 		&models.JwtObj{
 			UserId:         staff1.UUID.String(),
 			AccessControls: cred,
@@ -397,25 +538,23 @@ func createSchedule(t *testing.T, jwtSer auth.IJwtService, staff1 *staff.Staff, 
 	}
 }
 
-func preSaveService(ctx context.Context, a *stores.Adapters) (*service.ServiceTypeEntity, error) {
-	s := service.ServiceTypeEntity{
-		Name:          uuid.New().String(),
-		Price:         19.56,
-		Duration:      3600,
-		CleanUpTime:   30 * 60,
-		IsVisible:     true,
-		IsReoccurring: false,
+func preSaveService(ctx context.Context, a *stores.Adapters) (*service_type.ServiceTypeEntity, error) {
+	s := service_type.ServiceTypeEntity{
+		Name:        uuid.New().String(),
+		Price:       19.56,
+		Duration:    3600,
+		CleanUpTime: 30 * 60,
+		IsVisible:   true,
 	}
 	err := a.ServiceStore.Save(ctx, &s)
 	return &s, err
 }
 
-func linkServiceToStaff(a *stores.Adapters, sta *staff.Staff, staSer *service.ServiceTypeEntity) error {
-	_, err := a.StaffServiceStore.Save(context.Background(), &staff.StaffServiceEntity{
+func linkServiceToStaff(a *stores.Adapters, sta *staff.StaffEntity, staSer *service_type.ServiceTypeEntity) error {
+	return a.StaffServiceStore.Save(context.Background(), &staff.StaffServiceEntity{
 		StaffId:   sta.StaffId,
 		ServiceId: staSer.ServiceId,
 	})
-	return err
 }
 
 func randomTimezone() (*time.Location, error) {

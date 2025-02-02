@@ -1,0 +1,165 @@
+<div class="w-full py-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+  <div class="w-full flex-flex-col gap-2">
+    <div class="mb-3 flex flex-col gap-1">
+      <h1 class="font-semibold text-base lg:text-lg">Contact info</h1>
+      <p class="text-sm opacity-50">
+        Fields marked with <strong>*</strong> are required
+      </p>
+    </div>
+
+    <form
+      [formGroup]="form"
+      class="w-full flex flex-col gap-4 text-center md:text-left"
+    >
+      <div class="w-full flex flex-col gap-4">
+        <!-- phone -->
+        <div>
+          <p-iconfield styleClass="mb-0">
+            <p-inputicon styleClass="pi pi-phone" />
+            <input
+              class="w-full"
+              type="number"
+              formControlName="phone"
+              pInputText
+              placeholder="(999) 999-9999*"
+            />
+          </p-iconfield>
+          @if (
+            form.controls['phone'].invalid && !form.controls['phone'].untouched
+          ) {
+            <p-message severity="error" variant="simple" size="small">
+              Phone number is required
+            </p-message>
+          }
+        </div>
+
+        <!-- name & email -->
+        <div
+          class="w-full flex flex-col md:flex-row items-center justify-center gap-2"
+        >
+          <div class="w-full">
+            <p-iconfield styleClass="mb-0">
+              <p-inputicon styleClass="pi pi-user" />
+              <input
+                type="text"
+                class="w-full"
+                formControlName="name"
+                pInputText
+                placeholder="name*"
+              />
+            </p-iconfield>
+            @if (
+              form.controls['name'].invalid && !form.controls['name'].untouched
+            ) {
+              <p-message severity="error" variant="simple" size="small">
+                Name is required
+              </p-message>
+            }
+          </div>
+
+          <div class="w-full">
+            <p-iconfield styleClass="mb-0">
+              <p-inputicon styleClass="pi pi-envelope" />
+              <input
+                class="w-full"
+                type="text"
+                formControlName="email"
+                pInputText
+                placeholder="email*"
+              />
+            </p-iconfield>
+            @if (
+              form.controls['email'].invalid &&
+              !form.controls['email'].untouched
+            ) {
+              <p-message severity="error" variant="simple" size="small">
+                Email is required
+              </p-message>
+            }
+          </div>
+        </div>
+
+        <!-- description -->
+        <div>
+          <p-floatlabel variant="on">
+            <textarea
+              pTextarea
+              id="over_label"
+              formControlName="description"
+              rows="5"
+              cols="30"
+              style="resize: none"
+              class="h-full w-full"
+            ></textarea>
+            <label for="over_label">appointment note</label>
+          </p-floatlabel>
+        </div>
+      </div>
+
+      <div class="w-full">
+        <p-button
+          size="large"
+          styleClass="text-right w-full"
+          (onClick)="submit()"
+          [disabled]="form.invalid || req().state === state.LOADING"
+        >
+          @if (req().state === state.LOADING) {
+            <i class="pi pi-spin pi-spinner" style="font-size: 1.5rem"></i>
+          } @else {
+            Book appointment
+          }
+        </p-button>
+      </div>
+    </form>
+
+    @if (req().state === state.ERROR) {
+      <div class="mt-4">
+        <p-message severity="error" variant="simple">
+          {{ req().message }}
+        </p-message>
+      </div>
+    }
+
+    <p-divider />
+
+    <div class="w-full pt-5">
+      <h3 class="mb-3 font-semibold text-base lg:text-lg">
+        Cancellation policy
+      </h3>
+      <p>
+        This appointment, as well as any others, can be canceled but cannot be
+        rescheduled once booked.
+      </p>
+    </div>
+  </div>
+
+  <div class="w-full">
+    @if (check(reservationService.reservationState()); as obj) {
+      <app-summary-holder
+        [obj]="obj"
+        [datetime]="reservationService.reservationState().datetime"
+      />
+    }
+
+    <p-divider />
+
+    <div class="w-full mt-3 py-2">
+      <div class="mb-3 flex items-center justify-between">
+        <span class="text-sm font-medium">Subtotal</span>
+        <span class="font-medium"
+          >₦{{ subtotal(reservationService.reservationState().services) }}</span
+        >
+      </div>
+      <div class="mb-3 flex gap-3 items-center justify-between">
+        <span class="text-sm font-medium">VAT(5%)</span>
+        <span class="font-medium text-primary">Free</span>
+      </div>
+      <div class="mb-3 flex gap-3 items-center justify-between">
+        <span class="text-sm font-medium">Total</span>
+        <span class="font-medium"
+          >₦{{ subtotal(reservationService.reservationState().services) }}</span
+        >
+      </div>
+    </div>
+  </div>
+</div>

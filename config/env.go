@@ -3,6 +3,7 @@ package config
 import (
 	"cmp"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"net/http"
 	"os"
 )
 
@@ -13,6 +14,8 @@ type SecretVariables struct {
 	PrivateKeyPath     string
 	PublicKeyPath      string
 	CookieParam        *utils.CookieParam
+	FrontEnd           string
+	ApiPrefix          string
 }
 
 func (dep *SecretVariables) Config() *SecretVariables {
@@ -23,10 +26,13 @@ func (dep *SecretVariables) Config() *SecretVariables {
 		DbConnectionString: cmp.Or(os.Getenv("DB_CONN"), "postgres://reservation:reservation@localhost:5432/reservation_db?sslmode=disable"),
 		PrivateKeyPath:     cmp.Or(os.Getenv("JWT_PRIV_PATH"), "./keys/private.key"),
 		PublicKeyPath:      cmp.Or(os.Getenv("JWT_PUB_PATH"), "./keys/public.key"),
+		FrontEnd:           cmp.Or(os.Getenv("FRONTEND"), "http://localhost:4200"),
 		CookieParam: &utils.CookieParam{
 			CookieName:   cmp.Or(os.Getenv("COOKIENAME"), "RESERVATION_COOKIE"),
 			CookieSecure: profile == "production",
 			CookieDomain: cmp.Or(os.Getenv("COOKIEDOMAIN"), "localhost"),
+			SameSite:     http.SameSiteLaxMode,
 		},
+		ApiPrefix: "/api/v1/",
 	}
 }

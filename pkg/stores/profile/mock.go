@@ -3,38 +3,65 @@ package profile
 import (
 	"context"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/profile"
 )
 
 type MockProfileStore struct {
-	MockProfileSave       *profile.Profile
-	MockProfileSaveError  error
-	MockProfileSaveCalled bool
+	MockProfileSave                            *models.ProfileEntity
+	MockProfileSaveError                       error
+	MockProfileSaveCalled                      bool
+	ProfileRolesAndPermissionByStaffUUIDCalled bool
+	ProfileRolesAndPermissionByStaffUUIDObj    *models.ProfileRolePermissionEntity
+	ProfileRolesAndPermissionByStaffUUIDError  error
 }
 
-func (dep *MockProfileStore) Save(context.Context, *profile.Profile) (*profile.Profile, error) {
+func (dep *MockProfileStore) ProfileByEmail(context.Context, string) (*models.ProfileEntity, error) {
+	return nil, nil
+}
+
+func (dep *MockProfileStore) ProfileRolesAndPermissionByEmail(context.Context, string) (*models.ProfileRolePermissionEntity, error) {
+	return nil, nil
+}
+
+func (dep *MockProfileStore) ProfileRolesAndPermissionByStaffUUID(context.Context, string) (*models.ProfileRolePermissionEntity, error) {
+	dep.ProfileRolesAndPermissionByStaffUUIDCalled = true
+	return dep.ProfileRolesAndPermissionByStaffUUIDObj, dep.ProfileRolesAndPermissionByStaffUUIDError
+}
+
+func (dep *MockProfileStore) ProfileByStaffUUID(context.Context, string) (*models.ProfileEntity, error) {
+	return nil, nil
+}
+
+func (dep *MockProfileStore) Save(context.Context, *models.ProfileEntity) error {
 	dep.MockProfileSaveCalled = true
-	return dep.MockProfileSave, dep.MockProfileSaveError
+	return dep.MockProfileSaveError
 }
 
 type MockPermissionStore struct {
-	MockPermissionSave       *models.Permission
+	MockPermissionSave       *models.PermissionEntity
 	MockPermissionSaveError  error
 	MockPermissionSaveCalled bool
 }
 
-func (dep *MockPermissionStore) Save(context.Context, *models.Permission) (*models.Permission, error) {
+func (dep *MockPermissionStore) Save(context.Context, *models.PermissionEntity) error {
 	dep.MockPermissionSaveCalled = true
-	return dep.MockPermissionSave, dep.MockPermissionSaveError
+	return dep.MockPermissionSaveError
+}
+
+func (dep *MockPermissionStore) Delete(context.Context, uint64) (int64, error) {
+	return 0, nil
 }
 
 type MockRoleStore struct {
-	MockRoleSave       *models.Role
+	MockRoleSave       *models.RoleEntity
 	MockRoleSaveError  error
 	MockRoleSaveCalled bool
 }
 
-func (dep *MockRoleStore) Save(context.Context, *models.Role) (*models.Role, error) {
+func (dep *MockRoleStore) Save(context.Context, *models.RoleEntity) error {
 	dep.MockRoleSaveCalled = true
-	return dep.MockRoleSave, dep.MockRoleSaveError
+	return dep.MockRoleSaveError
+}
+
+func (dep *MockRoleStore) Delete(context.Context, uint64) (int64, error) {
+	return 0, nil
 }

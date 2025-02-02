@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"net/http"
+	"os"
 	"reflect"
 	"slices"
 	"strings"
@@ -25,13 +27,15 @@ func (w *wrappedWriter) WriteHeader(statusCode int) {
 }
 
 type Middleware struct {
-	Logger utils.ILogger
-	Auth   auth.IJwtService
-	Param  *utils.CookieParam
+	Logger    utils.ILogger
+	Auth      auth.IJwtService
+	Param     *utils.CookieParam
+	ApiPrefix string
 }
 
 func (dep *Middleware) Initialize(router *http.ServeMux) http.Handler {
-	return dep.logging(dep.timeout(router))
+	return dep.logging(dep.timeout(dep.redirect(router)))
+	//return dep.logging(dep.redirect(router))
 }
 
 // https://stackoverflow.com/questions/27234861/correct-way-of-getting-clients-ip-addresses-from-http-request
@@ -50,24 +54,53 @@ func (dep *Middleware) timeout(next http.Handler) http.Handler {
 		ctx, cancel := context.WithTimeout(r.Context(), dur)
 		defer cancel()
 		next.ServeHTTP(w, r.WithContext(ctx))
+		//if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		//	dep.Logger.Error("request timeout")
+		//	w.Header().Set("Content-Type", "application/json")
+		//	code := http.StatusRequestTimeout
+		//	w.WriteHeader(code)
+		//	type obj struct {
+		//		Status  int
+		//		Message string
+		//	}
+		//	if err := json.NewEncoder(w).Encode(obj{Status: code, Message: "request timeout"}); err != nil {
+		//		dep.Logger.Error(err.Error())
+		//	}
+		//}
 	})
 }
 
 func (dep *Middleware) logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := dep.Logger.Date()
 		ip := dep.requestIP(r)
+		id := uuid.NewString()
 		dep.Logger.Log(fmt.Sprintf(
-			"[Request] IP: %s | Method: %s | Path: %s", ip, r.Method, r.URL.Path,
+			"[Request] ID: %s | IP: %s | Method: %s | Path: %s", id, ip, r.Method, r.URL.Path,
 		))
 		obj := &wrappedWriter{
 			ResponseWriter: w,
 			status:         http.StatusOK,
 		}
 		next.ServeHTTP(obj, r)
+		end := dep.Logger.Date()
 		dep.Logger.Log(fmt.Sprintf(
-			"[Response] IP: %s | Status: %d | Method: %s | Path: %s",
-			ip, obj.status, r.Method, r.URL.Path,
+			"[Response] ID: %s | IP: %s | Status: %d | Method: %s | Path: %s | Duration: %v seconds",
+			id, ip, obj.status, r.Method, r.URL.Path, end.Sub(start).Seconds(),
 		))
+	})
+}
+
+func (dep *Middleware) redirect(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasPrefix(r.URL.Path, dep.ApiPrefix) {
+			_, err := os.Stat("./ui/dist/ui/browser" + r.URL.Path)
+			if os.IsNotExist(err) {
+				http.ServeFile(w, r, "./ui/dist/ui/browser/index.html")
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
 	})
 }
 
@@ -86,9 +119,9 @@ func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 			return
 		}
 
-		obj, err := dep.Auth.ValidateJwt(cookie.Value)
+		obj, err := dep.Auth.Decode(cookie.Value)
 		if err != nil {
-			dep.Logger.Error(err)
+			dep.Logger.Error(err.Error())
 			utils.ErrorResponse(w, &utils.AuthenticationError{})
 			return
 		}
@@ -99,12 +132,17 @@ func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 
 		isLogout := strings.HasSuffix(r.URL.Path, "/logout")
 		if !isLogout && isTokenExpiringSoon(dep.Logger.Date(), *obj.ExpireAt, utils.TwoDaysInSeconds) {
-			if o, err := dep.Auth.GenerateJwt(obj, utils.TwoDaysInSeconds); err != nil {
-				dep.Logger.Error(fmt.Sprintf("failed to refresh token %s", err))
+			if o, err := dep.Auth.Encode(obj, utils.TwoDaysInSeconds); err != nil {
+				dep.Logger.Error("failed to refresh token", err.Error())
 			} else {
 				cookie.Value = o.Token
 				cookie.Expires = o.ExpireAt
+				cookie.Path = "/"
+				cookie.HttpOnly = true
+				cookie.SameSite = dep.Param.SameSite
+				cookie.Secure = dep.Param.CookieSecure
 				http.SetCookie(w, cookie)
+
 				dep.Logger.Log("refreshed jwt")
 			}
 		}
@@ -128,7 +166,7 @@ func (dep *Middleware) HasRole(next http.Handler, role *models.RoleEnum) http.Ha
 			return
 		}
 
-		contains := slices.ContainsFunc(obj.AccessControls, func(access models.RolePermission) bool {
+		contains := slices.ContainsFunc(obj.AccessControls, func(access models.RolePermissionEnum) bool {
 			return access.Role == *role
 		})
 		if !contains {
@@ -155,7 +193,7 @@ func (dep *Middleware) HasPermission(next http.Handler, permission *models.Permi
 			return
 		}
 
-		contains := slices.ContainsFunc(obj.AccessControls, func(rp models.RolePermission) bool {
+		contains := slices.ContainsFunc(obj.AccessControls, func(rp models.RolePermissionEnum) bool {
 			return slices.ContainsFunc(rp.Permissions, func(enum models.PermissionEnum) bool {
 				return reflect.DeepEqual(enum, *permission)
 			})
@@ -171,7 +209,7 @@ func (dep *Middleware) HasPermission(next http.Handler, permission *models.Permi
 	})
 }
 
-func (dep *Middleware) HasRoleAndPermissions(next http.Handler, cred *models.RolePermission) http.Handler {
+func (dep *Middleware) HasRoleAndPermissions(next http.Handler, cred *models.RolePermissionEnum) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if cred == nil {
 			dep.Logger.Error("HasRoleAndPermissions: cred cannot be nil")
@@ -196,8 +234,8 @@ func (dep *Middleware) HasRoleAndPermissions(next http.Handler, cred *models.Rol
 	})
 }
 
-func (dep *Middleware) validateRoleAndPermissions(arr []models.RolePermission, param *models.RolePermission) bool {
-	return slices.ContainsFunc(arr, func(obj models.RolePermission) bool {
+func (dep *Middleware) validateRoleAndPermissions(arr []models.RolePermissionEnum, param *models.RolePermissionEnum) bool {
+	return slices.ContainsFunc(arr, func(obj models.RolePermissionEnum) bool {
 		if obj.Role == param.Role {
 			if len(param.Permissions) < 1 {
 				return false

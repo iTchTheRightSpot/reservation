@@ -1,0 +1,117 @@
+<div class="mb-4">
+  <p-button
+    type="button"
+    icon="pi pi-chevron-left"
+    (click)="first = first - rows"
+    [disabled]="staffs().data ? first === 0 : true"
+    text
+  />
+  <p-button type="button" icon="pi pi-refresh" (click)="first = 0" text />
+  <p-button
+    type="button"
+    icon="pi pi-chevron-right"
+    (click)="first = first + rows"
+    [disabled]="
+      staffs().data ? first + rows >= (staffs().data?.length || 0) : true
+    "
+    text
+  />
+</div>
+
+<div class="card">
+  <p-table
+    #dt1
+    selectionMode="single"
+    dataKey="id"
+    [loading]="staffs().state === state.LOADING"
+    [value]="staffs().data || []"
+    [paginator]="true"
+    [first]="first"
+    (onPage)="first = $event.first; rows = $event.rows"
+    [rows]="rows"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+    [rowsPerPageOptions]="[5, 10, 20]"
+  >
+    <ng-template #header>
+      <tr>
+        @for (h of thead; track h) {
+          <th style="width: 25%">{{ h }}</th>
+        }
+      </tr>
+    </ng-template>
+    <ng-template #body let-model>
+      <tr
+        class="cursor-pointer"
+        (click)="
+          selectedStaff = model;
+          servicesByStaffEmitter.next(model.user_id);
+          toggleStaffDetails = !toggleStaffDetails
+        "
+      >
+        <td>
+          @if (model.image_key; as k) {
+            <p-avatar [image]="k" class="mr-2" shape="circle" />
+          } @else if (model.image_key === null) {
+            <p-avatar icon="pi pi-user" class="mr-2" shape="circle" />
+          }
+        </td>
+        <td>{{ model.firstname }}</td>
+        <td>{{ model.lastname }}</td>
+        <td>
+          <p-tag
+            [value]="model.locked ? 'Locked' : 'Not Locked'"
+            [severity]="model.locked ? 'danger' : 'success'"
+          />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #paginatorleft>
+      <p-button type="button" icon="pi pi-plus" text (onClick)="register()" />
+    </ng-template>
+  </p-table>
+</div>
+
+<p-drawer
+  header="Staff Detail"
+  [(visible)]="toggleStaffDetails"
+  position="left"
+  styleClass="!w-full md:!w-[40rem] lg:!w-[60rem]"
+>
+  @defer (when toggleStaffDetails && selectedStaff !== undefined) {
+    <app-staff-detail-holder
+      [staff]="selectedStaff!!"
+      [allServices]="allServices()"
+      [servicesByStaff]="servicesByStaff()"
+      [linkServiceToStaffLoadingState]="serviceToStaffState().state"
+      [createRolesAndPermissionState]="createRolesAndPermissions().state"
+      [deLinkServiceFromStaffState]="deLinkServiceFromStaffState().state"
+      [staffSchedules]="staffSchedules()"
+      [createScheduleLoadingState]="createSchedule().state"
+      [updateScheduleLoadingState]="updateSchedule().state"
+      [deleteScheduleState]="deleteSchedule().state"
+      [addPermissionsState]="addPermissionsState().state"
+      [deleteRoleState]="deleteRoleState().state"
+      [deletePermissionState]="deletePermissionState().state"
+      (linkServiceToStaffEmitter)="linkServiceToStaffEmitter.next($event)"
+      (deLinkServiceFromStaffEmitter)="
+          deLinkServiceFromStaffEmitter.next($event)
+        "
+      (schedulesEmitter)="staffSchedulesEmitter.next($event)"
+      (createScheduleEmitter)="createScheduleEmitter.next($event)"
+      (updateScheduleEmitter)="updateScheduleEmitter.next($event)"
+      (deleteScheduleEmitter)="deleteScheduleEmitter.next($event)"
+      (createRolesAndPermissionsEmitter)="
+          createRolesAndPermissionsEmitter.next($event)
+        "
+      (addPermissionsEmitter)="addPermissionsEmitter.next($event)"
+      (deleteRoleEmitter)="deleteRoleEmitter.next($event)"
+      (deletePermissionEmitter)="deletePermissionEmitter.next($event)"
+    />
+  } @loading {
+    loading component...
+  } @placeholder {
+    place holder component
+  }
+</p-drawer>

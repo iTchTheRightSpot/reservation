@@ -2,14 +2,15 @@ package profile
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 )
 
 type IRoleStore interface {
-	Save(ctx context.Context, r *models.Role) (*models.Role, error)
+	Save(ctx context.Context, r *models.RoleEntity) error
+	Delete(ctx context.Context, roleId uint64) (int64, error)
 }
 
 type roleStore struct {
@@ -21,9 +22,9 @@ func NewRoleStore(l utils.ILogger, db pkg.Db) IRoleStore {
 	return &roleStore{logger: l, db: db}
 }
 
-func (dep *roleStore) Save(ctx context.Context, r *models.Role) (*models.Role, error) {
+func (dep *roleStore) Save(ctx context.Context, r *models.RoleEntity) error {
 	if r == nil {
-		return nil, fmt.Errorf("role object is nil")
+		return errors.New("role object is nil")
 	}
 
 	q := `
@@ -34,12 +35,19 @@ func (dep *roleStore) Save(ctx context.Context, r *models.Role) (*models.Role, e
 
 	row := dep.db.QueryRowContext(ctx, q, r.Role, r.ProfileId)
 
-	err := row.Scan(&r.RoleId, &r.Role, &r.ProfileId)
-
-	if err != nil {
-		dep.logger.Error(err)
-		return nil, fmt.Errorf("exception saving to role table")
+	if err := row.Scan(&r.RoleId, &r.Role, &r.ProfileId); err != nil {
+		dep.logger.Error(err.Error())
+		return errors.New("exception saving to role table")
 	}
 
-	return r, nil
+	return nil
+}
+
+func (dep *roleStore) Delete(ctx context.Context, roleId uint64) (int64, error) {
+	res, err := dep.db.ExecContext(ctx, "DELETE FROM role WHERE role_id = $1", roleId)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return 0, errors.New("error deleting role")
+	}
+	return res.RowsAffected()
 }

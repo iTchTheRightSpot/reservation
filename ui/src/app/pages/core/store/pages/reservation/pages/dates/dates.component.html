@@ -1,0 +1,101 @@
+<div class="w-full mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+  <div class="w-full">
+    <p-date-picker
+      [style]="{ width: '100%' }"
+      class="max-w-full"
+      [(ngModel)]="date"
+      [minDate]="today"
+      [inline]="true"
+      [showWeek]="false"
+      [readonlyInput]="true"
+      [disabledDates]="invalidDates()"
+      (onSelect)="selected.next($event)"
+      (onMonthChange)="onSelectedCalendarMonth($event)"
+      (onYearChange)="onSelectedCalendarYear($event)"
+    >
+      <ng-template pTemplate="date" let-date>
+        @if (crossDates(date, invalidDates())) {
+          <strong class="line-through">{{ date.day }}</strong>
+        } @else if (crossDates(date, validDates())) {
+          <strong>{{ date.day }}</strong>
+        } @else {
+          {{ date.day }}
+        }
+      </ng-template>
+    </p-date-picker>
+
+    <div class="w-full">
+      <div class="w-full">
+        <div class="w-full pt-2 flex items-center justify-between">
+          <p class="">
+            Times are shown in <strong>{{ tz }}</strong>
+          </p>
+          <p-button
+            (onClick)="
+              service.clearCache();
+              reservationService.setDateTime(undefined);
+              selected.next(this.selected.getValue())
+            "
+            type="button"
+            icon="pi pi-refresh"
+            text
+          />
+        </div>
+        <h3 class="my-6 text-xl">
+          <strong>
+            {{ selected.getValue().toLocaleDateString('en-US', timeformat) }}
+          </strong>
+        </h3>
+      </div>
+
+      @switch (req().state) {
+        @case (state.LOADING) {
+          @for (a of skeleton(2); track a) {
+            <div class="my-4">
+              <p-skeleton width="100%" height="2rem" />
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              @for (b of skeleton(10); track b) {
+                <p-skeleton width="4rem" height="2rem" />
+              }
+            </div>
+          }
+        }
+
+        @case (state.ERROR) {
+          <p-message severity="error">{{ req().message }}</p-message>
+        }
+
+        @case (state.LOADED) {
+          @if (contains(selected.getValue(), req().data!!); as ds) {
+            <div class="w-full flex flex-col gap-4">
+              <div class="flex flex-wrap gap-2">
+                <p class="w-full flex-none font-bold">Availabilities</p>
+
+                @for (time of ds; track time.original) {
+                  <p-button
+                    [label]="time.format"
+                    severity="secondary"
+                    (onClick)="updateParent(time.original)"
+                  />
+                }
+              </div>
+            </div>
+          } @else {
+            <p class="font-bold">No availability</p>
+          }
+        }
+      }
+    </div>
+  </div>
+
+  <div class="w-full">
+    @if (check(reservationService.reservationState()); as obj) {
+      <app-summary-holder
+        [obj]="obj"
+        [datetime]="reservationService.reservationState().datetime"
+      />
+    }
+  </div>
+</div>

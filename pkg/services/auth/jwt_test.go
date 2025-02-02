@@ -22,12 +22,12 @@ func TestJwtService(t *testing.T) {
 
 		s := NewJwtService(utils.NewMockLogger(), con)
 
-		cred := make([]models.RolePermission, 2)
-		cred[0] = models.RolePermission{
+		cred := make([]models.RolePermissionEnum, 2)
+		cred[0] = models.RolePermissionEnum{
 			Role:        models.STAFF,
 			Permissions: []models.PermissionEnum{models.READ, models.DELETE},
 		}
-		cred[1] = models.RolePermission{
+		cred[1] = models.RolePermissionEnum{
 			Role:        models.DEVELOPER,
 			Permissions: []models.PermissionEnum{models.READ, models.DELETE},
 		}
@@ -35,13 +35,13 @@ func TestJwtService(t *testing.T) {
 		o := &models.JwtObj{AccessControls: cred, UserId: "staff-uuid"}
 
 		// method to test & assert
-		obj, err := s.GenerateJwt(o, utils.TwoDaysInSeconds)
+		obj, err := s.Encode(o, utils.TwoDaysInSeconds)
 		if err != nil {
 			t.Errorf("exception generating jwt %s", err)
 		}
 
 		// method to test & assert
-		v, err := s.ValidateJwt(obj.Token)
+		v, err := s.Decode(obj.Token)
 		if err != nil {
 			t.Errorf("exception validating generated token jwt %s", err)
 		}

@@ -1,0 +1,138 @@
+<div class="card mt-3">
+  <p-table
+    #dt1
+    selectionMode="single"
+    dataKey="id"
+    [loading]="schedules().state === state.LOADING"
+    [value]="schedules().data || []"
+    [paginator]="true"
+    [first]="first"
+    [rows]="rows"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+    [rowsPerPageOptions]="[5, 10]"
+  >
+    <ng-template #caption>
+      <div class="flex items-center justify-between">
+        <p-floatlabel variant="on">
+          <p-date-picker
+            (onSelect)="
+              dateClicked.emit({
+                staff_id: staffId(),
+                date: $event,
+                page: (first = 0),
+                size: rows
+              });
+              date = $event
+            "
+            size="small"
+            id="over_label"
+            inputId="over_label"
+            showIcon
+            iconDisplay="input"
+            view="month"
+            dateFormat="mm/yy"
+          />
+          <label for="over_label">Date</label>
+        </p-floatlabel>
+        <p-button type="button" icon="pi pi-refresh" (click)="first = 0" text />
+      </div>
+    </ng-template>
+
+    <ng-template #header>
+      <tr>
+        @for (h of thead; track h) {
+          <th style="width: 25%">{{ h }}</th>
+        }
+        <th style="width: 5rem"></th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-model>
+      <tr>
+        <td>{{ fm(model.start) }}</td>
+        <td>{{ fm(model.end) }}</td>
+        <td>
+          <p-badge
+            [value]="model.is_visible"
+            [severity]="model.is_visible ? 'success' : 'danger'"
+          />
+        </td>
+        <td>
+          <p-badge
+            [value]="model.is_reoccurring"
+            [severity]="model.is_reoccurring ? 'success' : 'danger'"
+          />
+        </td>
+        <td>
+          <div class="flex gap-1">
+            <p-button
+              (onClick)="
+                selectedSchedule = model;
+                toggleEditSchedule = !toggleEditSchedule
+              "
+              icon="pi pi-pencil"
+              type="button"
+              severity="secondary"
+              rounded
+            />
+
+            <div>
+              <p-confirm-popup />
+              <p-button
+                (onClick)="delete($event, model.schedule_id, staffId())"
+                icon="pi pi-trash"
+                type="button"
+                severity="secondary"
+                rounded
+              />
+            </div>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #paginatorleft>
+      <p-button
+        (onClick)="toggleCreateSchedule = !toggleCreateSchedule"
+        type="button"
+        icon="pi pi-plus"
+        text
+      />
+    </ng-template>
+  </p-table>
+</div>
+
+@defer {
+  <p-dialog
+    header="New Schedule"
+    [modal]="true"
+    [(visible)]="toggleCreateSchedule"
+    styleClass="h-[40rem] w-[40rem]"
+  >
+    <app-create-schedule
+      [staffId]="staffId()"
+      [loadingState]="createScheduleLoadingState()"
+      (createScheduleEmitter)="createScheduleEmitter.emit($event)"
+    />
+  </p-dialog>
+}
+
+@defer {
+  <p-dialog
+    header="Edit Schedule"
+    [modal]="true"
+    [(visible)]="toggleEditSchedule"
+    [style]="{ width: '40rem' }"
+  >
+    @if (selectedSchedule; as s) {
+      <app-edit-schedule
+        [schedule]="s"
+        [staffId]="staffId()"
+        [loadingState]="updateScheduleLoadingState()"
+        (updateScheduleEmitter)="updateScheduleEmitter.emit($event)"
+      />
+    }
+  </p-dialog>
+}
