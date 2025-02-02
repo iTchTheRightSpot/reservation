@@ -93,6 +93,7 @@
         [staffId]="staff().user_id"
         [role]="srp.role"
         [permissions]="permissions(srp)"
+        (emitter)="addPermissionsEmitter.emit($event)"
       />
     }
   </p-dialog>
