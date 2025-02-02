@@ -15,6 +15,7 @@ type SecretVariables struct {
 	PublicKeyPath      string
 	CookieParam        *utils.CookieParam
 	FrontEnd           string
+	ApiPrefix          string
 }
 
 func (dep *SecretVariables) Config() *SecretVariables {
@@ -32,5 +33,6 @@ func (dep *SecretVariables) Config() *SecretVariables {
 			CookieDomain: cmp.Or(os.Getenv("COOKIEDOMAIN"), "localhost"),
 			SameSite:     http.SameSiteLaxMode,
 		},
+		ApiPrefix: "/api/v1/",
 	}
 }

@@ -51,53 +51,67 @@ import {
             <p-tag [value]="'Locked'" [severity]="'danger'" />
           }
         </p-tab>
-        <p-tab value="1">Roles & Permissions</p-tab>
-        <p-tab value="2">Services</p-tab>
-        <p-tab value="3">Schedules</p-tab>
+
+        <p-tab value="1" #rolePermission>Roles & Permissions</p-tab>
+
+        <p-tab value="2" #services>Services</p-tab>
+
+        <p-tab value="3" #schedules>Schedules</p-tab>
       </p-tablist>
       <p-tabpanels>
         <p-tabpanel value="0">
           <app-view-staff [staff]="staff()" />
         </p-tabpanel>
+
         <p-tabpanel value="1">
-          <app-role
-            [staff]="staff()"
-            [createRolesAndPermissionState]="createRolesAndPermissionState()"
-            [addPermissionsState]="addPermissionsState()"
-            [deleteRoleState]="deleteRoleState()"
-            [deletePermissionState]="deletePermissionState()"
-            (createRolesAndPermissionsEmitter)="
+          @defer (on interaction(rolePermission)) {
+            <app-role
+              [staff]="staff()"
+              [createRolesAndPermissionState]="createRolesAndPermissionState()"
+              [addPermissionsState]="addPermissionsState()"
+              [deleteRoleState]="deleteRoleState()"
+              [deletePermissionState]="deletePermissionState()"
+              (createRolesAndPermissionsEmitter)="
               createRolesAndPermissionsEmitter.emit($event)
             "
-            (addPermissionsEmitter)="addPermissionsEmitter.emit($event)"
-            (deleteRoleEmitter)="deleteRoleEmitter.emit($event)"
-            (deletePermissionEmitter)="deletePermissionEmitter.emit($event)"
-          />
+              (addPermissionsEmitter)="addPermissionsEmitter.emit($event)"
+              (deleteRoleEmitter)="deleteRoleEmitter.emit($event)"
+              (deletePermissionEmitter)="deletePermissionEmitter.emit($event)"
+            />
+          } @loading {
+
+          }
         </p-tabpanel>
+
         <p-tabpanel value="2">
-          <app-link-service
-            [allServices]="allServices()"
-            [linkServiceLoadingState]="linkServiceToStaffLoadingState()"
-            [staffId]="staff().user_id"
-            [staffServices]="servicesByStaff()"
-            [deLinkServiceFromStaffState]="deLinkServiceFromStaffState()"
-            (deLinkServiceFromStaffEmitter)="
+          @defer (on interaction(services)) {
+            <app-link-service
+              [allServices]="allServices()"
+              [linkServiceLoadingState]="linkServiceToStaffLoadingState()"
+              [staffId]="staff().user_id"
+              [staffServices]="servicesByStaff()"
+              [deLinkServiceFromStaffState]="deLinkServiceFromStaffState()"
+              (deLinkServiceFromStaffEmitter)="
               deLinkServiceFromStaffEmitter.emit($event)
             "
-            (linkServiceToStaffEmitter)="linkServiceToStaffEmitter.emit($event)"
-          />
+              (linkServiceToStaffEmitter)="linkServiceToStaffEmitter.emit($event)"
+            />
+          }
         </p-tabpanel>
+
         <p-tabpanel value="3">
-          <app-staff-schedule
-            [staffId]="staff().user_id"
-            [schedules]="staffSchedules()"
-            [createScheduleLoadingState]="createScheduleLoadingState()"
-            [updateScheduleLoadingState]="updateScheduleLoadingState()"
-            (dateClicked)="schedulesEmitter.emit($event)"
-            (createScheduleEmitter)="createScheduleEmitter.emit($event)"
-            (updateScheduleEmitter)="updateScheduleEmitter.emit($event)"
-            (deleteScheduleEmitter)="deleteScheduleEmitter.emit($event)"
-          />
+          @defer (on interaction(schedules)) {
+            <app-staff-schedule
+              [staffId]="staff().user_id"
+              [schedules]="staffSchedules()"
+              [createScheduleLoadingState]="createScheduleLoadingState()"
+              [updateScheduleLoadingState]="updateScheduleLoadingState()"
+              (dateClicked)="schedulesEmitter.emit($event)"
+              (createScheduleEmitter)="createScheduleEmitter.emit($event)"
+              (updateScheduleEmitter)="updateScheduleEmitter.emit($event)"
+              (deleteScheduleEmitter)="deleteScheduleEmitter.emit($event)"
+            />
+          }
         </p-tabpanel>
       </p-tabpanels>
     </p-tabs>

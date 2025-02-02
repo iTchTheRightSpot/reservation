@@ -28,21 +28,22 @@ func NewHandlerRegistry(db *sql.DB, l utils.ILogger, e *config.SecretVariables) 
 		env:  e,
 		mux:  http.NewServeMux(),
 		ss:   s,
-		ware: &middleware.Middleware{Logger: l, Auth: s.JwtService, Param: e.CookieParam},
+		ware: &middleware.Middleware{Logger: l, Auth: s.JwtService, Param: e.CookieParam, ApiPrefix: e.ApiPrefix},
 	}
 }
 
 func (dep *HandlerRegistry) Initialize() http.Handler {
 	v1 := http.NewServeMux()
 
-	// register handlers
 	schedule.NewScheduleHandler(v1, dep.ware, dep.lg, dep.ss.ScheduleService).Register()
 	service_type.NewServiceTypeHandler(v1, dep.lg, dep.ss.ServiceImpl, dep.ware).Register()
 	staff.NewStaffHandler(v1, dep.ware, dep.lg, dep.ss.StaffService).Register()
 	reservation.NewReservationHandler(v1, dep.lg, dep.ware, dep.ss.ReservationService).Register()
 	account.NewAccountHandler(v1, dep.ware, dep.lg, dep.env, dep.ss.PasswordService, dep.ss.AccountService).Register()
 
-	dep.mux.Handle("/api/v1/", http.StripPrefix("/api/v1", v1))
+	dep.mux.Handle(dep.env.ApiPrefix, http.StripPrefix(dep.env.ApiPrefix[:len(dep.env.ApiPrefix)-1], v1))
+
+	dep.mux.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./ui/dist/ui/browser"))))
 
 	return dep.ware.Initialize(dep.mux)
 }

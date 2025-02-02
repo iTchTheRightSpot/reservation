@@ -21,6 +21,11 @@ jobs:
         with:
           go-version: '1.23.x'
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
       - name: Docker compose up
         run: docker compose up -d
 
@@ -28,6 +33,9 @@ jobs:
         run: |
           openssl genrsa -out keys/private.key 2048
           openssl rsa -in keys/private.key -pubout -out keys/public.key
+
+      - name: NPM install
+        run: cd ui/ && npm i && npm run build --verbose --configuration=production
 
       - name: Install dependencies
         run: go get .

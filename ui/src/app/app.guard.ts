@@ -5,12 +5,9 @@ import { CORE_ROUTE } from './app.routes';
 import { LOGIN_ROUTE } from '@pages/core/core.routes';
 
 export const crmGuard = async () => {
-  const usr = inject(AuthService).activeUser();
-
-  if (!usr) {
+  if (!inject(AuthService).activeUser()) {
     await inject(Router).navigate([`${CORE_ROUTE}/${LOGIN_ROUTE}`]);
     return false;
   }
-
   return true;
 };

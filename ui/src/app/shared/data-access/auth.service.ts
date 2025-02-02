@@ -65,11 +65,7 @@ export class AuthService {
             tap(o => {
               if (o && Object.keys(o).length > 0) this.cache.next(o);
             }),
-            catchError(e => {
-              const m = e.error ? e.error.message : e.message;
-              console.error(m);
-              return of(m);
-            })
+            catchError(e => of(e))
           );
 
   readonly activeUser = toSignal(

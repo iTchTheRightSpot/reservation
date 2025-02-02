@@ -9,6 +9,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"net/http"
+	"os"
 	"reflect"
 	"slices"
 	"strings"
@@ -26,14 +27,15 @@ func (w *wrappedWriter) WriteHeader(statusCode int) {
 }
 
 type Middleware struct {
-	Logger utils.ILogger
-	Auth   auth.IJwtService
-	Param  *utils.CookieParam
+	Logger    utils.ILogger
+	Auth      auth.IJwtService
+	Param     *utils.CookieParam
+	ApiPrefix string
 }
 
 func (dep *Middleware) Initialize(router *http.ServeMux) http.Handler {
-	return dep.logging(dep.timeout(router))
-	//return dep.logging(router)
+	return dep.logging(dep.timeout(dep.redirect(router)))
+	//return dep.logging(dep.redirect(router))
 }
 
 // https://stackoverflow.com/questions/27234861/correct-way-of-getting-clients-ip-addresses-from-http-request
@@ -86,6 +88,19 @@ func (dep *Middleware) logging(next http.Handler) http.Handler {
 			"[Response] ID: %s | IP: %s | Status: %d | Method: %s | Path: %s | Duration: %v seconds",
 			id, ip, obj.status, r.Method, r.URL.Path, end.Sub(start).Seconds(),
 		))
+	})
+}
+
+func (dep *Middleware) redirect(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasPrefix(r.URL.Path, dep.ApiPrefix) {
+			_, err := os.Stat("./ui/dist/ui/browser" + r.URL.Path)
+			if os.IsNotExist(err) {
+				http.ServeFile(w, r, "./ui/dist/ui/browser/index.html")
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
 	})
 }
 

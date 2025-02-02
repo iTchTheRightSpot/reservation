@@ -73,45 +73,45 @@
   </p-table>
 </div>
 
-@defer {
-  <p-drawer
-    header="Staff Detail"
-    [(visible)]="toggleStaffDetails"
-    position="left"
-    styleClass="!w-full md:!w-[40rem] lg:!w-[60rem]"
-  >
-    @if (selectedStaff; as sel) {
-      <app-staff-detail-holder
-        [staff]="sel"
-        [allServices]="allServices()"
-        [servicesByStaff]="servicesByStaff()"
-        [linkServiceToStaffLoadingState]="serviceToStaffState().state"
-        [createRolesAndPermissionState]="createRolesAndPermissions().state"
-        [deLinkServiceFromStaffState]="deLinkServiceFromStaffState().state"
-        [staffSchedules]="staffSchedules()"
-        [createScheduleLoadingState]="createSchedule().state"
-        [updateScheduleLoadingState]="updateSchedule().state"
-        [deleteScheduleState]="deleteSchedule().state"
-        [addPermissionsState]="addPermissionsState().state"
-        [deleteRoleState]="deleteRoleState().state"
-        [deletePermissionState]="deletePermissionState().state"
-        (linkServiceToStaffEmitter)="linkServiceToStaffEmitter.next($event)"
-        (deLinkServiceFromStaffEmitter)="
+<p-drawer
+  header="Staff Detail"
+  [(visible)]="toggleStaffDetails"
+  position="left"
+  styleClass="!w-full md:!w-[40rem] lg:!w-[60rem]"
+>
+  @defer (when toggleStaffDetails && selectedStaff !== undefined) {
+    <app-staff-detail-holder
+      [staff]="selectedStaff!!"
+      [allServices]="allServices()"
+      [servicesByStaff]="servicesByStaff()"
+      [linkServiceToStaffLoadingState]="serviceToStaffState().state"
+      [createRolesAndPermissionState]="createRolesAndPermissions().state"
+      [deLinkServiceFromStaffState]="deLinkServiceFromStaffState().state"
+      [staffSchedules]="staffSchedules()"
+      [createScheduleLoadingState]="createSchedule().state"
+      [updateScheduleLoadingState]="updateSchedule().state"
+      [deleteScheduleState]="deleteSchedule().state"
+      [addPermissionsState]="addPermissionsState().state"
+      [deleteRoleState]="deleteRoleState().state"
+      [deletePermissionState]="deletePermissionState().state"
+      (linkServiceToStaffEmitter)="linkServiceToStaffEmitter.next($event)"
+      (deLinkServiceFromStaffEmitter)="
           deLinkServiceFromStaffEmitter.next($event)
         "
-        (schedulesEmitter)="staffSchedulesEmitter.next($event)"
-        (createScheduleEmitter)="createScheduleEmitter.next($event)"
-        (updateScheduleEmitter)="updateScheduleEmitter.next($event)"
-        (deleteScheduleEmitter)="deleteScheduleEmitter.next($event)"
-        (createRolesAndPermissionsEmitter)="
+      (schedulesEmitter)="staffSchedulesEmitter.next($event)"
+      (createScheduleEmitter)="createScheduleEmitter.next($event)"
+      (updateScheduleEmitter)="updateScheduleEmitter.next($event)"
+      (deleteScheduleEmitter)="deleteScheduleEmitter.next($event)"
+      (createRolesAndPermissionsEmitter)="
           createRolesAndPermissionsEmitter.next($event)
         "
-        (addPermissionsEmitter)="addPermissionsEmitter.next($event)"
-        (deleteRoleEmitter)="deleteRoleEmitter.next($event)"
-        (deletePermissionEmitter)="deletePermissionEmitter.next($event)"
-      />
-    } @else {
-      invalid staff selected
-    }
-  </p-drawer>
-}
+      (addPermissionsEmitter)="addPermissionsEmitter.next($event)"
+      (deleteRoleEmitter)="deleteRoleEmitter.next($event)"
+      (deletePermissionEmitter)="deletePermissionEmitter.next($event)"
+    />
+  } @loading {
+    loading component...
+  } @placeholder {
+    place holder component
+  }
+</p-drawer>

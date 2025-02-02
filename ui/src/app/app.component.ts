@@ -22,20 +22,18 @@ export class AppComponent {
 
   protected readonly toast$ = inject(ToastService).toast$.pipe(
     tap(obj => {
-      if (obj) {
-        if (obj.state === ToastEnum.ERROR)
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: obj.message
-          });
-        else if (obj.state === ToastEnum.SUCCESS)
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: obj.message
-          });
-      }
+      if (obj.state === ToastEnum.ERROR)
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: obj.message
+        });
+      else if (obj.state === ToastEnum.SUCCESS)
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: obj.message
+        });
     })
   );
 }
