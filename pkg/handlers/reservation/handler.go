@@ -178,13 +178,13 @@ func (dep *ReservationHandler) bookings(w http.ResponseWriter, r *http.Request) 
 		dep.logger.Error("timezone missing")
 		utils.ErrorResponse(w, &utils.BadRequestError{Message: "timezone missing"})
 		return
-	} else {
-		location, err = time.LoadLocation(zone)
-		if err != nil {
-			dep.logger.Error(err.Error())
-			utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
-			return
-		}
+	}
+
+	location, err = time.LoadLocation(zone)
+	if err != nil {
+		dep.logger.Error(err.Error())
+		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		return
 	}
 
 	p := model.CRMBookingsPayload{
