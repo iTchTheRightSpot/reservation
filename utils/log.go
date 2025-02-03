@@ -28,7 +28,6 @@ type logger struct {
 
 func NewLogger(timezone string) (ILogger, error) {
 	if utc, loc, err := dateInTimezone(timezone); err != nil {
-		log.Fatalf("failed to instantiate logger %v", err)
 		return nil, err
 	} else {
 		return &logger{time: utc, location: loc}, nil
