@@ -138,6 +138,7 @@ func (dep *AccountHandler) logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// max-age takes higher precedence to expires https://stackoverflow.com/questions/70715904/golang-cookie-max-age-vs-expire
+	cookie.Domain = dep.env.CookieParam.CookieDomain
 	cookie.MaxAge = -1 // expire now
 	cookie.Path = "/"
 	cookie.HttpOnly = true

@@ -163,6 +163,7 @@ func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 			if o, err := dep.Auth.Encode(obj, utils.TwoDaysInSeconds); err != nil {
 				dep.Logger.Error("failed to refresh token", err.Error())
 			} else {
+				cookie.Domain = dep.Param.CookieDomain
 				cookie.Value = o.Token
 				cookie.Expires = o.ExpireAt
 				cookie.Path = "/"
@@ -170,7 +171,6 @@ func (dep *Middleware) Authentication(next http.Handler) http.Handler {
 				cookie.SameSite = dep.Param.SameSite
 				cookie.Secure = dep.Param.CookieSecure
 				http.SetCookie(w, cookie)
-
 				dep.Logger.Log("refreshed jwt")
 			}
 		}
