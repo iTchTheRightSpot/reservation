@@ -16,6 +16,7 @@ type SecretVariables struct {
 	CookieParam        *utils.CookieParam
 	FrontEnd           string
 	ApiPrefix          string
+	SymmetricKey       string
 }
 
 func (dep *SecretVariables) Config() *SecretVariables {
@@ -27,6 +28,7 @@ func (dep *SecretVariables) Config() *SecretVariables {
 		PrivateKeyPath:     cmp.Or(os.Getenv("JWT_PRIV_PATH"), "./keys/private.key"),
 		PublicKeyPath:      cmp.Or(os.Getenv("JWT_PUB_PATH"), "./keys/public.key"),
 		FrontEnd:           cmp.Or(os.Getenv("FRONTEND"), "http://localhost:4200"),
+		SymmetricKey:       cmp.Or(os.Getenv("JWT_SECRET"), "jwt-secret"),
 		CookieParam: &utils.CookieParam{
 			CookieName:   cmp.Or(os.Getenv("COOKIENAME"), "RESERVATION_COOKIE"),
 			CookieSecure: profile == "production",

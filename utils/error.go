@@ -60,12 +60,24 @@ func (e *AccessDeniedError) Error() string {
 	return e.Message
 }
 
+type ServerError struct {
+	Message string
+}
+
+func (e *ServerError) Error() string {
+	if e.Message == "" {
+		return "server error"
+	}
+	return e.Message
+}
+
 func errorStatus(err error) int {
 	var notFoundError *NotFoundError
 	var insertionError *InsertionError
 	var badRequestError *BadRequestError
 	var authenticationError *AuthenticationError
 	var accessDeniedError *AccessDeniedError
+	var serverError *ServerError
 	switch {
 	case errors.As(err, &notFoundError):
 		return http.StatusNotFound
@@ -77,6 +89,8 @@ func errorStatus(err error) int {
 		return http.StatusUnauthorized
 	case errors.As(err, &accessDeniedError):
 		return http.StatusForbidden
+	case errors.As(err, &serverError):
+		return http.StatusInternalServerError
 	default:
 		return http.StatusInternalServerError
 	}

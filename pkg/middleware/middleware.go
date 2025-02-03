@@ -27,15 +27,16 @@ func (w *wrappedWriter) WriteHeader(statusCode int) {
 }
 
 type Middleware struct {
-	Logger    utils.ILogger
-	Auth      auth.IJwtService
-	Param     *utils.CookieParam
-	ApiPrefix string
+	Logger     utils.ILogger
+	Auth       auth.IJwtService
+	Param      *utils.CookieParam
+	ApiPrefix  string
+	FileSystem http.FileSystem
 }
 
 func (dep *Middleware) Initialize(router *http.ServeMux) http.Handler {
-	return dep.logging(dep.timeout(dep.redirect(router)))
-	//return dep.logging(dep.redirect(router))
+	//return dep.logging(dep.timeout(dep.redirect(router)))
+	return dep.logging(dep.redirect(router))
 }
 
 // https://stackoverflow.com/questions/27234861/correct-way-of-getting-clients-ip-addresses-from-http-request
@@ -94,12 +95,39 @@ func (dep *Middleware) logging(next http.Handler) http.Handler {
 func (dep *Middleware) redirect(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !strings.HasPrefix(r.URL.Path, dep.ApiPrefix) {
-			_, err := os.Stat("./ui/dist/ui/browser" + r.URL.Path)
+			d, err := dep.FileSystem.Open(r.URL.Path)
 			if os.IsNotExist(err) {
-				http.ServeFile(w, r, "./ui/dist/ui/browser/index.html")
+				html, err := dep.FileSystem.Open("index.html")
+				if err != nil {
+					next.ServeHTTP(w, r)
+					return
+				}
+
+				defer func(file http.File) {
+					if err = file.Close(); err != nil {
+						dep.Logger.Error(err.Error())
+					}
+				}(html)
+
+				stat, err := html.Stat()
+				if err == nil {
+					http.ServeContent(w, r, stat.Name(), stat.ModTime(), html)
+					return
+				}
+			}
+
+			if err != nil {
+				http.FileServer(dep.FileSystem).ServeHTTP(w, r)
 				return
 			}
+
+			defer func(d http.File) {
+				if err = d.Close(); err != nil {
+					dep.Logger.Error(err.Error())
+				}
+			}(d)
 		}
+
 		next.ServeHTTP(w, r)
 	})
 }

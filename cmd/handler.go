@@ -19,16 +19,18 @@ type HandlerRegistry struct {
 	mux  *http.ServeMux
 	ss   *serviceRegistry
 	ware *middleware.Middleware
+	f    http.FileSystem
 }
 
-func NewHandlerRegistry(db *sql.DB, l utils.ILogger, e *config.SecretVariables) *HandlerRegistry {
+func NewHandlerRegistry(db *sql.DB, l utils.ILogger, e *config.SecretVariables, f http.FileSystem) *HandlerRegistry {
 	s := newServiceRegistry(db, l, e)
 	return &HandlerRegistry{
+		f:    f,
 		lg:   l,
 		env:  e,
 		mux:  http.NewServeMux(),
 		ss:   s,
-		ware: &middleware.Middleware{Logger: l, Auth: s.JwtService, Param: e.CookieParam, ApiPrefix: e.ApiPrefix},
+		ware: &middleware.Middleware{Logger: l, Auth: s.JwtService, Param: e.CookieParam, ApiPrefix: e.ApiPrefix, FileSystem: f},
 	}
 }
 
@@ -43,7 +45,7 @@ func (dep *HandlerRegistry) Initialize() http.Handler {
 
 	dep.mux.Handle(dep.env.ApiPrefix, http.StripPrefix(dep.env.ApiPrefix[:len(dep.env.ApiPrefix)-1], v1))
 
-	dep.mux.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./ui/dist/ui/browser"))))
+	dep.mux.Handle("/", http.StripPrefix("/", http.FileServer(dep.f)))
 
 	return dep.ware.Initialize(dep.mux)
 }

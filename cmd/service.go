@@ -32,7 +32,8 @@ func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *
 	a := stores.NewAdapters(l, s, stores.NewTransactionProvider(l, s))
 	m := mail.NewMailService(l, e)
 	p := auth.NewPasswordService(l)
-	j := auth.NewJwtService(l, e)
+	j := auth.NewJwtServiceAsymmetric(l, e)
+	//j := auth.NewJwtServiceSymmetric(l, e)
 
 	staffCache := pkg.NewInMemoryCache[string, []*staffModel.AllStaffsEntity](l, 10, 10)
 	return &serviceRegistry{
