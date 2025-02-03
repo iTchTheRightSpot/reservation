@@ -19,7 +19,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o salon
 
 # production build
 FROM scratch
-#FROM gcr.io/distroless/static-debian12
 
 WORKDIR /app
 

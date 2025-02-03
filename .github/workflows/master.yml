@@ -27,7 +27,15 @@ jobs:
           node-version: '20.x'
 
       - name: Docker compose up
-        run: docker run --name pg -p 5432:5432 --expose 5432 -e POSTGRES_DB=reservation_db POSTGRES_USER=reservation POSTGRES_PASSWORD=reservation -d postgres:15.6
+        run: |
+          docker run --name pg \
+          -p 5432:5432 \
+          --expose 5432 \
+          -e POSTGRES_DB=reservation_db \
+          -e POSTGRES_USER=reservation \
+          -e POSTGRES_PASSWORD=reservation \
+          -d postgres:15.6
+          
 
       - name: Env
         run: |
