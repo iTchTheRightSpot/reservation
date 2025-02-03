@@ -5,6 +5,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"net/http"
 	"os"
+	"regexp"
 )
 
 type SecretVariables struct {
@@ -32,9 +33,18 @@ func (dep *SecretVariables) Config() *SecretVariables {
 		CookieParam: &utils.CookieParam{
 			CookieName:   cmp.Or(os.Getenv("COOKIENAME"), "RESERVATION_COOKIE"),
 			CookieSecure: profile == "production",
-			CookieDomain: cmp.Or(os.Getenv("COOKIEDOMAIN"), "localhost"),
+			CookieDomain: cookieDomain(),
 			SameSite:     http.SameSiteLaxMode,
 		},
 		ApiPrefix: "/api/v1/",
 	}
+}
+
+func cookieDomain() string {
+	val := cmp.Or(os.Getenv("COOKIEDOMAIN"), "localhost")
+	if val == "localhost" {
+		return val
+	}
+	// regex https://docs.spring.io/spring-session/reference/guides/java-custom-cookie.html
+	return regexp.MustCompile(`^.+?\.(\w+\.[a-z]+)$`).FindStringSubmatch(val)[1]
 }
