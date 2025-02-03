@@ -4,7 +4,7 @@ services:
     restart: always
     container_name: pg
     volumes:
-      - res-db-data:/var/lib/postgresql/data
+      - pg-data:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: reservation_db
       POSTGRES_USER: reservation
@@ -37,4 +37,4 @@ services:
       - ./keys:/app/keys
 
 volumes:
-  res-db-data:
+  pg-data:
