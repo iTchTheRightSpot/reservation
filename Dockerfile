@@ -15,13 +15,13 @@ WORKDIR /app
 COPY --from=frontend /app /app
 RUN go mod download
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o salon
+RUN CGO_ENABLED=0 go build -o salon
 
 # production build
-FROM scratch
+FROM gcr.io/distroless/static-debian12
 
-WORKDIR /app
+WORKDIR /
 
-COPY --from=api /app/salon /app/salon
+COPY --from=api /app/salon /salon
 
-CMD ["/app/salon"]
+CMD ["/salon"]

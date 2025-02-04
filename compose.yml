@@ -21,6 +21,7 @@ services:
 
 #  api:
 #    build: .
+#    image: 'emmanuelu17/salon:latest'
 #    container_name: api
 #    depends_on:
 #      pg:
