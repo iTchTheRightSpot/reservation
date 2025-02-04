@@ -58,7 +58,7 @@ export class NewServiceTypeComponent {
       price: Number(this.form.value.price!!),
       is_visible: this.form.value.is_visible!!.value,
       duration: Number(this.form.value.duration!!),
-      clean_up_time: Number(this.form.value.duration!!)
+      clean_up_time: Number(this.form.value.clean_up_time!!)
     } as CRMServiceTypeModel);
   };
 }
