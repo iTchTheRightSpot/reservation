@@ -37,6 +37,7 @@ import { CreateScheduleModel } from '@crm/pages/account/pages/schedule/schedule.
           Calendar
         </label>
         <p-date-picker
+          appendTo="body"
           styleClass="w-full"
           inputId="calendar-12h"
           formControlName="date_time"
@@ -59,6 +60,7 @@ import { CreateScheduleModel } from '@crm/pages/account/pages/schedule/schedule.
         <div class="w-full flex-auto">
           <label class="font-semibold block mb-2" for="visible">Visible</label>
           <p-select
+            appendTo="body"
             formControlName="is_visible"
             id="visible"
             placeholder="allow customers to book time"
@@ -80,6 +82,7 @@ import { CreateScheduleModel } from '@crm/pages/account/pages/schedule/schedule.
             >Reoccurring</label
           >
           <p-select
+            appendTo="body"
             formControlName="is_reoccurring"
             id="reoccurring"
             placeholder="automatically schedule every week"
