@@ -19,7 +19,6 @@ import { Textarea } from 'primeng/textarea';
 import { DatesService } from '@store/pages/reservation/pages/dates/dates.service';
 import { ConfirmService } from '@store/pages/reservation/pages/confirm/confirm.service';
 import { Subject, switchMap, tap } from 'rxjs';
-import { ConfirmModel } from './confirm.model';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TIMEZONE } from '@root/app.util';
 import { Router } from '@angular/router';
@@ -29,6 +28,7 @@ import { SERVICE_TYPES_ROUTE } from '@store/pages/reservation/reservation.routes
 import { RESERVATION_ROUTE } from '@store/store.routes';
 import { ServiceTypeModel } from '@store/pages/reservation/pages/service-type/service-type.model';
 import { Divider } from 'primeng/divider';
+import { ConfirmModel } from '@shared/data-access/shared.model';
 
 @Component({
   selector: 'app-confirm',
@@ -114,7 +114,7 @@ export class ConfirmComponent {
       name: this.form.controls['name'].value || '',
       email: this.form.controls['email'].value || '',
       description: this.form.controls['description'].value || '',
-      phone: `${this.form.controls['phone'].value}` || '',
+      phone: this.form.controls['phone'].value || '',
       services: state.services?.map(s => s.name.trim()) || [],
       timezone: TIMEZONE,
       time: state.datetime || ''

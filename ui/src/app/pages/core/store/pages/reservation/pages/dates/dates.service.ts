@@ -13,7 +13,7 @@ import {
   tap,
   timer
 } from 'rxjs';
-import { DateModel, DummyDates } from './dates.model';
+import { DateModel, DummyDates } from '@shared/data-access/shared.model';
 import { ApiResponse, ApiState } from '@root/app.model';
 import { Cache } from '@shared/data-access/cache';
 import { err, TIMEZONE } from '@root/app.util';

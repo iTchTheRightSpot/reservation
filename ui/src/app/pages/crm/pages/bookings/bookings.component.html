@@ -146,9 +146,10 @@
 >
   @defer (when toggleNewBookings) {
     <app-create-booking
-      [staffs]="staffs().data || []"
-      [services]="[]"
-      [request]="manualReservation"
+      [services]="manualReservation"
+      [staffs]="staffs()"
+      [datesTimes]="manualReservation"
+      [submissionRequestState]="manualReservation"
     />
   } @loading {
     loading component...

@@ -70,7 +70,7 @@ export class BookingsComponent {
   protected toggleBookingDetails = false;
   protected toggleNewBookings = false;
   protected first = 0;
-  protected rows = 10;
+  protected rows = 5;
   protected readonly apiState = ApiState;
   protected readonly bookingState = BookingStatus;
   protected readonly thead = ['Name', 'From', 'To', 'Status'];

@@ -15,7 +15,7 @@ import {
   tap
 } from 'rxjs';
 import { ApiResponse, ApiState } from '@root/app.model';
-import { DateModel } from '@store/pages/reservation/pages/dates/dates.model';
+import { DateModel } from '@shared/data-access/shared.model';
 import { FormsModule } from '@angular/forms';
 import {
   DatePicker,

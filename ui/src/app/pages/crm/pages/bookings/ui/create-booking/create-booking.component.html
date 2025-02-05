@@ -107,11 +107,49 @@
 
     <div class="w-full grid gap-2 grid-cols-1 md:grid-cols-2">
       <div class="w-full flex flex-col gap-1">
-        <label for="staff_id">Staff</label>
+        <label for="services">Service types</label>
+        <p-multi-select
+          (onChange)="
+            staffEmitter.emit($event.value);
+            form.controls['services'].invalid
+              ? form.controls['staff_id'].disable()
+              : form.controls['staff_id'].enable()
+          "
+          id="services"
+          appendTo="body"
+          [loading]="services().state === state.LOADING"
+          [options]="services().data || ['one', 'two', 'three']"
+          formControlName="services"
+          placeholder="select services"
+          styleClass="w-full"
+        />
+
+        @if (
+          form.controls['services'].invalid &&
+          !form.controls['services'].untouched
+        ) {
+          <p-message severity="error" variant="simple" size="small">
+            Please select 1 or more services
+          </p-message>
+        }
+      </div>
+
+      <div class="w-full flex flex-col gap-1">
+        <label for="staff_id">Staffs</label>
         <p-select
           id="staff_id"
           appendTo="body"
-          [options]="staffs()"
+          [loading]="staffs().state === state.LOADING"
+          [options]="staffs().data || []"
+          (onChange)="
+            datesEmitter.emit({
+              staff_id: $event.value.user_id,
+              services: form.controls['services'].value!!
+            });
+            form.controls['staff_id'].invalid
+              ? form.controls['date'].disable()
+              : form.controls['date'].enable()
+          "
           optionLabel="firstname"
           formControlName="staff_id"
           placeholder="select a staff"
@@ -151,54 +189,55 @@
           </p-message>
         }
       </div>
+    </div>
 
-      <div class="w-full flex flex-col gap-1">
-        <label for="services">Service types</label>
-        <p-multi-select
-          id="services"
-          appendTo="body"
-          [options]="services()"
-          formControlName="services"
-          placeholder="select services"
+    <div class="w-full grid gap-2 grid-cols-1 md:grid-cols-2">
+      <div class="w-full flex flex-col">
+        <label for="calendar">Calendar</label>
+        <p-date-picker
+          formControlName="date"
           styleClass="w-full"
+          id="calendar"
+          placeholder="select a date"
+          (onSelect)="
+            form.controls['date'].invalid
+              ? form.controls['date_time'].disable()
+              : form.controls['date_time'].enable()
+          "
+          [minDate]="today"
+          [showIcon]="true"
+          inputId="buttondisplay"
+          [showOnFocus]="false"
         />
-
         @if (
-          form.controls['services'].invalid &&
-          !form.controls['services'].untouched
+          form.controls['date'].invalid && !form.controls['date'].untouched
         ) {
           <p-message severity="error" variant="simple" size="small">
-            Please select 1 or more services
+            Date is required
           </p-message>
         }
       </div>
-    </div>
 
-    <div class="w-full">
-      <p-tabs value="0">
-        <p-tablist>
-          <p-tab value="0">Valid times</p-tab>
-          <p-tab value="1">Manual times</p-tab>
-        </p-tablist>
-
-        <p-tabpanels>
-          <p-tabpanel value="0">
-            <p>
-              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ad
-              delectus exercitationem nam nemo nostrum officiis perspiciatis
-              porro possimus repellat voluptas?
-            </p>
-          </p-tabpanel>
-
-          <p-tabpanel value="1">
-            <p>
-              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ad
-              delectus exercitationem nam nemo nostrum officiis perspiciatis
-              porro possimus repellat voluptas?
-            </p>
-          </p-tabpanel>
-        </p-tabpanels>
-      </p-tabs>
+      <div class="w-full flex flex-col gap-1">
+        <label for="date_time">Dates</label>
+        <p-select
+          id="date_time"
+          appendTo="body"
+          [options]="[]"
+          formControlName="date_time"
+          placeholder="select time"
+          class="w-full"
+          [loading]="datesTimes().state === state.LOADING"
+        />
+        @if (
+          form.controls['date_time'].invalid &&
+          !form.controls['date_time'].untouched
+        ) {
+          <p-message severity="error" variant="simple" size="small">
+            Please select a time
+          </p-message>
+        }
+      </div>
     </div>
   </div>
 
@@ -206,11 +245,15 @@
 
   <div class="w-full">
     <p-button
+      type="submit"
       size="large"
       styleClass="text-right w-full"
-      [disabled]="form.invalid || request().state === state.LOADING"
+      [disabled]="
+        form.invalid || submissionRequestState().state === state.LOADING
+      "
+      (submit)="submit()"
     >
-      @if (request().state === state.LOADING) {
+      @if (submissionRequestState().state === state.LOADING) {
         <i class="pi pi-spin pi-spinner" style="font-size: 1.5rem"></i>
       } @else {
         Book appointment

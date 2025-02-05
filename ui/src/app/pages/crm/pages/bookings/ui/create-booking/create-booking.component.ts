@@ -2,7 +2,8 @@ import {
   ChangeDetectionStrategy,
   Component,
   inject,
-  input
+  input,
+  output
 } from '@angular/core';
 import { CRMStaffModel } from '@crm/pages/staff/pages/all/crm-staff.model';
 import { Button } from 'primeng/button';
@@ -22,8 +23,10 @@ import { ApiResponse, ApiState } from '@root/app.model';
 import { Select } from 'primeng/select';
 import { MultiSelect } from 'primeng/multiselect';
 import { Avatar } from 'primeng/avatar';
-import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { Divider } from 'primeng/divider';
+import { DatePicker } from 'primeng/datepicker';
+import { ConfirmModel, DateModel } from '@shared/data-access/shared.model';
+import { TIMEZONE } from '@root/app.util';
 
 @Component({
   selector: 'app-create-booking',
@@ -39,22 +42,24 @@ import { Divider } from 'primeng/divider';
     Select,
     MultiSelect,
     Avatar,
-    Tab,
-    TabList,
-    TabPanel,
-    TabPanels,
-    Tabs,
-    Divider
+    Divider,
+    DatePicker
   ],
   templateUrl: './create-booking.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CreateBookingComponent {
-  staffs = input.required<CRMStaffModel[]>();
-  request = input.required<ApiResponse<any>>();
+  services = input.required<ApiResponse<string[]>>();
+  staffs = input.required<ApiResponse<CRMStaffModel[]>>();
+  datesTimes = input.required<ApiResponse<DateModel[]>>();
+  submissionRequestState = input.required<ApiResponse<any>>();
 
-  services = input.required<string[]>();
+  readonly staffEmitter = output<string[]>();
+  readonly datesEmitter = output<{ services: string[]; staff_id: string }>();
+  readonly submitEmitter = output<ConfirmModel>();
+
   protected readonly state = ApiState;
+  protected readonly today = new Date();
 
   protected readonly form = inject(FormBuilder).group({
     phone: new FormControl<string>('', [
@@ -73,10 +78,32 @@ export class CreateBookingComponent {
       Validators.maxLength(320)
     ]),
     description: new FormControl<string>('', [Validators.maxLength(255)]),
-    staff_id: new FormControl<string | null>(null, [Validators.required]),
     services: new FormControl<string[] | null>(null, [
       Validators.required,
       Validators.min(1)
+    ]),
+    staff_id: new FormControl<string | null>({ value: null, disabled: true }, [
+      Validators.required
+    ]),
+    date: new FormControl<Date | null>({ value: null, disabled: true }, [
+      Validators.required
+    ]),
+    date_time: new FormControl<string | null>({ value: null, disabled: true }, [
+      Validators.required
     ])
   });
+
+  protected readonly submit = () =>
+    this.form.invalid
+      ? {}
+      : this.submitEmitter.emit({
+          staff_id: this.form.controls['staff_id'].value || '',
+          name: this.form.controls['name'].value || '',
+          email: this.form.controls['email'].value || '',
+          description: this.form.controls['description'].value || '',
+          phone: this.form.controls['phone'].value || '',
+          services: this.form.controls['services'].value || [],
+          timezone: TIMEZONE,
+          time: this.form.controls['date_time'].value || ''
+        });
 }
