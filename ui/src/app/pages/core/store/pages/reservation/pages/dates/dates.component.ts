@@ -31,7 +31,7 @@ import { RESERVATION_ROUTE } from '@store/store.routes';
 import { CONFIRM_ROUTE } from '@store/pages/reservation/reservation.routes';
 import { Button } from 'primeng/button';
 import { PrimeTemplate } from 'primeng/api';
-import { TIMEZONE } from '@root/app.util';
+import { filterValidDatesFromDatesInAMonth, TIMEZONE } from '@root/app.util';
 import { CORE_ROUTE } from '@root/app.routes';
 import { STORE_ROUTE } from '@pages/core/core.routes';
 import { SummaryHolderComponent } from '@store/pages/reservation/shared/summary-holder.component';
@@ -106,30 +106,7 @@ export class DatesComponent {
   /**
    * Filters out valid dates from days in the particular month
    * */
-  private readonly filter = (date: Date, valid: DateModel[]) => {
-    const validDates = valid.map(d =>
-      moment.tz(Number(d.date), TIMEZONE).toDate()
-    );
-
-    const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    const daysInMonth = endOfMonth.getDate();
-
-    const allDatesInMonth = Array.from(
-      { length: daysInMonth },
-      (_, index) => new Date(date.getFullYear(), date.getMonth(), index + 1)
-    );
-
-    return allDatesInMonth.filter(
-      date =>
-        !validDates.some(validDate => {
-          return (
-            validDate.getDate() === date.getDate() &&
-            validDate.getMonth() === date.getMonth() &&
-            validDate.getFullYear() === date.getFullYear()
-          );
-        })
-    );
-  };
+  private readonly filter = (date: Date, valid: DateModel[]) => filterValidDatesFromDatesInAMonth(date, valid)
 
   protected readonly crossDates = (date: any, dates: Date[]) =>
     dates.some(

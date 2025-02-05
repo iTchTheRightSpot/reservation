@@ -198,17 +198,28 @@
           formControlName="date"
           styleClass="w-full"
           id="calendar"
+          inputId="buttondisplay"
           placeholder="select a date"
+          [minDate]="today"
+          [showIcon]="true"
+          [showOnFocus]="false"
+          [disabledDates]="invalidDates()"
           (onSelect)="
             form.controls['date'].invalid
               ? form.controls['date_time'].disable()
               : form.controls['date_time'].enable()
           "
-          [minDate]="today"
-          [showIcon]="true"
-          inputId="buttondisplay"
-          [showOnFocus]="false"
-        />
+        >
+          <ng-template pTemplate="date" let-date>
+            @if (crossDates(date, invalidDates())) {
+              <strong class="line-through">{{ date.day }}</strong>
+            } @else if (crossDates(date, validDates())) {
+              <strong>{{ date.day }}</strong>
+            } @else {
+              {{ date.day }}
+            }
+          </ng-template>
+        </p-date-picker>
         @if (
           form.controls['date'].invalid && !form.controls['date'].untouched
         ) {

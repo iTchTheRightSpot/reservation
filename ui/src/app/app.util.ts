@@ -1,6 +1,7 @@
 import * as moment from 'moment-timezone';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ApiResponse, ApiState } from '@root/app.model';
+import { DateModel } from '@shared/data-access/shared.model';
 
 export const err = <T>(e: HttpErrorResponse): ApiResponse<T> => ({
   state: ApiState.ERROR,
@@ -38,3 +39,28 @@ const secImpl = (seconds: number) => {
 };
 
 export const TIMEZONE = moment.tz.guess();
+
+export const filterValidDatesFromDatesInAMonth = (date: Date, valid: DateModel[]) => {
+  const validDates = valid.map(d =>
+    moment.tz(Number(d.date), TIMEZONE).toDate()
+  );
+
+  const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  const daysInMonth = endOfMonth.getDate();
+
+  const allDatesInMonth = Array.from(
+    { length: daysInMonth },
+    (_, index) => new Date(date.getFullYear(), date.getMonth(), index + 1)
+  );
+
+  return allDatesInMonth.filter(
+    date =>
+      !validDates.some(validDate => {
+        return (
+          validDate.getDate() === date.getDate() &&
+          validDate.getMonth() === date.getMonth() &&
+          validDate.getFullYear() === date.getFullYear()
+        );
+      })
+  );
+};

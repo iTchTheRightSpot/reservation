@@ -3,7 +3,10 @@ import {
   Component,
   inject,
   input,
-  output
+  OnChanges,
+  output,
+  signal,
+  SimpleChanges
 } from '@angular/core';
 import { CRMStaffModel } from '@crm/pages/staff/pages/all/crm-staff.model';
 import { Button } from 'primeng/button';
@@ -12,12 +15,7 @@ import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
-import {
-  FormBuilder,
-  FormControl,
-  ReactiveFormsModule,
-  Validators
-} from '@angular/forms';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Textarea } from 'primeng/textarea';
 import { ApiResponse, ApiState } from '@root/app.model';
 import { Select } from 'primeng/select';
@@ -26,7 +24,9 @@ import { Avatar } from 'primeng/avatar';
 import { Divider } from 'primeng/divider';
 import { DatePicker } from 'primeng/datepicker';
 import { ConfirmModel, DateModel } from '@shared/data-access/shared.model';
-import { TIMEZONE } from '@root/app.util';
+import { filterValidDatesFromDatesInAMonth, TIMEZONE } from '@root/app.util';
+import moment from 'moment-timezone';
+import { PrimeTemplate } from 'primeng/api';
 
 @Component({
   selector: 'app-create-booking',
@@ -43,12 +43,13 @@ import { TIMEZONE } from '@root/app.util';
     MultiSelect,
     Avatar,
     Divider,
-    DatePicker
+    DatePicker,
+    PrimeTemplate
   ],
   templateUrl: './create-booking.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CreateBookingComponent {
+export class CreateBookingComponent implements OnChanges {
   services = input.required<ApiResponse<string[]>>();
   staffs = input.required<ApiResponse<CRMStaffModel[]>>();
   datesTimes = input.required<ApiResponse<DateModel[]>>();
@@ -60,6 +61,8 @@ export class CreateBookingComponent {
 
   protected readonly state = ApiState;
   protected readonly today = new Date();
+  protected readonly invalidDates = signal<Date[]>([])
+  protected readonly validDates = signal<Date[]>([]);
 
   protected readonly form = inject(FormBuilder).group({
     phone: new FormControl<string>('', [
@@ -92,6 +95,33 @@ export class CreateBookingComponent {
       Validators.required
     ])
   });
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['dateTimes']) {
+      const dts = this.datesTimes()
+      if (dts.state === ApiState.LOADED && dts.data) {
+        this.validDates.set(
+          dts.data.map(d => moment.tz(Number(d.date), TIMEZONE).toDate())
+        );
+        this.invalidDates.set(
+          this.filter(
+            this.form.controls['date'].value || new Date(),
+            dts.data
+          )
+        );
+      }
+    }
+  }
+
+  protected readonly crossDates = (date: any, dates: Date[]) =>
+    dates.some(
+      d =>
+        d.getDate() === date.day &&
+        d.getMonth() === date.month &&
+        d.getFullYear() === date.year
+    );
+
+  private readonly filter = (date: Date, valid: DateModel[]) => filterValidDatesFromDatesInAMonth(date, valid)
 
   protected readonly submit = () =>
     this.form.invalid
