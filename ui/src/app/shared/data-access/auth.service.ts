@@ -40,9 +40,9 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
 
-  private readonly activeUserCache = new BehaviorSubject<ActiveUser | undefined>(
-    undefined
-  );
+  private readonly activeUserCache = new BehaviorSubject<
+    ActiveUser | undefined
+  >(undefined);
 
   private readonly activeUserRequest = () =>
     !environment.production

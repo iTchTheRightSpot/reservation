@@ -8,7 +8,7 @@ import { LOGIN_ROUTE } from '@pages/core/core.routes';
 import { ToastEnum, ToastService } from '@shared/data-access/toast.service';
 
 // responsible for loading ui and formatting error
-export function loadingInterceptor(
+export function interceptor(
   req: HttpRequest<unknown>,
   next: HttpHandlerFn
 ): Observable<HttpEvent<unknown>> {
@@ -19,7 +19,7 @@ export function loadingInterceptor(
   return next(req).pipe(
     catchError(err => {
       const mess = err.error ? err.error.message : err.message;
-      if (err.status === 401) {
+      if (err.status === 401 && !req.url.endsWith('/api/v1/active')) {
         router.navigate([`${CORE_ROUTE}/${LOGIN_ROUTE}`]);
         toast.message({ message: mess, state: ToastEnum.ERROR });
       }

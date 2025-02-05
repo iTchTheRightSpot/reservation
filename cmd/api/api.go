@@ -18,8 +18,6 @@ type ErpServer struct {
 }
 
 func (s *ErpServer) Serve() {
-	s.Logger.Log("starting server on PORT", s.Env.Address)
-
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{s.Env.FrontEnd},
 		AllowedMethods:   []string{http.MethodPost, http.MethodGet, http.MethodPut, http.MethodDelete, http.MethodOptions},
@@ -43,5 +41,6 @@ func (s *ErpServer) Serve() {
 		Handler:           c.Handler(cmd.NewHandlerRegistry(s.Db, s.Logger, s.Env, open).Initialize()),
 	}
 
+	s.Logger.Log("starting server on PORT", s.Env.Address)
 	s.Logger.Fatal("server stopped ", server.ListenAndServe())
 }

@@ -17,12 +17,11 @@ import {
 } from './bookings.model';
 import { AuthService } from '@shared/data-access/auth.service';
 import { interval, Subject, switchMap, takeWhile, tap } from 'rxjs';
-import { Select, SelectChangeEvent } from 'primeng/select';
+import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { Avatar } from 'primeng/avatar';
 import { Drawer } from 'primeng/drawer';
 import { BookingDetailComponent } from './ui/detail/booking-detail.component';
-import { Dialog } from 'primeng/dialog';
 import { CreateBookingComponent } from './ui/create-booking/create-booking.component';
 import { AsyncPipe } from '@angular/common';
 
@@ -39,7 +38,6 @@ import { AsyncPipe } from '@angular/common';
     Avatar,
     Drawer,
     BookingDetailComponent,
-    Dialog,
     CreateBookingComponent,
     AsyncPipe
   ],
@@ -80,6 +78,7 @@ export class BookingsComponent {
   protected selectedDate: Date | undefined;
   protected selectedStaff: CRMStaffModel | undefined;
   protected selectedBooking: BookingsModel | undefined;
+  protected readonly manualReservation: any = {};
 
   protected readonly staffs = toSignal(this.staffService.staffs(), {
     initialValue: { state: ApiState.LOADING } as ApiResponse<CRMStaffModel[]>

@@ -1,1 +1,220 @@
-<div class="w-full"></div>
+<form
+  [formGroup]="form"
+  class="w-full flex flex-col gap-2 text-center md:text-left"
+>
+  <div class="w-full flex flex-col gap-4">
+    <div class="mb-3 flex flex-col gap-1">
+      <h1 class="font-semibold text-base lg:text-lg">Contact info</h1>
+      <p class="text-sm opacity-50">
+        Fields marked with <strong>*</strong> are required
+      </p>
+    </div>
+
+    <div class="w-full flex flex-col gap-4">
+      <!-- phone -->
+      <div>
+        <p-iconfield styleClass="mb-0">
+          <p-inputicon styleClass="pi pi-phone" />
+          <input
+            class="w-full"
+            type="number"
+            formControlName="phone"
+            pInputText
+            placeholder="(999) 999-9999*"
+          />
+        </p-iconfield>
+        @if (
+          form.controls['phone'].invalid && !form.controls['phone'].untouched
+        ) {
+          <p-message severity="error" variant="simple" size="small">
+            Phone number is required
+          </p-message>
+        }
+      </div>
+
+      <!-- name & email -->
+      <div
+        class="w-full flex flex-col md:flex-row items-center justify-center gap-2"
+      >
+        <div class="w-full">
+          <p-iconfield styleClass="mb-0">
+            <p-inputicon styleClass="pi pi-user" />
+            <input
+              type="text"
+              class="w-full"
+              formControlName="name"
+              pInputText
+              placeholder="name*"
+            />
+          </p-iconfield>
+          @if (
+            form.controls['name'].invalid && !form.controls['name'].untouched
+          ) {
+            <p-message severity="error" variant="simple" size="small">
+              Name is required
+            </p-message>
+          }
+        </div>
+
+        <div class="w-full">
+          <p-iconfield styleClass="mb-0">
+            <p-inputicon styleClass="pi pi-envelope" />
+            <input
+              class="w-full"
+              type="text"
+              formControlName="email"
+              pInputText
+              placeholder="email*"
+            />
+          </p-iconfield>
+          @if (
+            form.controls['email'].invalid && !form.controls['email'].untouched
+          ) {
+            <p-message severity="error" variant="simple" size="small">
+              Email is required
+            </p-message>
+          }
+        </div>
+      </div>
+
+      <!-- description -->
+      <div>
+        <p-floatlabel variant="on">
+          <textarea
+            pTextarea
+            id="over_label"
+            formControlName="description"
+            rows="5"
+            cols="30"
+            style="resize: none"
+            class="h-full w-full"
+          ></textarea>
+          <label for="over_label">appointment note</label>
+        </p-floatlabel>
+      </div>
+    </div>
+  </div>
+
+  <p-divider />
+
+  <div class="w-full flex flex-col gap-4">
+    <div class="flex flex-col gap-1">
+      <h1 class="font-semibold text-base lg:text-lg">Booking info</h1>
+      <p class="text-sm opacity-50">
+        Fields marked with <strong>*</strong> are required
+      </p>
+    </div>
+
+    <div class="w-full grid gap-2 grid-cols-1 md:grid-cols-2">
+      <div class="w-full flex flex-col gap-1">
+        <label for="staff_id">Staff</label>
+        <p-select
+          id="staff_id"
+          appendTo="body"
+          [options]="staffs()"
+          optionLabel="firstname"
+          formControlName="staff_id"
+          placeholder="select a staff"
+          class="w-full"
+        >
+          <ng-template #selectedItem let-sel>
+            <div class="flex items-center gap-2">
+              @if (sel.image_key?.length > 0) {
+                <p-avatar [image]="sel.image_key" class="mr-2" shape="circle" />
+              } @else {
+                <p-avatar icon="pi pi-user" class="mr-2" shape="circle" />
+              }
+              <div>{{ sel.firstname }}</div>
+            </div>
+          </ng-template>
+          <ng-template let-staff #item>
+            <div class="flex items-center gap-2">
+              @if (staff.image_key?.length > 0) {
+                <p-avatar
+                  [image]="staff.image_key"
+                  class="mr-2"
+                  shape="circle"
+                />
+              } @else {
+                <p-avatar icon="pi pi-user" class="mr-2" shape="circle" />
+              }
+              <div>{{ staff.firstname }}</div>
+            </div>
+          </ng-template>
+        </p-select>
+        @if (
+          form.controls['staff_id'].invalid &&
+          !form.controls['staff_id'].untouched
+        ) {
+          <p-message severity="error" variant="simple" size="small">
+            Staff is required
+          </p-message>
+        }
+      </div>
+
+      <div class="w-full flex flex-col gap-1">
+        <label for="services">Service types</label>
+        <p-multi-select
+          id="services"
+          appendTo="body"
+          [options]="services()"
+          formControlName="services"
+          placeholder="select services"
+          styleClass="w-full"
+        />
+
+        @if (
+          form.controls['services'].invalid &&
+          !form.controls['services'].untouched
+        ) {
+          <p-message severity="error" variant="simple" size="small">
+            Please select 1 or more services
+          </p-message>
+        }
+      </div>
+    </div>
+
+    <div class="w-full">
+      <p-tabs value="0">
+        <p-tablist>
+          <p-tab value="0">Valid times</p-tab>
+          <p-tab value="1">Manual times</p-tab>
+        </p-tablist>
+
+        <p-tabpanels>
+          <p-tabpanel value="0">
+            <p>
+              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ad
+              delectus exercitationem nam nemo nostrum officiis perspiciatis
+              porro possimus repellat voluptas?
+            </p>
+          </p-tabpanel>
+
+          <p-tabpanel value="1">
+            <p>
+              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ad
+              delectus exercitationem nam nemo nostrum officiis perspiciatis
+              porro possimus repellat voluptas?
+            </p>
+          </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
+    </div>
+  </div>
+
+  <p-divider />
+
+  <div class="w-full">
+    <p-button
+      size="large"
+      styleClass="text-right w-full"
+      [disabled]="form.invalid || request().state === state.LOADING"
+    >
+      @if (request().state === state.LOADING) {
+        <i class="pi pi-spin pi-spinner" style="font-size: 1.5rem"></i>
+      } @else {
+        Book appointment
+      }
+    </p-button>
+  </div>
+</form>
