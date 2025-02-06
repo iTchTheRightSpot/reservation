@@ -142,15 +142,16 @@
           [loading]="staffs().state === state.LOADING"
           [options]="staffs().data || []"
           (onChange)="
-            datesEmitter.emit({
-              staff_id: $event.value.user_id,
-              services: form.controls['services'].value!!
-            });
             form.controls['staff_id'].invalid
               ? form.controls['date'].disable()
-              : form.controls['date'].enable()
+              : form.controls['date'].enable();
+            datesEmitter.emit({
+              date: form.controls['date'].value!!,
+              staff_id: form.controls['staff_id'].value?.staff_id || '',
+              services: form.controls['services'].value || []
+            })
           "
-          optionLabel="firstname"
+          optionLabel="name"
           formControlName="staff_id"
           placeholder="select a staff"
           class="w-full"
@@ -162,7 +163,7 @@
               } @else {
                 <p-avatar icon="pi pi-user" class="mr-2" shape="circle" />
               }
-              <div>{{ sel.firstname }}</div>
+              <div>{{ sel.name }}</div>
             </div>
           </ng-template>
           <ng-template let-staff #item>
@@ -176,7 +177,7 @@
               } @else {
                 <p-avatar icon="pi pi-user" class="mr-2" shape="circle" />
               }
-              <div>{{ staff.firstname }}</div>
+              <div>{{ staff.name }}</div>
             </div>
           </ng-template>
         </p-select>
@@ -203,12 +204,20 @@
           [minDate]="today"
           [showIcon]="true"
           [showOnFocus]="false"
+          [readonlyInput]="true"
           [disabledDates]="invalidDates()"
           (onSelect)="
+            datesEmitter.emit({
+              date: $event,
+              staff_id: form.controls['staff_id'].value?.staff_id || '',
+              services: form.controls['services'].value || []
+            });
             form.controls['date'].invalid
               ? form.controls['date_time'].disable()
               : form.controls['date_time'].enable()
           "
+          (onMonthChange)="onSelectedCalendarMonth($event)"
+          (onYearChange)="onSelectedCalendarYear($event)"
         >
           <ng-template pTemplate="date" let-date>
             @if (crossDates(date, invalidDates())) {
@@ -259,12 +268,10 @@
       type="submit"
       size="large"
       styleClass="text-right w-full"
-      [disabled]="
-        form.invalid || submissionRequestState().state === state.LOADING
-      "
+      [disabled]="form.invalid || submissionRequestState() === state.LOADING"
       (submit)="submit()"
     >
-      @if (submissionRequestState().state === state.LOADING) {
+      @if (submissionRequestState() === state.LOADING) {
         <i class="pi pi-spin pi-spinner" style="font-size: 1.5rem"></i>
       } @else {
         Book appointment

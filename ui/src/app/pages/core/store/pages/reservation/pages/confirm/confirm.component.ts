@@ -28,7 +28,7 @@ import { SERVICE_TYPES_ROUTE } from '@store/pages/reservation/reservation.routes
 import { RESERVATION_ROUTE } from '@store/store.routes';
 import { ServiceTypeModel } from '@store/pages/reservation/pages/service-type/service-type.model';
 import { Divider } from 'primeng/divider';
-import { ConfirmModel } from '@shared/data-access/shared.model';
+import { ConfirmModel } from '@shared/model/shared.model';
 
 @Component({
   selector: 'app-confirm',

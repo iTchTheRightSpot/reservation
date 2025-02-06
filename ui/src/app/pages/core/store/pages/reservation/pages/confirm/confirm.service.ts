@@ -5,7 +5,7 @@ import { catchError, concat, concatMap, map, of, startWith, timer } from 'rxjs';
 import { ApiResponse, ApiState } from '@root/app.model';
 import { err } from '@root/app.util';
 import { ToastEnum, ToastService } from '@shared/data-access/toast.service';
-import { ConfirmModel } from '@shared/data-access/shared.model';
+import { ConfirmModel } from '@shared/model/shared.model';
 
 @Injectable({
   providedIn: 'root'

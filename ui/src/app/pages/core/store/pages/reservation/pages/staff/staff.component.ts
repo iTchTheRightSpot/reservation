@@ -9,7 +9,6 @@ import { Router } from '@angular/router';
 import { ApiResponse, ApiState } from '@root/app.model';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { StaffService } from './staff.service';
-import { StaffModel } from './staff.model';
 import { Message } from 'primeng/message';
 import { Skeleton } from 'primeng/skeleton';
 import { Button } from 'primeng/button';
@@ -20,6 +19,7 @@ import { DATES_ROUTE } from '@store/pages/reservation/reservation.routes';
 import { Avatar } from 'primeng/avatar';
 import { RadioButton } from 'primeng/radiobutton';
 import { FormsModule } from '@angular/forms';
+import { StaffModel } from '@shared/model/shared.model';
 
 @Component({
   selector: 'app-staff',

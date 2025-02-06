@@ -111,7 +111,10 @@
     <ng-template #paginatorleft>
       <p-button
         type="button"
-        (onClick)="toggleNewBookings = !toggleNewBookings"
+        (onClick)="
+          toggleNewBookings = !toggleNewBookings;
+          servicesEmitter.next(toggleNewBookings)
+        "
         icon="pi pi-plus"
         text
       />
@@ -146,10 +149,13 @@
 >
   @defer (when toggleNewBookings) {
     <app-create-booking
-      [services]="manualReservation"
+      [services]="services()"
       [staffs]="staffs()"
-      [datesTimes]="manualReservation"
-      [submissionRequestState]="manualReservation"
+      [datesTimes]="validDates()"
+      [submissionRequestState]="reserveBooking().state"
+      (staffEmitter)="staffEmitter.next($event)"
+      (datesEmitter)="validDatesEmitter.next($event)"
+      (submitEmitter)="reserveBookingEmitter.next($event)"
     />
   } @loading {
     loading component...

@@ -8,22 +8,34 @@ import {
   signal,
   SimpleChanges
 } from '@angular/core';
-import { CRMStaffModel } from '@crm/pages/staff/pages/all/crm-staff.model';
 import { Button } from 'primeng/button';
 import { FloatLabel } from 'primeng/floatlabel';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
-import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormControl,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
 import { Textarea } from 'primeng/textarea';
 import { ApiResponse, ApiState } from '@root/app.model';
 import { Select } from 'primeng/select';
 import { MultiSelect } from 'primeng/multiselect';
 import { Avatar } from 'primeng/avatar';
 import { Divider } from 'primeng/divider';
-import { DatePicker } from 'primeng/datepicker';
-import { ConfirmModel, DateModel } from '@shared/data-access/shared.model';
+import {
+  DatePicker,
+  DatePickerMonthChangeEvent,
+  DatePickerYearChangeEvent
+} from 'primeng/datepicker';
+import {
+  ConfirmModel,
+  DateModel,
+  StaffModel
+} from '@shared/model/shared.model';
 import { filterValidDatesFromDatesInAMonth, TIMEZONE } from '@root/app.util';
 import moment from 'moment-timezone';
 import { PrimeTemplate } from 'primeng/api';
@@ -51,17 +63,21 @@ import { PrimeTemplate } from 'primeng/api';
 })
 export class CreateBookingComponent implements OnChanges {
   services = input.required<ApiResponse<string[]>>();
-  staffs = input.required<ApiResponse<CRMStaffModel[]>>();
+  staffs = input.required<ApiResponse<StaffModel[]>>();
   datesTimes = input.required<ApiResponse<DateModel[]>>();
-  submissionRequestState = input.required<ApiResponse<any>>();
+  submissionRequestState = input.required<ApiState>();
 
   readonly staffEmitter = output<string[]>();
-  readonly datesEmitter = output<{ services: string[]; staff_id: string }>();
+  readonly datesEmitter = output<{
+    services: string[];
+    staff_id: string;
+    date: Date;
+  }>();
   readonly submitEmitter = output<ConfirmModel>();
 
   protected readonly state = ApiState;
   protected readonly today = new Date();
-  protected readonly invalidDates = signal<Date[]>([])
+  protected readonly invalidDates = signal<Date[]>([]);
   protected readonly validDates = signal<Date[]>([]);
 
   protected readonly form = inject(FormBuilder).group({
@@ -85,10 +101,11 @@ export class CreateBookingComponent implements OnChanges {
       Validators.required,
       Validators.min(1)
     ]),
-    staff_id: new FormControl<string | null>({ value: null, disabled: true }, [
-      Validators.required
-    ]),
-    date: new FormControl<Date | null>({ value: null, disabled: true }, [
+    staff_id: new FormControl<StaffModel | null>(
+      { value: null, disabled: true },
+      [Validators.required]
+    ),
+    date: new FormControl<Date | null>({ value: new Date(), disabled: true }, [
       Validators.required
     ]),
     date_time: new FormControl<string | null>({ value: null, disabled: true }, [
@@ -97,17 +114,16 @@ export class CreateBookingComponent implements OnChanges {
   });
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['dateTimes']) {
-      const dts = this.datesTimes()
+    if (changes['datesTimes']) {
+      const dts = changes['datesTimes'].currentValue as ApiResponse<
+        DateModel[]
+      >;
       if (dts.state === ApiState.LOADED && dts.data) {
         this.validDates.set(
           dts.data.map(d => moment.tz(Number(d.date), TIMEZONE).toDate())
         );
         this.invalidDates.set(
-          this.filter(
-            this.form.controls['date'].value || new Date(),
-            dts.data
-          )
+          this.filter(this.form.controls['date'].value || new Date(), dts.data)
         );
       }
     }
@@ -121,13 +137,34 @@ export class CreateBookingComponent implements OnChanges {
         d.getFullYear() === date.year
     );
 
-  private readonly filter = (date: Date, valid: DateModel[]) => filterValidDatesFromDatesInAMonth(date, valid)
+  private readonly filter = (date: Date, valid: DateModel[]) =>
+    filterValidDatesFromDatesInAMonth(date, valid);
+
+  protected readonly onSelectedCalendarMonth = (
+    event: DatePickerMonthChangeEvent
+  ) => this.monthYearImpl(event.month, event.year);
+
+  protected readonly onSelectedCalendarYear = (
+    event: DatePickerYearChangeEvent
+  ) => this.monthYearImpl(event.month, event.year);
+
+  private readonly monthYearImpl = (
+    month: number | undefined,
+    year: number | undefined
+  ) =>
+    !month || !year
+      ? {}
+      : this.datesEmitter.emit({
+          date: new Date(year, month - 1, 1),
+          staff_id: this.form.controls['staff_id'].value?.staff_id || '',
+          services: this.form.controls['services'].value || []
+        });
 
   protected readonly submit = () =>
     this.form.invalid
       ? {}
       : this.submitEmitter.emit({
-          staff_id: this.form.controls['staff_id'].value || '',
+          staff_id: this.form.controls['staff_id'].value?.staff_id || '',
           name: this.form.controls['name'].value || '',
           email: this.form.controls['email'].value || '',
           description: this.form.controls['description'].value || '',

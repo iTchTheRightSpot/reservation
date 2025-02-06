@@ -1,7 +1,7 @@
 import * as moment from 'moment-timezone';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ApiResponse, ApiState } from '@root/app.model';
-import { DateModel } from '@shared/data-access/shared.model';
+import { DateModel } from '@shared/model/shared.model';
 
 export const err = <T>(e: HttpErrorResponse): ApiResponse<T> => ({
   state: ApiState.ERROR,
@@ -40,7 +40,10 @@ const secImpl = (seconds: number) => {
 
 export const TIMEZONE = moment.tz.guess();
 
-export const filterValidDatesFromDatesInAMonth = (date: Date, valid: DateModel[]) => {
+export const filterValidDatesFromDatesInAMonth = (
+  date: Date,
+  valid: DateModel[]
+) => {
   const validDates = valid.map(d =>
     moment.tz(Number(d.date), TIMEZONE).toDate()
   );

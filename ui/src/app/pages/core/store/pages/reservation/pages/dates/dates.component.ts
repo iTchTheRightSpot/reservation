@@ -15,7 +15,7 @@ import {
   tap
 } from 'rxjs';
 import { ApiResponse, ApiState } from '@root/app.model';
-import { DateModel } from '@shared/data-access/shared.model';
+import { DateModel } from '@shared/model/shared.model';
 import { FormsModule } from '@angular/forms';
 import {
   DatePicker,
@@ -106,7 +106,8 @@ export class DatesComponent {
   /**
    * Filters out valid dates from days in the particular month
    * */
-  private readonly filter = (date: Date, valid: DateModel[]) => filterValidDatesFromDatesInAMonth(date, valid)
+  private readonly filter = (date: Date, valid: DateModel[]) =>
+    filterValidDatesFromDatesInAMonth(date, valid);
 
   protected readonly crossDates = (date: any, dates: Date[]) =>
     dates.some(

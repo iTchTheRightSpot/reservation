@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { BookingsService } from './bookings.service';
-import { CRMStaffsService } from '@crm/pages/staff/pages/all/crm-staff.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ApiResponse, ApiState } from '@root/app.model';
 import { CRMStaffModel } from '@crm/pages/staff/pages/all/crm-staff.model';
@@ -16,13 +15,19 @@ import {
   UpdateBookingStatusPayload
 } from './bookings.model';
 import { AuthService } from '@shared/data-access/auth.service';
-import { interval, Subject, switchMap, takeWhile, tap } from 'rxjs';
+import { EMPTY, interval, map, Subject, switchMap, takeWhile, tap } from 'rxjs';
 import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { Avatar } from 'primeng/avatar';
 import { Drawer } from 'primeng/drawer';
 import { BookingDetailComponent } from './ui/detail/booking-detail.component';
 import { CreateBookingComponent } from './ui/create-booking/create-booking.component';
+import {
+  ConfirmModel,
+  DateModel,
+  StaffModel
+} from '@shared/model/shared.model';
+import { CRMServiceTypeService } from '@crm/pages/service-type/crm-service-type.service';
 import { AsyncPipe } from '@angular/common';
 
 @Component({
@@ -64,8 +69,8 @@ export class BookingsComponent {
   }
 
   private readonly bookingService = inject(BookingsService);
-  private readonly staffService = inject(CRMStaffsService);
   protected readonly authService = inject(AuthService);
+  private readonly serviceTypes = inject(CRMServiceTypeService);
 
   protected toggleBookingDetails = false;
   protected toggleNewBookings = false;
@@ -78,11 +83,6 @@ export class BookingsComponent {
   protected selectedDate: Date | undefined;
   protected selectedStaff: CRMStaffModel | undefined;
   protected selectedBooking: BookingsModel | undefined;
-  protected readonly manualReservation: any = {};
-
-  protected readonly staffs = toSignal(this.staffService.staffs(), {
-    initialValue: { state: ApiState.LOADING } as ApiResponse<CRMStaffModel[]>
-  });
 
   private readonly allBookingsEmitter = new Subject<BookingsRequestPayload>();
   protected readonly bookings = toSignal(
@@ -142,4 +142,56 @@ export class BookingsComponent {
       page: (this.first = 0),
       size: this.rows
     });
+
+  protected readonly servicesEmitter = new Subject<boolean>();
+  protected readonly services = toSignal<
+    ApiResponse<string[]>,
+    ApiResponse<string[]>
+  >(
+    this.servicesEmitter.asObservable().pipe(
+      switchMap(b =>
+        !b
+          ? EMPTY
+          : this.serviceTypes.all().pipe(
+              map(
+                o =>
+                  <ApiResponse<string[]>>{
+                    state: o.state,
+                    message: o.message,
+                    data: o.data?.map(s => s.name)
+                  }
+              )
+            )
+      )
+    ),
+    { initialValue: { state: ApiState.LOADED } }
+  );
+
+  protected readonly staffEmitter = new Subject<string[]>();
+  protected readonly staffs = toSignal(
+    this.staffEmitter
+      .asObservable()
+      .pipe(switchMap(a => this.bookingService.staffsByServiceTypes(a))),
+    { initialValue: { state: ApiState.LOADED } as ApiResponse<StaffModel[]> }
+  );
+
+  protected readonly validDatesEmitter = new Subject<{
+    date: Date;
+    services: string[];
+    staff_id: string;
+  }>();
+  protected readonly validDates = toSignal(
+    this.validDatesEmitter
+      .asObservable()
+      .pipe(switchMap(o => this.bookingService.validDates(o))),
+    { initialValue: { state: ApiState.LOADED } as ApiResponse<DateModel[]> }
+  );
+
+  protected readonly reserveBookingEmitter = new Subject<ConfirmModel>();
+  protected readonly reserveBooking = toSignal(
+    this.reserveBookingEmitter
+      .asObservable()
+      .pipe(switchMap(o => this.bookingService.create(o))),
+    { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
+  );
 }

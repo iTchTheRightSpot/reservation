@@ -1,5 +1,5 @@
 import { ServiceTypeModel } from '@store/pages/reservation/pages/service-type/service-type.model';
-import { StaffModel } from '@store/pages/reservation/pages/staff/staff.model';
+import { StaffModel } from '@shared/model/shared.model';
 
 export interface ReservationModel {
   services: ServiceTypeModel[] | undefined;
