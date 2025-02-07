@@ -1,6 +1,5 @@
 import {
   ChangeDetectionStrategy,
-  ChangeDetectorRef,
   Component,
   inject,
   input,
@@ -78,6 +77,7 @@ export class CreateBookingComponent implements OnChanges {
   }>();
   readonly submitEmitter = output<ConfirmModel>();
 
+  protected readonly tz = TIMEZONE;
   protected readonly state = ApiState;
   protected readonly today = new Date();
   protected readonly invalidDates = signal<Date[]>([]);

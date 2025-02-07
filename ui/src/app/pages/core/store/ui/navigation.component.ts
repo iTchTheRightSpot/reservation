@@ -41,7 +41,6 @@ export class NavigationComponent {
   imageKey = input.required<string | null | undefined>();
 
   protected readonly crm = `${CRM_ROUTE}`;
-
   protected readonly items: MenuItem[] = [
     {
       label: 'Home',

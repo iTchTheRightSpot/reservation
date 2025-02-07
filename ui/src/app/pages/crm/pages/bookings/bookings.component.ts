@@ -21,7 +21,7 @@ import { FormsModule } from '@angular/forms';
 import { Avatar } from 'primeng/avatar';
 import { Drawer } from 'primeng/drawer';
 import { BookingDetailComponent } from './ui/detail/booking-detail.component';
-import { CreateBookingComponent } from './ui/create-booking/create-booking.component';
+import { CreateBookingComponent } from '@shared/ui/create-booking/create-booking.component';
 import {
   ConfirmModel,
   DateModel,
