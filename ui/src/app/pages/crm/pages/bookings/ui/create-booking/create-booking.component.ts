@@ -1,5 +1,6 @@
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   inject,
   input,
@@ -34,9 +35,11 @@ import {
 import {
   ConfirmModel,
   DateModel,
+  filterValidDatesFromDatesInAMonth,
+  findDatesInDateModel,
   StaffModel
 } from '@shared/model/shared.model';
-import { filterValidDatesFromDatesInAMonth, TIMEZONE } from '@root/app.util';
+import { TIMEZONE } from '@root/app.util';
 import moment from 'moment-timezone';
 import { PrimeTemplate } from 'primeng/api';
 
@@ -108,9 +111,10 @@ export class CreateBookingComponent implements OnChanges {
     date: new FormControl<Date | null>({ value: new Date(), disabled: true }, [
       Validators.required
     ]),
-    date_time: new FormControl<string | null>({ value: null, disabled: true }, [
-      Validators.required
-    ])
+    date_time: new FormControl<{ original: string; format: string } | null>(
+      { value: null, disabled: true },
+      [Validators.required]
+    )
   });
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -123,7 +127,7 @@ export class CreateBookingComponent implements OnChanges {
           dts.data.map(d => moment.tz(Number(d.date), TIMEZONE).toDate())
         );
         this.invalidDates.set(
-          this.filter(this.form.controls['date'].value || new Date(), dts.data)
+          this.filter(this.form.controls['date'].value!!, dts.data)
         );
       }
     }
@@ -136,6 +140,9 @@ export class CreateBookingComponent implements OnChanges {
         d.getMonth() === date.month &&
         d.getFullYear() === date.year
     );
+
+  protected readonly contains = (d: Date, arr: DateModel[]) =>
+    findDatesInDateModel(d, arr);
 
   private readonly filter = (date: Date, valid: DateModel[]) =>
     filterValidDatesFromDatesInAMonth(date, valid);
@@ -171,6 +178,6 @@ export class CreateBookingComponent implements OnChanges {
           phone: this.form.controls['phone'].value || '',
           services: this.form.controls['services'].value || [],
           timezone: TIMEZONE,
-          time: this.form.controls['date_time'].value || ''
+          time: this.form.controls['date_time'].value?.original || ''
         });
 }

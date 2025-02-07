@@ -1,3 +1,6 @@
+import * as moment from 'moment-timezone';
+import { TIMEZONE } from '@root/app.util';
+
 export interface ConfirmModel {
   staff_id: string;
   name: string;
@@ -33,6 +36,50 @@ export function DummyDates(month: number, year: number) {
   }
   return results;
 }
+
+export const filterValidDatesFromDatesInAMonth = (
+  date: Date,
+  valid: DateModel[]
+) => {
+  const validDates = valid.map(d =>
+    moment.tz(Number(d.date), TIMEZONE).toDate()
+  );
+
+  const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  const daysInMonth = endOfMonth.getDate();
+
+  const allDatesInMonth = Array.from(
+    { length: daysInMonth },
+    (_, index) => new Date(date.getFullYear(), date.getMonth(), index + 1)
+  );
+
+  return allDatesInMonth.filter(
+    date =>
+      !validDates.some(validDate => {
+        return (
+          validDate.getDate() === date.getDate() &&
+          validDate.getMonth() === date.getMonth() &&
+          validDate.getFullYear() === date.getFullYear()
+        );
+      })
+  );
+};
+
+export const findDatesInDateModel = (d: Date, arr: DateModel[]) => {
+  const find = arr.find(obj => {
+    const t = moment.tz(Number(obj.date), TIMEZONE).toDate();
+    return (
+      t.getDate() === d.getDate() &&
+      t.getMonth() === d.getMonth() &&
+      t.getFullYear() === d.getFullYear()
+    );
+  });
+  if (!find) return undefined;
+  return find.times.map(a => ({
+    original: a,
+    format: moment.tz(Number(a), TIMEZONE).format('h:mm a')
+  }));
+};
 
 export interface StaffModel {
   staff_id: string;

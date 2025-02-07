@@ -113,7 +113,16 @@
             staffEmitter.emit($event.value);
             form.controls['services'].invalid
               ? form.controls['staff_id'].disable()
-              : form.controls['staff_id'].enable()
+              : form.controls['staff_id'].enable();
+            form.controls['services'].valid &&
+            form.controls['staff_id'].valid &&
+            form.controls['date'].valid
+              ? datesEmitter.emit({
+                  date: form.controls['date'].value!!,
+                  staff_id: form.controls['staff_id'].value?.staff_id || '',
+                  services: form.controls['services'].value || []
+                })
+              : {}
           "
           id="services"
           appendTo="body"
@@ -199,7 +208,7 @@
           formControlName="date"
           styleClass="w-full"
           id="calendar"
-          inputId="buttondisplay"
+          inputId="calendar"
           placeholder="select a date"
           [minDate]="today"
           [showIcon]="true"
@@ -243,7 +252,10 @@
         <p-select
           id="date_time"
           appendTo="body"
-          [options]="[]"
+          [options]="
+            contains(form.controls['date'].value!!, datesTimes().data || [])
+          "
+          optionLabel="format"
           formControlName="date_time"
           placeholder="select time"
           class="w-full"
@@ -269,7 +281,7 @@
       size="large"
       styleClass="text-right w-full"
       [disabled]="form.invalid || submissionRequestState() === state.LOADING"
-      (submit)="submit()"
+      (onClick)="submit()"
     >
       @if (submissionRequestState() === state.LOADING) {
         <i class="pi pi-spin pi-spinner" style="font-size: 1.5rem"></i>

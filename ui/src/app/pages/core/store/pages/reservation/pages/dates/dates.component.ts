@@ -15,7 +15,11 @@ import {
   tap
 } from 'rxjs';
 import { ApiResponse, ApiState } from '@root/app.model';
-import { DateModel } from '@shared/model/shared.model';
+import {
+  DateModel,
+  filterValidDatesFromDatesInAMonth,
+  findDatesInDateModel
+} from '@shared/model/shared.model';
 import { FormsModule } from '@angular/forms';
 import {
   DatePicker,
@@ -31,7 +35,7 @@ import { RESERVATION_ROUTE } from '@store/store.routes';
 import { CONFIRM_ROUTE } from '@store/pages/reservation/reservation.routes';
 import { Button } from 'primeng/button';
 import { PrimeTemplate } from 'primeng/api';
-import { filterValidDatesFromDatesInAMonth, TIMEZONE } from '@root/app.util';
+import { TIMEZONE } from '@root/app.util';
 import { CORE_ROUTE } from '@root/app.routes';
 import { STORE_ROUTE } from '@pages/core/core.routes';
 import { SummaryHolderComponent } from '@store/pages/reservation/shared/summary-holder.component';
@@ -117,21 +121,8 @@ export class DatesComponent {
         d.getFullYear() === date.year
     );
 
-  protected readonly contains = (d: Date, arr: DateModel[]) => {
-    const find = arr.find(obj => {
-      const t = moment.tz(Number(obj.date), TIMEZONE).toDate();
-      return (
-        t.getDate() === d.getDate() &&
-        t.getMonth() === d.getMonth() &&
-        t.getFullYear() === d.getFullYear()
-      );
-    });
-    if (!find) return undefined;
-    return find.times.map(a => ({
-      original: a,
-      format: moment.tz(Number(a), TIMEZONE).format('h:mm a')
-    }));
-  };
+  protected readonly contains = (d: Date, arr: DateModel[]) =>
+    findDatesInDateModel(d, arr);
 
   protected readonly onSelectedCalendarMonth = (
     event: DatePickerMonthChangeEvent
