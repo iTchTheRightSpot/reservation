@@ -29,11 +29,11 @@
 </svg>
 
 <div class="w-full p-5 flex flex-col gap-8">
-  <div class="w-full flex gap-5 md:gap-0 flex-col md:flex-row items-center justify-center">
+  <div class="w-full flex gap-5 md:gap-1 flex-col md:flex-row items-center justify-center">
     <div class="w-full h-full gap-5 flex flex-col items-center justify-center md:order-none order-last">
       <p class="karla-font text-xl xl:text-2xl">WELCOME TO</p>
       <h1 class="font-bold xl:font-normal text-2xl xl:text-7xl">{{ name }}</h1>
-      <p class="karla-font text-base md:text-lg xl:text-xl">{{ address }}</p>
+      <p class="karla-font text-sm lg:text-lg xl:text-xl">{{ address }}</p>
 
       <div class="w-full flex gap-3 justify-center">
         <p-button (onClick)="toggleNewBookings = !toggleNewBookings; servicesEmitter.next(toggleNewBookings)" label="Book Now" severity="contrast" />

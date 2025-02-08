@@ -52,7 +52,7 @@ export class HomeComponent extends ReservationUtilComponent {
   protected readonly instagram =
     'https://www.instagram.com/revivehairstudiolekki/';
   protected readonly address =
-    '456 Count Dracula Way, Transylvania Hills, Romania';
+    'Ologolo Lekki, Opposite White Oak Estate, Eti-Osa, Lagos, NG';
   protected readonly imgs = ['./salon-2.jpg', './salon-3.jpg'];
   protected readonly responsiveOptions = [
     {
