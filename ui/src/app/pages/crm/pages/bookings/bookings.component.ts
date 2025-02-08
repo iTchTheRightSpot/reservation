@@ -15,20 +15,18 @@ import {
   UpdateBookingStatusPayload
 } from './bookings.model';
 import { AuthService } from '@shared/data-access/auth.service';
-import { EMPTY, interval, map, Subject, switchMap, takeWhile, tap } from 'rxjs';
+import { interval, Subject, switchMap, takeWhile, tap } from 'rxjs';
 import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { Avatar } from 'primeng/avatar';
 import { Drawer } from 'primeng/drawer';
 import { BookingDetailComponent } from './ui/detail/booking-detail.component';
-import { CreateBookingComponent } from '@shared/ui/create-booking/create-booking.component';
-import {
-  ConfirmModel,
-  DateModel,
-  StaffModel
-} from '@shared/model/shared.model';
-import { CRMServiceTypeService } from '@crm/pages/service-type/crm-service-type.service';
+import { CreateBookingComponent } from '@shared/ui/reservation/create-booking.component';
 import { AsyncPipe } from '@angular/common';
+import { ReservationUtilComponent } from '@shared/ui/reservation/reservation-util.component';
+import { ServiceTypeImpl } from '@shared/data-access/service-type.service';
+import { BookingService } from '@shared/data-access/booking.service';
+import { CRMStaffsService } from '@crm/pages/staff/pages/all/crm-staff.service';
 
 @Component({
   selector: 'app-bookings',
@@ -49,8 +47,10 @@ import { AsyncPipe } from '@angular/common';
   templateUrl: './bookings.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class BookingsComponent {
-  constructor() {
+export class BookingsComponent extends ReservationUtilComponent {
+  constructor(st: ServiceTypeImpl, bs: BookingService) {
+    super(st, bs);
+
     interval(1000)
       .pipe(
         tap(() => {
@@ -68,9 +68,11 @@ export class BookingsComponent {
       .subscribe();
   }
 
-  private readonly bookingService = inject(BookingsService);
-  protected readonly authService = inject(AuthService);
-  private readonly serviceTypes = inject(CRMServiceTypeService);
+  private readonly bookingsService = inject(BookingsService);
+  private readonly authService = inject(AuthService);
+  protected readonly staffs = toSignal(inject(CRMStaffsService).staffs(), {
+    initialValue: { state: ApiState.LOADED } as ApiResponse<CRMStaffModel[]>
+  });
 
   protected toggleBookingDetails = false;
   protected toggleNewBookings = false;
@@ -88,7 +90,7 @@ export class BookingsComponent {
   protected readonly bookings = toSignal(
     this.allBookingsEmitter
       .asObservable()
-      .pipe(switchMap(o => this.bookingService.bookings(o))),
+      .pipe(switchMap(o => this.bookingsService.bookings(o))),
     {
       initialValue: { state: ApiState.LOADED } as ApiResponse<BookingsModel[]>
     }
@@ -109,7 +111,7 @@ export class BookingsComponent {
     new Subject<UpdateBookingStatusPayload>();
   protected readonly updateBookingStatus$ = this.updateBookingStatusEmitter
     .asObservable()
-    .pipe(switchMap(o => this.bookingService.updateBookingStatus(o)));
+    .pipe(switchMap(o => this.bookingsService.updateBookingStatus(o)));
 
   protected readonly fm = (d: number) =>
     new Date(d).toLocaleDateString('en-US', {
@@ -142,56 +144,4 @@ export class BookingsComponent {
       page: (this.first = 0),
       size: this.rows
     });
-
-  protected readonly servicesEmitter = new Subject<boolean>();
-  protected readonly services = toSignal<
-    ApiResponse<string[]>,
-    ApiResponse<string[]>
-  >(
-    this.servicesEmitter.asObservable().pipe(
-      switchMap(b =>
-        !b
-          ? EMPTY
-          : this.serviceTypes.all().pipe(
-              map(
-                o =>
-                  <ApiResponse<string[]>>{
-                    state: o.state,
-                    message: o.message,
-                    data: o.data?.map(s => s.name)
-                  }
-              )
-            )
-      )
-    ),
-    { initialValue: { state: ApiState.LOADED } }
-  );
-
-  protected readonly staffEmitter = new Subject<string[]>();
-  protected readonly staffs = toSignal(
-    this.staffEmitter
-      .asObservable()
-      .pipe(switchMap(a => this.bookingService.staffsByServiceTypes(a))),
-    { initialValue: { state: ApiState.LOADED } as ApiResponse<StaffModel[]> }
-  );
-
-  protected readonly validDatesEmitter = new Subject<{
-    date: Date;
-    services: string[];
-    staff_id: string;
-  }>();
-  protected readonly validDates = toSignal(
-    this.validDatesEmitter
-      .asObservable()
-      .pipe(switchMap(o => this.bookingService.validDates(o))),
-    { initialValue: { state: ApiState.LOADED } as ApiResponse<DateModel[]> }
-  );
-
-  protected readonly reserveBookingEmitter = new Subject<ConfirmModel>();
-  protected readonly reserveBooking = toSignal(
-    this.reserveBookingEmitter
-      .asObservable()
-      .pipe(switchMap(o => this.bookingService.create(o))),
-    { initialValue: { state: ApiState.LOADED } as ApiResponse<any> }
-  );
 }

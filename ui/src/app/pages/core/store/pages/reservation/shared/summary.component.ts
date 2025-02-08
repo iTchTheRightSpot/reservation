@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { Card } from 'primeng/card';
 import { Avatar } from 'primeng/avatar';
-import { ServiceTypeModel } from '@store/pages/reservation/pages/service-type/service-type.model';
 import { ToggleButton } from 'primeng/togglebutton';
 import { FormsModule } from '@angular/forms';
 import { NgClass } from '@angular/common';
 import { FORMAT_SECONDS } from '@root/app.util';
+import { ServiceTypeModel } from '@shared/model/shared.model';
 
 @Component({
   selector: 'app-summary',

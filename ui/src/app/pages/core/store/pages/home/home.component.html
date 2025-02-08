@@ -36,7 +36,7 @@
       <p class="karla-font text-base md:text-lg xl:text-xl">{{ address }}</p>
 
       <div class="w-full flex gap-3 justify-center">
-        <p-button (onClick)="toggleNewBookings = !toggleNewBookings" label="Book Now" severity="contrast" />
+        <p-button (onClick)="toggleNewBookings = !toggleNewBookings; servicesEmitter.next(toggleNewBookings)" label="Book Now" severity="contrast" />
         <p-button (onClick)="about()" label="Contact Us" variant="outlined" severity="contrast" />
       </div>
       <a [href]="instagram" target="_blank">
@@ -78,12 +78,16 @@
   @defer (when toggleNewBookings) {
     <app-create-booking
       [services]="services()"
-      [staffs]="staffs()"
+      [staffs]="staffsByServiceTypes()"
       [datesTimes]="validDates()"
       [submissionRequestState]="reserveBooking().state"
       (staffEmitter)="staffEmitter.next($event)"
       (datesEmitter)="validDatesEmitter.next($event)"
       (submitEmitter)="reserveBookingEmitter.next($event)"
     />
+  } @loading {
+    loading component...
+  } @placeholder {
+    loading component...
   }
 </p-drawer>

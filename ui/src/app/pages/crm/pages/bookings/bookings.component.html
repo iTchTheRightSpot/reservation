@@ -150,7 +150,7 @@
   @defer (when toggleNewBookings) {
     <app-create-booking
       [services]="services()"
-      [staffs]="staffs()"
+      [staffs]="staffsByServiceTypes()"
       [datesTimes]="validDates()"
       [submissionRequestState]="reserveBooking().state"
       (staffEmitter)="staffEmitter.next($event)"

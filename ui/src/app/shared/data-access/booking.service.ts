@@ -20,9 +20,9 @@ import {
   StaffModel
 } from '@shared/model/shared.model';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { ToastEnum, ToastService } from '@shared/data-access/toast.service';
+import { ToastEnum, ToastService } from './toast.service';
 import { err, TIMEZONE } from '@root/app.util';
-import { Cache } from '@shared/data-access/cache';
+import { Cache } from './cache';
 
 @Injectable({
   providedIn: 'root'
@@ -108,7 +108,7 @@ export class BookingService {
 
         let params = new HttpParams();
         params = params.append('staff_id', o.staff_id);
-        params = params.append('day', o.date.getDate());
+        params = params.append('day', 1);
         params = params.append('month', 1 + o.date.getMonth());
         params = params.append('year', o.date.getFullYear());
         o.services.forEach(

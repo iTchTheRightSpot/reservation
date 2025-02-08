@@ -26,9 +26,8 @@ import { CORE_ROUTE } from '@root/app.routes';
 import { STORE_ROUTE } from '@pages/core/core.routes';
 import { SERVICE_TYPES_ROUTE } from '@store/pages/reservation/reservation.routes';
 import { RESERVATION_ROUTE } from '@store/store.routes';
-import { ServiceTypeModel } from '@store/pages/reservation/pages/service-type/service-type.model';
 import { Divider } from 'primeng/divider';
-import { ConfirmModel } from '@shared/model/shared.model';
+import { ConfirmModel, ServiceTypeModel } from '@shared/model/shared.model';
 
 @Component({
   selector: 'app-confirm',
@@ -114,7 +113,7 @@ export class ConfirmComponent {
       name: this.form.controls['name'].value || '',
       email: this.form.controls['email'].value || '',
       description: this.form.controls['description'].value || '',
-      phone: this.form.controls['phone'].value || '',
+      phone: `${this.form.controls['phone'].value}` || '',
       services: state.services?.map(s => s.name.trim()) || [],
       timezone: TIMEZONE,
       time: state.datetime || ''

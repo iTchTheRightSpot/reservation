@@ -80,6 +80,8 @@ export class CreateBookingComponent implements OnChanges {
   protected readonly tz = TIMEZONE;
   protected readonly state = ApiState;
   protected readonly today = new Date();
+  // the date representing the selected calendar date or the date when a navigation action (previous/next month/year) is triggered
+  protected selectedDate = new Date();
   protected readonly invalidDates = signal<Date[]>([]);
   protected readonly validDates = signal<Date[]>([]);
 
@@ -126,9 +128,7 @@ export class CreateBookingComponent implements OnChanges {
         this.validDates.set(
           dts.data.map(d => moment.tz(Number(d.date), TIMEZONE).toDate())
         );
-        this.invalidDates.set(
-          this.filter(this.form.controls['date'].value!!, dts.data)
-        );
+        this.invalidDates.set(this.filter(this.selectedDate, dts.data));
       }
     }
   }
@@ -159,10 +159,13 @@ export class CreateBookingComponent implements OnChanges {
     month: number | undefined,
     year: number | undefined
   ) =>
-    !month || !year
+    !month ||
+    month - 1 < this.today.getMonth() ||
+    !year ||
+    year < this.today.getFullYear()
       ? {}
       : this.datesEmitter.emit({
-          date: new Date(year, month - 1, 1),
+          date: (this.selectedDate = new Date(year, month - 1, 1)),
           staff_id: this.form.controls['staff_id'].value?.staff_id || '',
           services: this.form.controls['services'].value || []
         });
@@ -175,7 +178,7 @@ export class CreateBookingComponent implements OnChanges {
           name: this.form.controls['name'].value || '',
           email: this.form.controls['email'].value || '',
           description: this.form.controls['description'].value || '',
-          phone: this.form.controls['phone'].value || '',
+          phone: `${this.form.controls['phone'].value}` || '',
           services: this.form.controls['services'].value || [],
           timezone: TIMEZONE,
           time: this.form.controls['date_time'].value?.original || ''

@@ -1,15 +1,18 @@
 import { inject, Injectable } from '@angular/core';
 import { environment } from '@env/environment';
 import { HttpClient } from '@angular/common/http';
-import { DummyServiceTypes, ServiceTypeModel } from './service-type.model';
 import { BehaviorSubject, catchError, map, of, switchMap, tap } from 'rxjs';
 import { ApiResponse, ApiState } from '@root/app.model';
 import { err } from '@root/app.util';
+import {
+  DummyServiceTypes,
+  ServiceTypeModel
+} from '@shared/model/shared.model';
 
 @Injectable({
   providedIn: 'root'
 })
-export class ServiceTypeService {
+export class ServiceTypeImpl {
   private readonly http = inject(HttpClient);
 
   private readonly cache = new BehaviorSubject<ServiceTypeModel[] | undefined>(

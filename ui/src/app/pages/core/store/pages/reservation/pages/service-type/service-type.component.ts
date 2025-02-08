@@ -1,10 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { ServiceTypeService } from './service-type.service';
+import { ServiceTypeImpl } from '@shared/data-access/service-type.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ApiResponse, ApiState } from '@root/app.model';
 import { Skeleton } from 'primeng/skeleton';
 import { Message } from 'primeng/message';
-import { ServiceTypeModel } from './service-type.model';
 import { CardModule } from 'primeng/card';
 import { FormsModule } from '@angular/forms';
 import { RadioButton } from 'primeng/radiobutton';
@@ -15,6 +14,7 @@ import { RESERVATION_ROUTE } from '@store/store.routes';
 import { STAFFS_ROUTE } from '@store/pages/reservation/reservation.routes';
 import { ReservationService } from '@store/pages/reservation/reservation.service';
 import { FORMAT_SECONDS } from '@root/app.util';
+import { ServiceTypeModel } from '@shared/model/shared.model';
 
 @Component({
   selector: 'app-service-type',
@@ -37,7 +37,7 @@ export class ServiceTypeComponent {
   }
 
   private readonly service1 = inject(ReservationService);
-  private readonly service2 = inject(ServiceTypeService);
+  private readonly service2 = inject(ServiceTypeImpl);
   private readonly router = inject(Router);
 
   protected readonly state = ApiState;
