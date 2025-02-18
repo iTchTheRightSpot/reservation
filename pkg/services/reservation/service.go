@@ -53,16 +53,20 @@ func (dep *reservationService) generateChunks(schedules []*schedule.ScheduleEnti
 	var arr []*reservation.Chunks
 	var wg sync.WaitGroup
 	var mu sync.Mutex // to ensure safe concurrent access to 'arr'
+	now := dep.logger.Date()
+	mins := time.Duration(30) * time.Minute
 
 	for _, sch := range schedules {
 		wg.Add(1)
-		go func(sch *schedule.ScheduleEntity) {
+		go func(sch *schedule.ScheduleEntity, now time.Time, mins time.Duration) {
 			defer wg.Done()
 
 			var times []time.Time
 			add := time.Duration(duration) * time.Second
 			start := sch.Start
-			for start.Before(sch.End) && start.Add(add).Before(sch.End) {
+			b := start.Sub(now).Seconds() > mins.Seconds()
+
+			for b && start.Before(sch.End) && start.Add(add).Before(sch.End) {
 				times = append(times, start)
 				start = start.Add(add)
 			}
@@ -73,7 +77,7 @@ func (dep *reservationService) generateChunks(schedules []*schedule.ScheduleEnti
 				Times: times,
 			})
 			mu.Unlock()
-		}(sch)
+		}(sch, now, mins)
 	}
 
 	wg.Wait()

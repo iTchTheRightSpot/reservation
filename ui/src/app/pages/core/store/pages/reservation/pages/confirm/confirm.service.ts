@@ -1,11 +1,11 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { ConfirmModel } from './confirm.model';
 import { environment } from '@env/environment';
 import { catchError, concat, concatMap, map, of, startWith, timer } from 'rxjs';
 import { ApiResponse, ApiState } from '@root/app.model';
 import { err } from '@root/app.util';
 import { ToastEnum, ToastService } from '@shared/data-access/toast.service';
+import { ConfirmModel } from '@shared/model/shared.model';
 
 @Injectable({
   providedIn: 'root'

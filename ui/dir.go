@@ -1,6 +1,24 @@
 package ui
 
-import "embed"
+import (
+	"embed"
+	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"io/fs"
+	"net/http"
+)
 
 //go:embed dist/ui/browser
-var _ embed.FS
+var frontend embed.FS
+
+type FrontendStruct struct {
+	Logger utils.ILogger
+}
+
+func (dep *FrontendStruct) Open() (http.FileSystem, error) {
+	build, err := fs.Sub(frontend, "dist/ui/browser")
+	if err != nil {
+		dep.Logger.Error(err.Error())
+		return nil, &utils.ServerError{}
+	}
+	return http.FS(build), nil
+}

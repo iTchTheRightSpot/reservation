@@ -1,7 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { ReservationModel } from './reservation.model';
-import { ServiceTypeModel } from '@store/pages/reservation/pages/service-type/service-type.model';
-import { StaffModel } from '@store/pages/reservation/pages/staff/staff.model';
+import { ServiceTypeModel, StaffModel } from '@shared/model/shared.model';
 
 @Injectable({
   providedIn: 'root'

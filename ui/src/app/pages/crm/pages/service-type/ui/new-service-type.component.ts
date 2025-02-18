@@ -55,10 +55,10 @@ export class NewServiceTypeComponent {
     if (this.form.invalid) return;
     this.emitter.emit({
       name: this.form.value.name!!,
-      price: this.form.value.price!!,
+      price: Number(this.form.value.price!!),
       is_visible: this.form.value.is_visible!!.value,
-      duration: this.form.value.duration!!,
-      clean_up_time: this.form.value.duration!!
+      duration: Number(this.form.value.duration!!),
+      clean_up_time: Number(this.form.value.clean_up_time!!)
     } as CRMServiceTypeModel);
   };
 }

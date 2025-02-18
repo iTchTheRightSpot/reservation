@@ -12,13 +12,13 @@ import {
   withFetch,
   withInterceptors
 } from '@angular/common/http';
-import { loadingInterceptor } from '@shared/data-access/interceptors';
+import { interceptor } from '@shared/data-access/interceptors';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideExperimentalZonelessChangeDetection(),
     provideRouter(routes),
-    provideHttpClient(withFetch(), withInterceptors([loadingInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([interceptor])),
     provideAnimationsAsync(),
     providePrimeNG({
       theme: {

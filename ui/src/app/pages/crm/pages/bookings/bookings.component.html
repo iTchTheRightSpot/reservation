@@ -111,7 +111,10 @@
     <ng-template #paginatorleft>
       <p-button
         type="button"
-        (onClick)="toggleNewBookings = !toggleNewBookings"
+        (onClick)="
+          toggleNewBookings = !toggleNewBookings;
+          servicesEmitter.next(toggleNewBookings)
+        "
         icon="pi pi-plus"
         text
       />
@@ -119,32 +122,44 @@
   </p-table>
 </div>
 
-@defer {
-  <p-drawer
-    header="Booking Detail"
-    [(visible)]="toggleBookingDetails"
-    position="right"
-    styleClass="!w-full md:!w-[40rem] lg:!w-[50rem]"
-  >
-    @if (selectedBooking; as sb) {
-      <app-booking-detail
-        [booking]="sb"
-        [updateStatus]="(updateBookingStatus$ | async)?.state"
-        (emitter)="updateBookingStatus($event)"
-      />
-    } @else {
-      <p>error displaying booking details</p>
-    }
-  </p-drawer>
-}
+<p-drawer
+  header="Booking Detail"
+  [(visible)]="toggleBookingDetails"
+  position="right"
+  styleClass="!w-full md:!w-[40rem] lg:!w-[50rem]"
+>
+  @defer (when toggleBookingDetails && selectedBooking !== undefined) {
+    <app-booking-detail
+      [booking]="selectedBooking!!"
+      [updateStatus]="(updateBookingStatus$ | async)?.state"
+      (emitter)="updateBookingStatus($event)"
+    />
+  } @loading {
+    loading component...
+  } @placeholder {
+    loading component...
+  }
+</p-drawer>
 
-@defer {
-  <p-dialog
-    header="Create New Booking"
-    [modal]="true"
-    [(visible)]="toggleNewBookings"
-    [style]="{ width: '25rem' }"
-  >
-    <app-create-booking [staffs]="staffs().data || []" />
-  </p-dialog>
-}
+<p-drawer
+  header="New Booking"
+  [(visible)]="toggleNewBookings"
+  position="left"
+  styleClass="!w-full md:!w-[40rem] lg:!w-[50rem]"
+>
+  @defer (when toggleNewBookings) {
+    <app-create-booking
+      [services]="services()"
+      [staffs]="staffsByServiceTypes()"
+      [datesTimes]="validDates()"
+      [submissionRequestState]="reserveBooking().state"
+      (staffEmitter)="staffEmitter.next($event)"
+      (datesEmitter)="validDatesEmitter.next($event)"
+      (submitEmitter)="reserveBookingEmitter.next($event)"
+    />
+  } @loading {
+    loading component...
+  } @placeholder {
+    loading component...
+  }
+</p-drawer>

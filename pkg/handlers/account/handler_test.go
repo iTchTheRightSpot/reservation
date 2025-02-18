@@ -65,7 +65,7 @@ func TestAccountHandler(t *testing.T) {
 	l := utils.NewMockLogger()
 	prov := stores.NewTransactionProvider(l, db)
 	adp := stores.NewAdapters(l, db, prov)
-	jwtSer := auth.NewJwtService(l, env)
+	jwtSer := auth.NewJwtServiceAsymmetric(l, env)
 	ps := auth.NewPasswordService(l)
 	acs := account.NewAccountService(l, adp, jwtSer, ps, pkg.NewInMemoryCache[string, []*staff.AllStaffsEntity](l, 10, 10))
 

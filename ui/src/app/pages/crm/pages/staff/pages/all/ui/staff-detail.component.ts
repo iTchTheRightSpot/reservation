@@ -72,15 +72,13 @@ import {
               [deleteRoleState]="deleteRoleState()"
               [deletePermissionState]="deletePermissionState()"
               (createRolesAndPermissionsEmitter)="
-              createRolesAndPermissionsEmitter.emit($event)
-            "
+                createRolesAndPermissionsEmitter.emit($event)
+              "
               (addPermissionsEmitter)="addPermissionsEmitter.emit($event)"
               (deleteRoleEmitter)="deleteRoleEmitter.emit($event)"
               (deletePermissionEmitter)="deletePermissionEmitter.emit($event)"
             />
-          } @loading {
-
-          }
+          } @loading {}
         </p-tabpanel>
 
         <p-tabpanel value="2">
@@ -92,9 +90,11 @@ import {
               [staffServices]="servicesByStaff()"
               [deLinkServiceFromStaffState]="deLinkServiceFromStaffState()"
               (deLinkServiceFromStaffEmitter)="
-              deLinkServiceFromStaffEmitter.emit($event)
-            "
-              (linkServiceToStaffEmitter)="linkServiceToStaffEmitter.emit($event)"
+                deLinkServiceFromStaffEmitter.emit($event)
+              "
+              (linkServiceToStaffEmitter)="
+                linkServiceToStaffEmitter.emit($event)
+              "
             />
           }
         </p-tabpanel>

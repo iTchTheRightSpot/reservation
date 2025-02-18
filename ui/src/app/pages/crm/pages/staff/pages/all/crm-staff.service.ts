@@ -5,6 +5,7 @@ import {
   concat,
   concatMap,
   map,
+  Observable,
   of,
   startWith,
   switchMap,
@@ -28,7 +29,7 @@ export class CRMStaffsService {
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
 
-  readonly staffs = () =>
+  readonly staffs = (): Observable<ApiResponse<CRMStaffModel[]>> =>
     !environment.production
       ? of('yes').pipe(
           concatMap(() =>

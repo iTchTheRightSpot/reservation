@@ -17,7 +17,7 @@ import { err, TIMEZONE } from '@root/app.util';
   providedIn: 'root'
 })
 export class BookingsService {
-  private static readonly cache = new Cache<string, BookingsModel[]>();
+  private static readonly BookingsCache = new Cache<string, BookingsModel[]>();
 
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
@@ -30,7 +30,7 @@ export class BookingsService {
       });
 
     const k = `${o.user_id}_${o.date.getMonth()}_${o.date.getFullYear()}`;
-    return BookingsService.cache.getItem(k).pipe(
+    return BookingsService.BookingsCache.getItem(k).pipe(
       switchMap(arr =>
         arr
           ? of<ApiResponse<BookingsModel[]>>({
@@ -48,7 +48,7 @@ export class BookingsService {
                 >(`${environment.domain}crm/reservation?user_id=${o.user_id}&month=${1 + o.date.getMonth()}&year=${o.date.getFullYear()}&timezone=${TIMEZONE}`, { withCredentials: true })
                 .pipe(
                   map(arr => {
-                    BookingsService.cache.setItem(k, arr);
+                    BookingsService.BookingsCache.setItem(k, arr);
                     return { state: ApiState.LOADED, data: arr };
                   }),
                   startWith({ state: ApiState.LOADING } as ApiResponse<
@@ -75,7 +75,7 @@ export class BookingsService {
           })
           .pipe(
             map(() => {
-              BookingsService.cache.clear();
+              BookingsService.BookingsCache.clear();
               return { state: ApiState.LOADED };
             }),
             startWith({ state: ApiState.LOADING } as ApiResponse<any>),

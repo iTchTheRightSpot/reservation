@@ -77,7 +77,7 @@ func TestReservationHandler(t *testing.T) {
 	logger := utils.NewMockLogger()
 	prov := stores.NewTransactionProvider(logger, db)
 	adapters := stores.NewAdapters(logger, db, prov)
-	jwtSer := auth.NewJwtService(logger, env)
+	jwtSer := auth.NewJwtServiceAsymmetric(logger, env)
 	ware := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
 	s := schedule.NewScheduleService(logger, adapters)
 	cache := pkg.NewInMemoryCache[string, []*model.ReservationTimeSlots](logger, 30, 30)

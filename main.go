@@ -12,7 +12,7 @@ func main() {
 	// logger
 	logger, err := utils.NewLogger("UTC")
 	if err != nil {
-		return
+		log.Fatal("failed to instantiate logger ", err.Error())
 	}
 
 	// config
@@ -22,8 +22,13 @@ func main() {
 	// connect to database
 	db, err := database.ConnectToPostgres(env.DbConnectionString)
 	if err != nil {
-		log.Fatal(err)
-		return
+		logger.Fatal(err.Error())
+	}
+
+	if env.CookieParam.CookieSecure {
+		if err = database.Migrate(db); err != nil {
+			logger.Fatal(err.Error())
+		}
 	}
 
 	// start server

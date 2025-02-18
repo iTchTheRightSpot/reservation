@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/iTchTheRightSpot/erp-golang/cmd"
 	"github.com/iTchTheRightSpot/erp-golang/config"
+	"github.com/iTchTheRightSpot/erp-golang/ui"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"github.com/rs/cors"
 	"net/http"
@@ -17,8 +18,6 @@ type ErpServer struct {
 }
 
 func (s *ErpServer) Serve() {
-	s.Logger.Log("starting server on PORT", s.Env.Address)
-
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{s.Env.FrontEnd},
 		AllowedMethods:   []string{http.MethodPost, http.MethodGet, http.MethodPut, http.MethodDelete, http.MethodOptions},
@@ -27,7 +26,11 @@ func (s *ErpServer) Serve() {
 		AllowCredentials: true,
 	})
 
-	registry := cmd.NewHandlerRegistry(s.Db, s.Logger, s.Env)
+	f := ui.FrontendStruct{Logger: s.Logger}
+	open, err := f.Open()
+	if err != nil {
+		s.Logger.Fatal(err.Error())
+	}
 
 	server := http.Server{
 		Addr:              s.Env.Address,
@@ -35,8 +38,9 @@ func (s *ErpServer) Serve() {
 		IdleTimeout:       30 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       5 * time.Second,
-		Handler:           c.Handler(registry.Initialize()),
+		Handler:           c.Handler(cmd.NewHandlerRegistry(s.Db, s.Logger, s.Env, open).Initialize()),
 	}
 
+	s.Logger.Log("starting server on PORT", s.Env.Address)
 	s.Logger.Fatal("server stopped ", server.ListenAndServe())
 }

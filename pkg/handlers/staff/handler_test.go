@@ -64,7 +64,7 @@ func TestStaffHandler(t *testing.T) {
 	logger := utils.NewMockLogger()
 	prov := stores.NewTransactionProvider(logger, db)
 	adp := stores.NewAdapters(logger, db, prov)
-	jwtSer := auth.NewJwtService(logger, env)
+	jwtSer := auth.NewJwtServiceAsymmetric(logger, env)
 	m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
 	cach := pkg.NewInMemoryCache[string, []*model.AllStaffsEntity](logger, 10, 10)
 	s := staff.NewStaffService(logger, adp, cach)

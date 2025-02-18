@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { BookingsService } from './bookings.service';
-import { CRMStaffsService } from '@crm/pages/staff/pages/all/crm-staff.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ApiResponse, ApiState } from '@root/app.model';
 import { CRMStaffModel } from '@crm/pages/staff/pages/all/crm-staff.model';
@@ -17,14 +16,17 @@ import {
 } from './bookings.model';
 import { AuthService } from '@shared/data-access/auth.service';
 import { interval, Subject, switchMap, takeWhile, tap } from 'rxjs';
-import { Select, SelectChangeEvent } from 'primeng/select';
+import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { Avatar } from 'primeng/avatar';
 import { Drawer } from 'primeng/drawer';
 import { BookingDetailComponent } from './ui/detail/booking-detail.component';
-import { Dialog } from 'primeng/dialog';
-import { CreateBookingComponent } from './ui/create-booking/create-booking.component';
+import { CreateBookingComponent } from '@shared/ui/reservation/create-booking.component';
 import { AsyncPipe } from '@angular/common';
+import { ReservationUtilComponent } from '@shared/ui/reservation/reservation-util.component';
+import { ServiceTypeImpl } from '@shared/data-access/service-type.service';
+import { BookingService } from '@shared/data-access/booking.service';
+import { CRMStaffsService } from '@crm/pages/staff/pages/all/crm-staff.service';
 
 @Component({
   selector: 'app-bookings',
@@ -39,15 +41,16 @@ import { AsyncPipe } from '@angular/common';
     Avatar,
     Drawer,
     BookingDetailComponent,
-    Dialog,
     CreateBookingComponent,
     AsyncPipe
   ],
   templateUrl: './bookings.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class BookingsComponent {
-  constructor() {
+export class BookingsComponent extends ReservationUtilComponent {
+  constructor(st: ServiceTypeImpl, bs: BookingService) {
+    super(st, bs);
+
     interval(1000)
       .pipe(
         tap(() => {
@@ -65,14 +68,16 @@ export class BookingsComponent {
       .subscribe();
   }
 
-  private readonly bookingService = inject(BookingsService);
-  private readonly staffService = inject(CRMStaffsService);
-  protected readonly authService = inject(AuthService);
+  private readonly bookingsService = inject(BookingsService);
+  private readonly authService = inject(AuthService);
+  protected readonly staffs = toSignal(inject(CRMStaffsService).staffs(), {
+    initialValue: { state: ApiState.LOADED } as ApiResponse<CRMStaffModel[]>
+  });
 
   protected toggleBookingDetails = false;
   protected toggleNewBookings = false;
   protected first = 0;
-  protected rows = 10;
+  protected rows = 5;
   protected readonly apiState = ApiState;
   protected readonly bookingState = BookingStatus;
   protected readonly thead = ['Name', 'From', 'To', 'Status'];
@@ -81,15 +86,11 @@ export class BookingsComponent {
   protected selectedStaff: CRMStaffModel | undefined;
   protected selectedBooking: BookingsModel | undefined;
 
-  protected readonly staffs = toSignal(this.staffService.staffs(), {
-    initialValue: { state: ApiState.LOADING } as ApiResponse<CRMStaffModel[]>
-  });
-
   private readonly allBookingsEmitter = new Subject<BookingsRequestPayload>();
   protected readonly bookings = toSignal(
     this.allBookingsEmitter
       .asObservable()
-      .pipe(switchMap(o => this.bookingService.bookings(o))),
+      .pipe(switchMap(o => this.bookingsService.bookings(o))),
     {
       initialValue: { state: ApiState.LOADED } as ApiResponse<BookingsModel[]>
     }
@@ -110,7 +111,7 @@ export class BookingsComponent {
     new Subject<UpdateBookingStatusPayload>();
   protected readonly updateBookingStatus$ = this.updateBookingStatusEmitter
     .asObservable()
-    .pipe(switchMap(o => this.bookingService.updateBookingStatus(o)));
+    .pipe(switchMap(o => this.bookingsService.updateBookingStatus(o)));
 
   protected readonly fm = (d: number) =>
     new Date(d).toLocaleDateString('en-US', {

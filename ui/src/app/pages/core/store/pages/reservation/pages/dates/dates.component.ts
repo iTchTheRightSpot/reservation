@@ -15,7 +15,11 @@ import {
   tap
 } from 'rxjs';
 import { ApiResponse, ApiState } from '@root/app.model';
-import { DateModel } from '@store/pages/reservation/pages/dates/dates.model';
+import {
+  DateModel,
+  filterValidDatesFromDatesInAMonth,
+  findDatesInDateModel
+} from '@shared/model/shared.model';
 import { FormsModule } from '@angular/forms';
 import {
   DatePicker,
@@ -106,30 +110,8 @@ export class DatesComponent {
   /**
    * Filters out valid dates from days in the particular month
    * */
-  private readonly filter = (date: Date, valid: DateModel[]) => {
-    const validDates = valid.map(d =>
-      moment.tz(Number(d.date), TIMEZONE).toDate()
-    );
-
-    const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    const daysInMonth = endOfMonth.getDate();
-
-    const allDatesInMonth = Array.from(
-      { length: daysInMonth },
-      (_, index) => new Date(date.getFullYear(), date.getMonth(), index + 1)
-    );
-
-    return allDatesInMonth.filter(
-      date =>
-        !validDates.some(validDate => {
-          return (
-            validDate.getDate() === date.getDate() &&
-            validDate.getMonth() === date.getMonth() &&
-            validDate.getFullYear() === date.getFullYear()
-          );
-        })
-    );
-  };
+  private readonly filter = (date: Date, valid: DateModel[]) =>
+    filterValidDatesFromDatesInAMonth(date, valid);
 
   protected readonly crossDates = (date: any, dates: Date[]) =>
     dates.some(
@@ -139,21 +121,8 @@ export class DatesComponent {
         d.getFullYear() === date.year
     );
 
-  protected readonly contains = (d: Date, arr: DateModel[]) => {
-    const find = arr.find(obj => {
-      const t = moment.tz(Number(obj.date), TIMEZONE).toDate();
-      return (
-        t.getDate() === d.getDate() &&
-        t.getMonth() === d.getMonth() &&
-        t.getFullYear() === d.getFullYear()
-      );
-    });
-    if (!find) return undefined;
-    return find.times.map(a => ({
-      original: a,
-      format: moment.tz(Number(a), TIMEZONE).format('h:mm a')
-    }));
-  };
+  protected readonly contains = (d: Date, arr: DateModel[]) =>
+    findDatesInDateModel(d, arr);
 
   protected readonly onSelectedCalendarMonth = (
     event: DatePickerMonthChangeEvent

@@ -5,6 +5,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"net/http"
 	"os"
+	"regexp"
 )
 
 type SecretVariables struct {
@@ -16,6 +17,7 @@ type SecretVariables struct {
 	CookieParam        *utils.CookieParam
 	FrontEnd           string
 	ApiPrefix          string
+	SymmetricKey       string
 }
 
 func (dep *SecretVariables) Config() *SecretVariables {
@@ -27,12 +29,22 @@ func (dep *SecretVariables) Config() *SecretVariables {
 		PrivateKeyPath:     cmp.Or(os.Getenv("JWT_PRIV_PATH"), "./keys/private.key"),
 		PublicKeyPath:      cmp.Or(os.Getenv("JWT_PUB_PATH"), "./keys/public.key"),
 		FrontEnd:           cmp.Or(os.Getenv("FRONTEND"), "http://localhost:4200"),
+		SymmetricKey:       cmp.Or(os.Getenv("JWT_SECRET"), "jwt-secret"),
 		CookieParam: &utils.CookieParam{
 			CookieName:   cmp.Or(os.Getenv("COOKIENAME"), "RESERVATION_COOKIE"),
 			CookieSecure: profile == "production",
-			CookieDomain: cmp.Or(os.Getenv("COOKIEDOMAIN"), "localhost"),
+			CookieDomain: cookieDomain(),
 			SameSite:     http.SameSiteLaxMode,
 		},
 		ApiPrefix: "/api/v1/",
 	}
+}
+
+func cookieDomain() string {
+	val := cmp.Or(os.Getenv("COOKIEDOMAIN"), "localhost")
+	if val == "localhost" {
+		return val
+	}
+	// regex https://docs.spring.io/spring-session/reference/guides/java-custom-cookie.html
+	return regexp.MustCompile(`^.+?\.(\w+\.[a-z]+)$`).FindStringSubmatch(val)[1]
 }

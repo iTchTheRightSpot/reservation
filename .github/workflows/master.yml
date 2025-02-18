@@ -1,4 +1,4 @@
-name: Speak Api test & deploy
+name: Reservation test & deploy
 on:
   push:
     branches:
@@ -26,8 +26,21 @@ jobs:
         with:
           node-version: '20.x'
 
+      - name: Log into DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: emmanuelu17
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Docker compose up
-        run: docker compose up -d
+        run: |
+          docker run --name pg \
+          -p 5432:5432 \
+          --expose 5432 \
+          -e POSTGRES_DB=reservation_db \
+          -e POSTGRES_USER=reservation \
+          -e POSTGRES_PASSWORD=reservation \
+          -d postgres:15.6
 
       - name: Env
         run: |
@@ -50,4 +63,12 @@ jobs:
 #        run: go clean -testcache && go test ./... --race
 
       - name: Docker compose down
-        run: docker compose down -v
+        run: docker stop pg
+
+      - name: Build binary
+        run: docker build --tag salon:latest . --progress=plain
+
+      - name: Push to dockerhub
+        run: |
+          docker image tag salon:latest emmanuelu17/salon:latest
+          docker push --all-tags emmanuelu17/salon

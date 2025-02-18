@@ -1,5 +1,13 @@
 import { Injectable } from '@angular/core';
-import { concat, concatMap, Observable, of, Subject, timer } from 'rxjs';
+import {
+  concat,
+  concatMap,
+  Observable,
+  of,
+  Subject,
+  switchMap,
+  timer
+} from 'rxjs';
 
 export enum ToastEnum {
   NONE = 'NONE',
@@ -19,7 +27,7 @@ export class ToastService {
   private readonly subject = new Subject<IToast>();
 
   readonly toast$: Observable<IToast> = this.subject.pipe(
-    concatMap(obj =>
+    switchMap(obj =>
       concat(
         of(obj),
         timer(5000).pipe(

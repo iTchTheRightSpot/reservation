@@ -51,6 +51,7 @@ export class CrmNavBarComponent {
 
   readonly logout = output<void>();
 
+  protected readonly logo = './logo.jpeg';
   protected readonly items: MenuItem[] = [
     {
       label: 'Dashboard',

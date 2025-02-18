@@ -65,7 +65,7 @@ func TestScheduleHandler(t *testing.T) {
 	logger := utils.NewMockLogger()
 	prov := stores.NewTransactionProvider(logger, db)
 	adapters := stores.NewAdapters(logger, db, prov)
-	jwtSer := auth.NewJwtService(logger, env)
+	jwtSer := auth.NewJwtServiceAsymmetric(logger, env)
 	m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
 	s := schedule.NewScheduleService(logger, adapters)
 

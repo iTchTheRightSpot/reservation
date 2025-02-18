@@ -1,11 +1,13 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  inject,
   OnInit,
   signal
 } from '@angular/core';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { FormsModule } from '@angular/forms';
+import { LightDarkModeService } from '@shared/data-access/light-dark-mode.service';
 
 @Component({
   selector: 'app-light-dark-mode',
@@ -26,6 +28,8 @@ import { FormsModule } from '@angular/forms';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LightDarkModeComponent implements OnInit {
+  private readonly service = inject(LightDarkModeService);
+
   protected readonly isDarkMode = signal(false);
 
   ngOnInit(): void {
@@ -41,6 +45,7 @@ export class LightDarkModeComponent implements OnInit {
       this.isDarkMode.set(false);
       el?.classList.remove('dark');
     }
+    this.service.isDarkMode.set(this.isDarkMode());
   }
 
   protected readonly toggleDarkMode = () => {
@@ -48,5 +53,6 @@ export class LightDarkModeComponent implements OnInit {
     if (this.isDarkMode()) localStorage.setItem('color-theme', 'light');
     else localStorage.setItem('color-theme', 'dark');
     this.isDarkMode.set(!this.isDarkMode());
+    this.service.isDarkMode.set(this.isDarkMode());
   };
 }

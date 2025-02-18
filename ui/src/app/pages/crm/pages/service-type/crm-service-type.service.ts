@@ -48,7 +48,7 @@ export class CRMServiceTypeService {
                 concatMap(() =>
                   of<ApiResponse<CRMServiceTypeModel[]>>({
                     state: ApiState.LOADED,
-                    data: CRM_DummyServiceTypes(50)
+                    data: CRM_DummyServiceTypes(10)
                   })
                 )
               )
