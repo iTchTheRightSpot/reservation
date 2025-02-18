@@ -78,6 +78,7 @@ import { InputNumber } from 'primeng/inputnumber';
           >Visible (display to customers)</label
         >
         <p-select
+          id="is_visible"
           inputId="is_visible"
           [options]="visibilityOptions()"
           formControlName="is_visible"

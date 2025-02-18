@@ -1,7 +1,6 @@
 services:
   pg:
     image: postgres:15.6
-    restart: always
     container_name: pg
     volumes:
       - pg-data:/var/lib/postgresql/data
