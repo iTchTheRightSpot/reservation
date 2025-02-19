@@ -5,12 +5,14 @@ Service similar to Square reservation
 
 ## Core Requirements
 
-1. **Authentication & Authorization**
+1. **Serverside serve angular app**
+   
+2. **Authentication & Authorization**
    - Authentication by email & password
    - Role & permission based authorization using jwt
      - To access protected resources, each request must contain jwt as a cookie.
 
-2. **Staff**
+3. **Staff**
     - **Schedule**
       - Only staffs with `WRITE` permission can create working hours for other staffs.
       - Allow bulk creation of schedules with the following constraints:
@@ -35,7 +37,7 @@ Service similar to Square reservation
       That is an existing relationship with payment_detail.
       - Both staff & client should receive a notification 1 day before a `PENDING` appointment.
 
-3. **Clients**
+4. **Clients**
    - **Services**
      - A client should see all the services offered.
      - n number of services can be for one reservation.
@@ -47,7 +49,7 @@ Service similar to Square reservation
      - A reservation cannot be made for past dates.
      - Clients & staffs should receive notifications on appointment status change.
 
-4. **Payment**
+5. **Payment**
     - Only staffs can send invoices to clients.
     - Clients should be able to pay via online invoice.
 
