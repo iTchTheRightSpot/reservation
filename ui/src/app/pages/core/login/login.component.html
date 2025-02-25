@@ -32,9 +32,24 @@
   <div
     class="w-full md:w-fit h-fit px-10 md:px-20 py-7 flex flex-col item-center justify-center rounded-md border shadow-2xl"
   >
-    <div class="text-center md:text-left mb-4">
+    <div class="md:text-left mb-4">
       <p class="mb-2 text-xl md:text-2xl font-bold">Log in</p>
       <span class="font-medium opacity-50">Please enter your details</span>
+    </div>
+
+    <div class="text-left mb-4">
+      <p class="mb-2 font-bold">Demo credentials</p>
+
+      <div class="w-full flex flex-col sm:flex-row gap-2">
+        <div class="flex gap-2">
+          <strong>email:</strong>
+          <span class="font-medium opacity-50">{{ email }}</span>
+        </div>
+        <div class="flex gap-2">
+          <strong>password:</strong>
+          <span class="font-medium opacity-50">{{ password }}</span>
+        </div>
+      </div>
     </div>
 
     <form

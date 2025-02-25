@@ -46,6 +46,8 @@ export class LoginComponent {
   });
 
   protected readonly state = ApiState;
+  protected readonly email = 'demo@email.com';
+  protected readonly password = 'Fast#!@fooD123#$';
 
   private readonly subject = new Subject<LoginModel>();
   protected readonly login = toSignal(
