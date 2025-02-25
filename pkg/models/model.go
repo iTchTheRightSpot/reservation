@@ -14,7 +14,7 @@ type ProfilePayload struct {
 	Firstname string `json:"firstname" validate:"required,min=1,max=50"`
 	Lastname  string `json:"lastname" validate:"required,min=1,max=50"`
 	Email     string `json:"email" validate:"required,min=1,max=320"`
-	Password  string `json:"password" validate:"required,min=8,max=15"`
+	Password  string `json:"password" validate:"required,min=8,max=20"`
 }
 
 type RoleEnum string

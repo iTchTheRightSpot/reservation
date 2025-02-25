@@ -23,10 +23,10 @@ func NewPasswordService(l utils.ILogger) IPasswordService {
 }
 
 func (dep *passwordService) PasswordRegex(str string) error {
-	mess := "password must be 8-15 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character (#?!@$%^&*-)"
+	mess := "password must be 8-20 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character (#?!@$%^&*-)"
 
 	// length check
-	if len(str) < 8 || len(str) > 15 {
+	if len(str) < 8 || len(str) > 20 {
 		return errors.New(mess)
 	}
 
