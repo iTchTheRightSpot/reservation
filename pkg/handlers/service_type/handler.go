@@ -28,21 +28,18 @@ func NewServiceTypeHandler(mux *http.ServeMux, l utils.ILogger, s service_type.I
 }
 
 func (dep *ServiceTypeHandler) Register() {
-	rp := &models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}}
-
 	dep.mux.HandleFunc("GET /service", dep.services)
 	dep.mux.HandleFunc("GET /service/staffs", dep.staffsByServices)
 
 	// protected routes
+	rp := &models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}}
+
 	// reads
 	dep.mux.Handle("GET /crm/services", dep.ware.Authentication(
 		dep.ware.HasRole(http.HandlerFunc(dep.crmServices), &rp.Role),
 	))
 	dep.mux.Handle("GET /crm/services/staff", dep.ware.Authentication(
-		dep.ware.HasRoleAndPermissions(
-			http.HandlerFunc(dep.serviceTypesByStaffUUID),
-			&models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.READ}},
-		),
+		dep.ware.HasRole(http.HandlerFunc(dep.serviceTypesByStaffUUID), &rp.Role),
 	))
 
 	// writes

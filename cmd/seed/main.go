@@ -84,7 +84,7 @@ func services(ctx context.Context, a *stores.Adapters) [4]service_type.ServiceTy
 func staffs(ctx context.Context, a *stores.Adapters, ps auth.IPasswordService) [3]staff.StaffEntity {
 	arr := [3]staff.StaffEntity{}
 
-	pass, _ := ps.Encode("Password123@#$")
+	pass, _ := ps.Encode("Fast#!@fooD123#$")
 
 	for i := 0; i < 3; i++ {
 

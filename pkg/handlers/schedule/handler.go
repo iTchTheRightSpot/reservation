@@ -30,7 +30,7 @@ func (dep *ScheduleHandler) Register() {
 
 	// read
 	dep.mux.Handle("GET /schedules", dep.ware.Authentication(dep.ware.HasRole(http.HandlerFunc(dep.schedules), &rp.Role)))
-	dep.mux.Handle("GET /schedules/staff", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(http.HandlerFunc(dep.schedulesByStaff), rp)))
+	dep.mux.Handle("GET /schedules/staff", dep.ware.Authentication(dep.ware.HasRole(http.HandlerFunc(dep.schedulesByStaff), &rp.Role)))
 
 	// write
 	m1 := middleware.RequestBodyMiddleware[model.SchedulePayload]{Logger: dep.logger}

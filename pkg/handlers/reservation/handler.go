@@ -34,7 +34,7 @@ func (dep *ReservationHandler) Register() {
 	// protected routes
 	rp := models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}}
 	// read
-	dep.mux.Handle("GET /crm/reservation", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(http.HandlerFunc(dep.bookings), &rp)))
+	dep.mux.Handle("GET /crm/reservation", dep.ware.Authentication(dep.ware.HasRole(http.HandlerFunc(dep.bookings), &rp.Role)))
 
 	// write
 	dep.mux.Handle("POST /crm/reservation", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(m1.RequestBody(http.HandlerFunc(dep.manualCreate)), &rp)))

@@ -22,7 +22,7 @@ type ActiveUser struct {
 
 type Login struct {
 	Email    string `json:"email" validate:"required,min=1,max=320"`
-	Password string `json:"password" validate:"required,min=8,max=15"`
+	Password string `json:"password" validate:"required,min=8,max=20"`
 }
 
 type RoleAndPermissionPayload struct {
