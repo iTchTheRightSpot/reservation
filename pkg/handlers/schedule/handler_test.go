@@ -194,7 +194,7 @@ func TestScheduleHandler(t *testing.T) {
 			}
 		})
 
-		t.Run("reject. staff without WRITE permission trying to view another staffs schedule", func(t *testing.T) {
+		t.Run("reject. any staff can view another staffs schedule", func(t *testing.T) {
 			cred := []models.RolePermissionEnum{
 				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.READ}},
 			}
@@ -217,7 +217,7 @@ func TestScheduleHandler(t *testing.T) {
 			mux.ServeHTTP(rr, req)
 
 			// assert
-			if rr.Code != http.StatusForbidden {
+			if rr.Code != http.StatusOK {
 				t.Errorf("expected status code %d, got %d", http.StatusOK, rr.Code)
 			}
 		})
