@@ -185,7 +185,7 @@ func TestScheduleHandler(t *testing.T) {
 
 			var arr []model.ScheduleResponse
 			if err = json.NewDecoder(rr.Body).Decode(&arr); err != nil {
-				t.Errorf(err.Error())
+				t.Error(err.Error())
 			}
 
 			if len(arr) < 1 {
@@ -251,7 +251,7 @@ func TestScheduleHandler(t *testing.T) {
 
 			var arr []model.ScheduleResponse
 			if err = json.NewDecoder(rr.Body).Decode(&arr); err != nil {
-				t.Errorf(err.Error())
+				t.Error(err.Error())
 			}
 
 			if len(arr) < 1 {
@@ -458,7 +458,7 @@ func TestScheduleHandler(t *testing.T) {
 
 			_, err = db.ExecContext(context.Background(), q, ss[0].StaffId, ss[0].Start, ss[0].Start, ss[0].Start.Add(5*time.Minute))
 			if err != nil {
-				t.Errorf(err.Error())
+				t.Error(err.Error())
 			}
 
 			// route

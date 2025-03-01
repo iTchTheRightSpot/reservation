@@ -56,7 +56,7 @@ func TestMain(m *testing.M) {
 func TestServiceTypeHandler(t *testing.T) {
 	t.Cleanup(func() {
 		if err := handlers.DeleteAll(db); err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 	})
 
@@ -151,7 +151,7 @@ func TestServiceTypeHandler(t *testing.T) {
 
 			var resp []*ui
 			if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
-				t.Errorf(err.Error())
+				t.Error(err.Error())
 			}
 
 			// assert
@@ -259,7 +259,7 @@ func TestServiceTypeHandler(t *testing.T) {
 
 			var arr []string
 			if err := json.Unmarshal(rr.Body.Bytes(), &arr); err != nil {
-				t.Errorf(err.Error())
+				t.Error(err.Error())
 			}
 
 			if len(arr) != 2 {
@@ -288,7 +288,7 @@ func TestServiceTypeHandler(t *testing.T) {
 
 			var resp []ui
 			if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
-				t.Errorf(err.Error())
+				t.Error(err.Error())
 			}
 
 			// assert
@@ -343,7 +343,7 @@ func TestServiceTypeHandler(t *testing.T) {
 
 				var resp []*ui
 				if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
-					t.Errorf(err.Error())
+					t.Error(err.Error())
 				}
 
 				// assert
@@ -368,7 +368,7 @@ func TestServiceTypeHandler(t *testing.T) {
 
 				var resp []*ui
 				if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
-					t.Errorf(err.Error())
+					t.Error(err.Error())
 				}
 
 				// assert

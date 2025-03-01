@@ -44,7 +44,7 @@ func TestMain(m *testing.M) {
 	db = d
 
 	defer func(db *sql.DB) {
-		if err := db.Close(); err != nil {
+		if err = db.Close(); err != nil {
 			log.Printf("db connection did not close after tests")
 			return
 		}
@@ -56,7 +56,7 @@ func TestMain(m *testing.M) {
 func TestAccountHandler(t *testing.T) {
 	t.Cleanup(func() {
 		if err := handlers.DeleteAll(db); err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 	})
 
@@ -194,7 +194,7 @@ func TestAccountHandler(t *testing.T) {
 
 	pr, err := adp.ProfileStore.ProfileRolesAndPermissionByEmail(context.Background(), p.Email)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 
 	if pr == nil {
@@ -203,7 +203,7 @@ func TestAccountHandler(t *testing.T) {
 
 	staf, err := adp.StaffStore.StaffByProfileId(context.Background(), pr.Profile.ProfileId)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 
 	t.Run("should delete permission", func(t *testing.T) {
@@ -246,7 +246,7 @@ func TestAccountHandler(t *testing.T) {
 	t.Run("should add role to user", func(t *testing.T) {
 		st, err := adp.StaffStore.StaffByProfileId(context.Background(), pr.Profile.ProfileId)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 
 		pl, err := json.Marshal(models.RoleAndPermissionPayload{

@@ -56,7 +56,7 @@ func TestMain(m *testing.M) {
 func TestStaffHandler(t *testing.T) {
 	t.Cleanup(func() {
 		if err := handlers.DeleteAll(db); err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 	})
 
