@@ -1,8 +1,8 @@
-name: Reservation test & deploy
+name: Test & Deploy
 on:
   push:
     branches:
-      - '**'
+      - master
   pull_request:
     branches:
       - master
@@ -19,7 +19,7 @@ jobs:
       - name: Set up Go version
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23.x'
+          go-version: '1.24.x'
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
