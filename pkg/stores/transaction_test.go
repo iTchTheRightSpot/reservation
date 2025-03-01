@@ -38,7 +38,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestTransactionProvider(t *testing.T) {
-	logger := utils.NewMockLogger()
+	logger := utils.NewDevLogger()
 	del := func(query string, args ...interface{}) (sql.Result, error) {
 		exec, err := db.Exec(query, args...)
 		if err != nil {

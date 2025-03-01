@@ -61,7 +61,7 @@ func TestStaffHandler(t *testing.T) {
 	})
 
 	mux := http.NewServeMux()
-	logger := utils.NewMockLogger()
+	logger := utils.NewDevLogger()
 	prov := stores.NewTransactionProvider(logger, db)
 	adp := stores.NewAdapters(logger, db, prov)
 	jwtSer := auth.NewJwtServiceAsymmetric(logger, env)

@@ -10,7 +10,7 @@ import (
 func TestScheduleModel(t *testing.T) {
 	t.Parallel()
 
-	logger := utils.NewMockLogger()
+	logger := utils.NewDevLogger()
 	timezone := logger.Timezone()
 
 	t.Run("return error schedule in the past", func(t *testing.T) {

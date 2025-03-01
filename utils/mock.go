@@ -10,7 +10,7 @@ type mockLogger struct {
 	loc  *time.Location
 }
 
-func NewMockLogger() ILogger {
+func NewDevLogger() ILogger {
 	utc, loc, err := dateInTimezone("UTC")
 	if err != nil {
 		return nil

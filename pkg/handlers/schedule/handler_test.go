@@ -62,7 +62,7 @@ func TestScheduleHandler(t *testing.T) {
 
 	// given
 	mux := http.NewServeMux()
-	logger := utils.NewMockLogger()
+	logger := utils.NewDevLogger()
 	prov := stores.NewTransactionProvider(logger, db)
 	adapters := stores.NewAdapters(logger, db, prov)
 	jwtSer := auth.NewJwtServiceAsymmetric(logger, env)

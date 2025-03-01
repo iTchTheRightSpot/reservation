@@ -18,6 +18,7 @@ type SecretVariables struct {
 	FrontEnd           string
 	ApiPrefix          string
 	SymmetricKey       string
+	Discord            string
 }
 
 func (dep *SecretVariables) Config() *SecretVariables {
@@ -31,12 +32,13 @@ func (dep *SecretVariables) Config() *SecretVariables {
 		FrontEnd:           cmp.Or(os.Getenv("FRONTEND"), "http://localhost:4200"),
 		SymmetricKey:       cmp.Or(os.Getenv("JWT_SECRET"), "jwt-secret"),
 		CookieParam: &utils.CookieParam{
-			CookieName:   cmp.Or(os.Getenv("COOKIENAME"), "RESERVATION_COOKIE"),
+			CookieName:   cmp.Or(os.Getenv("COOKIENAME"), "GSESSIONID"),
 			CookieSecure: profile == "production",
 			CookieDomain: cookieDomain(),
 			SameSite:     http.SameSiteLaxMode,
 		},
 		ApiPrefix: "/api/v1/",
+		Discord:   cmp.Or(os.Getenv("DISCORD_WEBHOOK"), "http://localhost:4200"),
 	}
 }
 

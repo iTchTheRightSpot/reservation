@@ -61,7 +61,7 @@ func TestServiceTypeHandler(t *testing.T) {
 	})
 
 	// given
-	logger := utils.NewMockLogger()
+	logger := utils.NewDevLogger()
 	mux := http.NewServeMux()
 	prov := stores.NewTransactionProvider(logger, db)
 	adapters := stores.NewAdapters(logger, db, prov)

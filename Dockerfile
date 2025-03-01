@@ -22,6 +22,6 @@ FROM gcr.io/distroless/static-debian12
 
 WORKDIR /
 
-COPY --from=api /app/salon /salon
+COPY --from=api /app/salon /
 
 CMD ["/salon"]

@@ -20,7 +20,7 @@ func TestJwtService(t *testing.T) {
 	t.Run("should generate and validate jwt", func(t *testing.T) {
 		t.Parallel()
 
-		s := NewJwtServiceAsymmetric(utils.NewMockLogger(), con)
+		s := NewJwtServiceAsymmetric(utils.NewDevLogger(), con)
 
 		cred := make([]models.RolePermissionEnum, 2)
 		cred[0] = models.RolePermissionEnum{

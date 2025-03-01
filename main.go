@@ -9,29 +9,34 @@ import (
 )
 
 func main() {
-	// logger
-	logger, err := utils.NewLogger("UTC")
-	if err != nil {
-		log.Fatal("failed to instantiate logger ", err.Error())
-	}
-
-	// config
+	// initialize env
 	obj := config.SecretVariables{}
 	env := obj.Config()
+
+	// logger
+	var l = utils.NewDevLogger()
+	if env.Profile == "production" {
+		lg, err := utils.NewLogger("UTC", env.Discord)
+		if err != nil {
+			log.Fatal("failed to instantiate logger ", err.Error())
+			return
+		}
+		l = lg
+	}
 
 	// connect to database
 	db, err := database.ConnectToPostgres(env.DbConnectionString)
 	if err != nil {
-		logger.Fatal(err.Error())
+		l.Fatal(err.Error())
 	}
 
 	if env.CookieParam.CookieSecure {
 		if err = database.Migrate(db); err != nil {
-			logger.Fatal(err.Error())
+			l.Fatal(err.Error())
 		}
 	}
 
 	// start server
-	server := api.ErpServer{Db: db, Logger: logger, Env: env}
+	server := api.ErpServer{Db: db, Logger: l, Env: env}
 	server.Serve()
 }

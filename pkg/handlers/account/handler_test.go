@@ -62,7 +62,7 @@ func TestAccountHandler(t *testing.T) {
 
 	// given
 	mux := http.NewServeMux()
-	l := utils.NewMockLogger()
+	l := utils.NewDevLogger()
 	prov := stores.NewTransactionProvider(l, db)
 	adp := stores.NewAdapters(l, db, prov)
 	jwtSer := auth.NewJwtServiceAsymmetric(l, env)

@@ -58,7 +58,7 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 func TestStaffStore(t *testing.T) {
 	t.Parallel()
 
-	mockLog := utils.NewMockLogger()
+	mockLog := utils.NewDevLogger()
 
 	t.Run("should save staff and find by uuid", func(t *testing.T) {
 		t.Parallel()

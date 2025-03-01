@@ -94,7 +94,7 @@ func preSaveService(a serviceStore.IServiceTypeStore) (*service_type.ServiceType
 }
 
 func TestReservationStore(t *testing.T) {
-	mockLog := utils.NewMockLogger()
+	mockLog := utils.NewDevLogger()
 
 	t.Run("should save reservation & count reservations in range", func(t *testing.T) {
 		tx, fn := setupTest(t)

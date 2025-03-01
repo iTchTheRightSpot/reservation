@@ -27,11 +27,7 @@ func main() {
 		return
 	}
 
-	l, err := utils.NewLogger("UTC")
-	if err != nil {
-		return
-	}
-
+	l := utils.NewDevLogger()
 	ps := auth.NewPasswordService(l)
 	a := stores.NewAdapters(l, db, stores.NewTransactionProvider(l, db))
 	ctx := context.Background()

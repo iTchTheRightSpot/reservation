@@ -15,7 +15,7 @@ import (
 func TestAccountService(t *testing.T) {
 	t.Parallel()
 
-	lg := utils.NewMockLogger()
+	lg := utils.NewDevLogger()
 	cac := pkg.NewInMemoryCache[string, []*staffModel.AllStaffsEntity](lg, 10, 0)
 	ctx := context.Background()
 
