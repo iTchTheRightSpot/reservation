@@ -6,7 +6,7 @@ import (
 )
 
 func TestProfileModel(t *testing.T) {
-	instance := NewPasswordService(utils.NewMockLogger())
+	instance := NewPasswordService(utils.NewDevLogger())
 
 	t.Run("regex. password has no uppercase", func(t *testing.T) {
 		if err := instance.PasswordRegex("password123#!"); err == nil {

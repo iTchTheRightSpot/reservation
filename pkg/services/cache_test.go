@@ -20,7 +20,7 @@ func TestInMemoryCache(t *testing.T) {
 		t.Parallel()
 
 		cache := inMemoryCache[string, cxObj]{
-			logger:   utils.NewMockLogger(),
+			logger:   utils.NewDevLogger(),
 			cache:    &sync.Map{},
 			duration: time.Duration(2) * time.Second,
 			size:     2,
@@ -48,7 +48,7 @@ func TestInMemoryCache(t *testing.T) {
 		t.Parallel()
 
 		cache := inMemoryCache[string, cxObj]{
-			logger:   utils.NewMockLogger(),
+			logger:   utils.NewDevLogger(),
 			cache:    &sync.Map{},
 			duration: time.Duration(2) * time.Second,
 			size:     2,
@@ -70,7 +70,7 @@ func TestInMemoryCache(t *testing.T) {
 		t.Parallel()
 
 		cache := inMemoryCache[string, cxObj]{
-			logger:   utils.NewMockLogger(),
+			logger:   utils.NewDevLogger(),
 			cache:    &sync.Map{},
 			duration: time.Duration(2) * time.Second,
 			size:     2,
@@ -94,7 +94,7 @@ func TestInMemoryCache(t *testing.T) {
 		t.Parallel()
 
 		cache := inMemoryCache[string, cxObj]{
-			logger:   utils.NewMockLogger(),
+			logger:   utils.NewDevLogger(),
 			cache:    &sync.Map{},
 			duration: time.Duration(2) * time.Second,
 			size:     2,
@@ -119,7 +119,7 @@ func TestInMemoryCache(t *testing.T) {
 		t.Parallel()
 
 		cache := inMemoryCache[string, cxObj]{
-			logger:   utils.NewMockLogger(),
+			logger:   utils.NewDevLogger(),
 			cache:    &sync.Map{},
 			duration: time.Duration(2) * time.Second,
 			size:     2,

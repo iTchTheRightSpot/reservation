@@ -8,7 +8,7 @@ COPY . .
 RUN cd ui/ && npm i && npm run build --verbose --configuration=production
 
 # build golang
-FROM golang:1.23.4 AS  api
+FROM golang:1.24.0 AS  api
 
 WORKDIR /app
 
@@ -22,6 +22,6 @@ FROM gcr.io/distroless/static-debian12
 
 WORKDIR /
 
-COPY --from=api /app/salon /salon
+COPY --from=api /app/salon /
 
 CMD ["/salon"]

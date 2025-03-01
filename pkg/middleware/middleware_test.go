@@ -25,7 +25,7 @@ func TestMiddleware(t *testing.T) {
 	sv := &config.SecretVariables{}
 	env := sv.Config()
 
-	logger := utils.NewMockLogger()
+	logger := utils.NewDevLogger()
 
 	t.Run("Authentication middleware", func(t *testing.T) {
 		t.Parallel()

@@ -1,6 +1,6 @@
 module github.com/iTchTheRightSpot/erp-golang
 
-go 1.23.4
+go 1.24.0
 
 require (
 	github.com/go-playground/validator/v10 v10.25.0
@@ -9,7 +9,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/lib/pq v1.10.9
 	github.com/rs/cors v1.11.1
-	golang.org/x/crypto v0.33.0
+	golang.org/x/crypto v0.35.0
 )
 
 require (

@@ -56,7 +56,7 @@ func TestMain(m *testing.M) {
 	db = d
 
 	defer func(db *sql.DB) {
-		if err := db.Close(); err != nil {
+		if err = db.Close(); err != nil {
 			log.Printf("db connection did not close after tests")
 			return
 		}
@@ -68,13 +68,13 @@ func TestMain(m *testing.M) {
 func TestReservationHandler(t *testing.T) {
 	t.Cleanup(func() {
 		if err := handlers.DeleteAll(db); err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 	})
 
 	// given
 	mux := http.NewServeMux()
-	logger := utils.NewMockLogger()
+	logger := utils.NewDevLogger()
 	prov := stores.NewTransactionProvider(logger, db)
 	adapters := stores.NewAdapters(logger, db, prov)
 	jwtSer := auth.NewJwtServiceAsymmetric(logger, env)
@@ -87,25 +87,25 @@ func TestReservationHandler(t *testing.T) {
 	ctx := context.Background()
 	staff1, err := handlers.PreSaveStaff(ctx, adapters)
 	if err != nil {
-		t.Error(err)
+		t.Error(err.Error())
 	}
 
 	serviceType1, err := preSaveService(ctx, adapters)
 	if err != nil {
-		t.Fatalf("preSaveService type 1 failed: %v", err)
+		t.Fatalf("preSaveService type 1 failed: %v", err.Error())
 	}
 
 	if err = linkServiceToStaff(adapters, staff1, serviceType1); err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 
 	serviceType2, err := preSaveService(ctx, adapters)
 	if err != nil {
-		t.Fatalf("preSaveService type 2 failed: %v", err)
+		t.Fatalf("preSaveService type 2 failed: %v", err.Error())
 	}
 
 	if err = linkServiceToStaff(adapters, staff1, serviceType2); err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 
 	// register schedule handler
@@ -179,7 +179,7 @@ func TestReservationHandler(t *testing.T) {
 
 			if rr.Code != http.StatusCreated {
 				t.Errorf("expected status code %d, got %d", http.StatusCreated, rr.Code)
-				t.Errorf(rr.Body.String())
+				t.Error(rr.Body.String())
 			}
 		})
 
@@ -284,7 +284,7 @@ func TestReservationHandler(t *testing.T) {
 		t.Run("should cancel reservation", func(t *testing.T) {
 			first, err := firstReservation(ctx)
 			if err != nil {
-				t.Errorf(err.Error())
+				t.Error(err.Error())
 			}
 
 			t.Run("success.", func(t *testing.T) {
@@ -312,7 +312,7 @@ func TestReservationHandler(t *testing.T) {
 
 				var obj utils.Error
 				if err = json.NewDecoder(rr.Body).Decode(&obj); err != nil {
-					t.Errorf(err.Error())
+					t.Error(err.Error())
 				}
 
 				str := "reservation already cancelled"
@@ -421,7 +421,7 @@ func TestReservationHandler(t *testing.T) {
 			t.Run("success", func(t *testing.T) {
 				first, err := firstReservation(ctx)
 				if err != nil {
-					t.Errorf(err.Error())
+					t.Error(err.Error())
 				}
 
 				body := model.UpdateBookingPayload{
@@ -486,7 +486,7 @@ func reservationTimes(t *testing.T, d time.Time, staff1 *staff.StaffEntity, serv
 
 	var payload []model.ReservationTimeSlots
 	if err = json.Unmarshal(rr.Body.Bytes(), &payload); err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 
 	return payload

@@ -56,7 +56,7 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 func TestScheduleStore(t *testing.T) {
 	t.Parallel()
 
-	mockLog := utils.NewMockLogger()
+	mockLog := utils.NewDevLogger()
 
 	t.Run("should save staff schedule", func(t *testing.T) {
 		t.Parallel()

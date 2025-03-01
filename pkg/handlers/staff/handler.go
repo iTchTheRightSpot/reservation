@@ -21,9 +21,8 @@ func NewStaffHandler(mux *http.ServeMux, w *middleware.Middleware, l utils.ILogg
 }
 
 func (dep *StaffHandler) Register() {
-	rp := &models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}}
-
-	dep.mux.Handle("GET /staffs", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(http.HandlerFunc(dep.allStaffs), rp)))
+	r := models.STAFF
+	dep.mux.Handle("GET /staffs", dep.ware.Authentication(dep.ware.HasRole(http.HandlerFunc(dep.allStaffs), &r)))
 }
 
 func (dep *StaffHandler) allStaffs(w http.ResponseWriter, r *http.Request) {

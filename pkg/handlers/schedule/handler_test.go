@@ -62,7 +62,7 @@ func TestScheduleHandler(t *testing.T) {
 
 	// given
 	mux := http.NewServeMux()
-	logger := utils.NewMockLogger()
+	logger := utils.NewDevLogger()
 	prov := stores.NewTransactionProvider(logger, db)
 	adapters := stores.NewAdapters(logger, db, prov)
 	jwtSer := auth.NewJwtServiceAsymmetric(logger, env)
@@ -185,7 +185,7 @@ func TestScheduleHandler(t *testing.T) {
 
 			var arr []model.ScheduleResponse
 			if err = json.NewDecoder(rr.Body).Decode(&arr); err != nil {
-				t.Errorf(err.Error())
+				t.Error(err.Error())
 			}
 
 			if len(arr) < 1 {
@@ -194,7 +194,7 @@ func TestScheduleHandler(t *testing.T) {
 			}
 		})
 
-		t.Run("reject. staff without WRITE permission trying to view another staffs schedule", func(t *testing.T) {
+		t.Run("reject. any staff can view another staffs schedule", func(t *testing.T) {
 			cred := []models.RolePermissionEnum{
 				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.READ}},
 			}
@@ -217,7 +217,7 @@ func TestScheduleHandler(t *testing.T) {
 			mux.ServeHTTP(rr, req)
 
 			// assert
-			if rr.Code != http.StatusForbidden {
+			if rr.Code != http.StatusOK {
 				t.Errorf("expected status code %d, got %d", http.StatusOK, rr.Code)
 			}
 		})
@@ -251,7 +251,7 @@ func TestScheduleHandler(t *testing.T) {
 
 			var arr []model.ScheduleResponse
 			if err = json.NewDecoder(rr.Body).Decode(&arr); err != nil {
-				t.Errorf(err.Error())
+				t.Error(err.Error())
 			}
 
 			if len(arr) < 1 {
@@ -458,7 +458,7 @@ func TestScheduleHandler(t *testing.T) {
 
 			_, err = db.ExecContext(context.Background(), q, ss[0].StaffId, ss[0].Start, ss[0].Start, ss[0].Start.Add(5*time.Minute))
 			if err != nil {
-				t.Errorf(err.Error())
+				t.Error(err.Error())
 			}
 
 			// route

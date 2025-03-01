@@ -94,7 +94,7 @@ func preSaveService(a serviceStore.IServiceTypeStore) (*service_type.ServiceType
 }
 
 func TestReservationStore(t *testing.T) {
-	mockLog := utils.NewMockLogger()
+	mockLog := utils.NewDevLogger()
 
 	t.Run("should save reservation & count reservations in range", func(t *testing.T) {
 		tx, fn := setupTest(t)
@@ -106,7 +106,7 @@ func TestReservationStore(t *testing.T) {
 		store := NewReservationStore(mockLog, tx)
 		staf, err := preSaveStaff(profileStore.NewProfileStore(mockLog, tx), staffStore.NewStaffStore(mockLog, tx))
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 
 		start := time.Date(mockLog.Date().Year(), mockLog.Date().Month(), 1, 9, 0, 0, 0, mockLog.Timezone())
@@ -134,7 +134,7 @@ func TestReservationStore(t *testing.T) {
 
 		// method to test & assert
 		if err = store.Save(ctx, r1); err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 		_ = store.Save(ctx, r2)
 
@@ -170,12 +170,12 @@ func TestReservationStore(t *testing.T) {
 		reservationServStore := NewReservationServiceStore(mockLog, tx)
 		erpStaff, err := preSaveStaff(profileStore.NewProfileStore(mockLog, tx), staffStore.NewStaffStore(mockLog, tx))
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 
 		erp, err := preSaveService(serviceStore.NewServiceTypeStore(mockLog, tx))
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 
 		start := mockLog.Date().Add(1 * time.Hour)
@@ -194,7 +194,7 @@ func TestReservationStore(t *testing.T) {
 
 		// method to test & assert
 		if err = store.Save(ctx, r); err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 
 		if r.ReservationId < 1 {
@@ -209,7 +209,7 @@ func TestReservationStore(t *testing.T) {
 
 		// method to test & assert
 		if err = reservationServStore.Save(ctx, re); err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 
 		if re.JunctionId < 1 {
@@ -227,7 +227,7 @@ func TestReservationStore(t *testing.T) {
 		store := NewReservationStore(mockLog, tx)
 		erpStaff, err := preSaveStaff(profileStore.NewProfileStore(mockLog, tx), staffStore.NewStaffStore(mockLog, tx))
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 
 		start := mockLog.Date().Add(1 * time.Hour)
@@ -244,7 +244,7 @@ func TestReservationStore(t *testing.T) {
 
 		// method to test & assert
 		if err = store.Save(ctx, r); err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 
 		if err = store.Save(ctx, r); err == nil {

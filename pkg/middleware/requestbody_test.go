@@ -13,7 +13,7 @@ import (
 func TestRequestBodyMiddleware(t *testing.T) {
 	t.Parallel()
 
-	logger := utils.NewMockLogger()
+	logger := utils.NewDevLogger()
 
 	t.Run("should accept request valid request body", func(t *testing.T) {
 		t.Parallel()

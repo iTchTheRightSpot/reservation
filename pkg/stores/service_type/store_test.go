@@ -58,7 +58,7 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 func TestServiceStore(t *testing.T) {
 	t.Parallel()
 
-	logger := utils.NewMockLogger()
+	logger := utils.NewDevLogger()
 
 	t.Run("should save and return service by name", func(t *testing.T) {
 		t.Parallel()

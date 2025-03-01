@@ -19,7 +19,7 @@ import (
 func TestReservationService(t *testing.T) {
 	t.Parallel()
 
-	mockLog := utils.NewMockLogger()
+	mockLog := utils.NewDevLogger()
 
 	t.Run("creating a reservation", func(t *testing.T) {
 		t.Parallel()
