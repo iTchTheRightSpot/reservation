@@ -38,10 +38,10 @@ func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *
 	j := auth.NewJwtServiceAsymmetric(l, e)
 	//j := auth.NewJwtServiceSymmetric(l, e)
 
-	if e.CookieParam.CookieSecure {
-		dummyUser(a, p)
-		demoUser(a, p)
-	}
+	//if e.CookieParam.CookieSecure {
+	//	dummyUser(a, p)
+	//	demoUser(a, p)
+	//}
 
 	staffCache := pkg.NewInMemoryCache[string, []*staffModel.AllStaffsEntity](l, 10, 10)
 	return &serviceRegistry{

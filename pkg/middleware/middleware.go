@@ -76,19 +76,15 @@ func (dep *Middleware) logging(next http.Handler) http.Handler {
 		start := dep.Logger.Date()
 		ip := dep.requestIP(r)
 		id := uuid.NewString()
-		dep.Logger.Log(fmt.Sprintf(
-			"[Request] ID: %s | IP: %s | Method: %s | Path: %s", id, ip, r.Method, r.URL.Path,
-		))
+
+		dep.Logger.Log("[Request] ID:", id, "\n IP:", ip, "\nMethod:", r.Method, "\nPath:", r.URL.Path)
 		obj := &wrappedWriter{
 			ResponseWriter: w,
 			status:         http.StatusOK,
 		}
 		next.ServeHTTP(obj, r)
 		end := dep.Logger.Date()
-		dep.Logger.Log(fmt.Sprintf(
-			"[Response] ID: %s | IP: %s | Status: %d | Method: %s | Path: %s | Duration: %v seconds",
-			id, ip, obj.status, r.Method, r.URL.Path, end.Sub(start).Seconds(),
-		))
+		dep.Logger.Log("[Response] ID:", id, "\nIP:", ip, "\nStatus:", obj.status, "\nMethod:", r.Method, "\nPath:", r.URL.Path, "\nDuration:", fmt.Sprintf("%v seconds", end.Sub(start).Seconds()))
 	})
 }
 
