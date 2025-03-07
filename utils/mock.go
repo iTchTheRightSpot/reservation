@@ -6,16 +6,15 @@ import (
 )
 
 type mockLogger struct {
-	date time.Time
-	loc  *time.Location
+	loc *time.Location
 }
 
 func NewDevLogger() ILogger {
-	utc, loc, err := dateInTimezone("UTC")
+	loc, err := dateInTimezone("UTC")
 	if err != nil {
 		return nil
 	}
-	return &mockLogger{date: utc, loc: loc}
+	return &mockLogger{loc: loc}
 }
 
 func (m *mockLogger) Timezone() *time.Location {
@@ -23,7 +22,11 @@ func (m *mockLogger) Timezone() *time.Location {
 }
 
 func (m *mockLogger) Date() time.Time {
-	return m.date
+	dt, err := time.Parse(TimeFormat, time.Now().In(m.loc).Format(TimeFormat))
+	if err != nil {
+		log.Print(err.Error())
+	}
+	return dt
 }
 
 func (m *mockLogger) Error(variables ...interface{}) {
