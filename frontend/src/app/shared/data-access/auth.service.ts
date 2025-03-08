@@ -15,7 +15,7 @@ import {
   tap,
   timer
 } from 'rxjs';
-import { ActiveUser, ApiResponse, ApiState } from '@root/app.model';
+import { ActiveUser, ApiResponse, ApiState, usr } from '@root/app.model';
 import { err } from '@root/app.util';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Permission, Role } from '@crm/pages/staff/pages/all/crm-staff.model';
@@ -65,14 +65,17 @@ export class AuthService {
             tap(o => {
               if (o && Object.keys(o).length > 0) this.activeUserCache.next(o);
             }),
-            catchError(e => of(e))
+            catchError(e => {
+              console.error(e);
+              return of(undefined);
+            })
           );
 
   readonly activeUser = toSignal(
     this.activeUserCache
       .asObservable()
       .pipe(switchMap(o => (o ? of<ActiveUser>(o) : this.activeUserRequest()))),
-    { initialValue: undefined }
+    { initialValue: usr }
   );
 
   readonly login = (obj: LoginModel) =>

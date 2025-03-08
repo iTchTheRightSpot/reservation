@@ -18,3 +18,10 @@ export interface ActiveUser {
   image_key: string | null;
   access_controls: RolePermissionEntity[];
 }
+
+export const usr = <ActiveUser>{
+  user_id: '',
+  firstname: '',
+  image_key: null,
+  access_controls: []
+};

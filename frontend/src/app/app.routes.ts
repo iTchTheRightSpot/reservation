@@ -9,7 +9,7 @@ export const RootRoutes = {
   NOTFOUND: '404'
 };
 
-export const crmGuard = async () => {
+const guard = async () => {
   if (!inject(AuthService).activeUser()) {
     await inject(Router).navigate([`${RootRoutes.CORE}/${CoreRoutes.LOGIN}`]);
     return false;
@@ -26,8 +26,8 @@ export const routes: Routes = [
   },
   {
     path: RootRoutes.CRM,
-    canActivate: [crmGuard],
-    canActivateChild: [crmGuard],
+    canActivate: [guard],
+    canActivateChild: [guard],
     loadComponent: () => import('@crm/crm.component').then(m => m.CrmComponent),
     loadChildren: () => import('@crm/crm.routes').then(m => m.routes)
   },
