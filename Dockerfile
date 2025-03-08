@@ -5,7 +5,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN cd fronetend/ && npm i && npm run build --verbose --configuration=production
+RUN cd frontend/ && npm i && npm run build --verbose --configuration=production
 
 # build golang
 FROM golang:1.24.0 AS  api
