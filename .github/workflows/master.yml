@@ -48,7 +48,7 @@ jobs:
           openssl rsa -in keys/private.key -pubout -out keys/public.key
 
       - name: NPM install
-        run: cd ui/ && npm i && npm run build --verbose --configuration=production
+        run: cd frontend/ && npm i && npm run build --verbose --configuration=production
 
       - name: Install dependencies
         run: go get .
