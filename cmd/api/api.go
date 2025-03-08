@@ -34,7 +34,7 @@ func (s *ErpServer) Serve() {
 
 	server := http.Server{
 		Addr:              s.Env.Address,
-		WriteTimeout:      10 * time.Second,
+		WriteTimeout:      5 * time.Second,
 		IdleTimeout:       30 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       5 * time.Second,
