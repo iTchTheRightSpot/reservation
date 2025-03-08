@@ -54,7 +54,7 @@ export class BookingsComponent extends ReservationUtilComponent {
     interval(1000)
       .pipe(
         tap(() => {
-          const u = this.authService.activeUser();
+          const u = this.authService.user();
           if (u)
             this.allBookingsEmitter.next({
               date: new Date(),
@@ -63,7 +63,7 @@ export class BookingsComponent extends ReservationUtilComponent {
               size: this.rows
             });
         }),
-        takeWhile(() => !this.authService.activeUser())
+        takeWhile(() => !this.authService.user())
       )
       .subscribe();
   }
@@ -99,9 +99,7 @@ export class BookingsComponent extends ReservationUtilComponent {
   protected readonly onSelectedDate = (d: Date) =>
     this.allBookingsEmitter.next({
       user_id:
-        this.selectedStaff?.user_id ||
-        this.authService.activeUser()?.user_id ||
-        '',
+        this.selectedStaff?.user_id || this.authService.user()?.user_id || '',
       date: d,
       page: (this.first = 0),
       size: this.rows
@@ -128,9 +126,7 @@ export class BookingsComponent extends ReservationUtilComponent {
     this.updateBookingStatusEmitter.next(o);
     this.allBookingsEmitter.next({
       user_id:
-        this.selectedStaff?.user_id ||
-        this.authService.activeUser()?.user_id ||
-        '',
+        this.selectedStaff?.user_id || this.authService.user()?.user_id || '',
       date: this.selectedDate || new Date(),
       page: this.first,
       size: this.rows

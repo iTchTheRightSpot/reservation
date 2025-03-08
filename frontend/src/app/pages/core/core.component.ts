@@ -16,7 +16,7 @@ import { ProgressBar } from 'primeng/progressbar';
         @if (loading.state()) {
           <p-progress-bar mode="indeterminate" [style]="{ height: '6px' }" />
         }
-        <app-navigation [imageKey]="auth.activeUser()?.image_key" />
+        <app-navigation [imageKey]="auth.user()?.image_key" />
       </div>
 
       <div class="w-full pb-2 px-1">

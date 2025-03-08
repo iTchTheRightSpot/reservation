@@ -40,11 +40,11 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
 
-  private readonly activeUserCache = new BehaviorSubject<
-    ActiveUser | undefined
-  >(undefined);
+  private readonly userCache = new BehaviorSubject<ActiveUser | undefined>(
+    undefined
+  );
 
-  private readonly activeUserRequest = () =>
+  private readonly userRequest = () =>
     !environment.production
       ? of<ActiveUser>({
           user_id: '1',
@@ -63,7 +63,7 @@ export class AuthService {
           })
           .pipe(
             tap(o => {
-              if (o && Object.keys(o).length > 0) this.activeUserCache.next(o);
+              if (o && Object.keys(o).length > 0) this.userCache.next(o);
             }),
             catchError(e => {
               console.error(e);
@@ -71,10 +71,10 @@ export class AuthService {
             })
           );
 
-  readonly activeUser = toSignal(
-    this.activeUserCache
+  readonly user = toSignal(
+    this.userCache
       .asObservable()
-      .pipe(switchMap(o => (o ? of<ActiveUser>(o) : this.activeUserRequest()))),
+      .pipe(switchMap(o => (o ? of<ActiveUser>(o) : this.userRequest()))),
     { initialValue: usr }
   );
 
@@ -86,7 +86,7 @@ export class AuthService {
           })
           .pipe(
             switchMap(() =>
-              this.activeUserRequest().pipe(
+              this.userRequest().pipe(
                 map(() => ({ state: ApiState.LOADED }) as ApiResponse<any>)
               )
             ),
@@ -137,7 +137,7 @@ export class AuthService {
             ApiResponse<any>
           >(`${environment.domain}logout`, {}, { withCredentials: true })
           .pipe(
-            tap(() => this.activeUserCache.next(undefined)),
+            tap(() => this.userCache.next(undefined)),
             map(() => <ApiResponse<any>>{ state: ApiState.LOADED }),
             startWith(<ApiResponse<any>>{ state: ApiState.LOADING }),
             catchError(e => {

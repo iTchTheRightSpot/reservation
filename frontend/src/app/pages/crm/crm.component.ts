@@ -20,7 +20,7 @@ import { CoreRoutes } from '@pages/core/core.routes';
           <p-progress-bar mode="indeterminate" [style]="{ height: '6px' }" />
         }
         <app-crm-nav-bar
-          [imageKey]="auth.activeUser()?.image_key"
+          [imageKey]="auth.user()?.image_key"
           [logoutState]="logout().state"
           (logout)="logoutEmitter.next($event)"
         />

@@ -10,7 +10,7 @@ export const RootRoutes = {
 };
 
 const guard = async () => {
-  if (!inject(AuthService).activeUser()) {
+  if (!inject(AuthService).user()) {
     await inject(Router).navigate([`${RootRoutes.CORE}/${CoreRoutes.LOGIN}`]);
     return false;
   }
