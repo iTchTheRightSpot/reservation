@@ -87,7 +87,7 @@ func (dep *Middleware) logging(next http.Handler) http.Handler {
 		next.ServeHTTP(obj, r)
 		end := dep.Logger.Date()
 		str = fmt.Sprintf(
-			"\n[Response] ID: %s\nIP: %s\nStatus: %d\nMethod: %s\nPath: %s\nDuration: %v seconds",
+			"\n[Response] ID: %s\nIP: %s\nStatus: %d\nMethod: %s\nPath: %s\nDuration: %v seconds\n",
 			id, ip, obj.status, r.Method, r.URL.Path, end.Sub(start).Seconds(),
 		)
 		dep.Logger.Log(str)
