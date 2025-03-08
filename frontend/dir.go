@@ -15,7 +15,7 @@ type FrontendStruct struct {
 }
 
 func (dep *FrontendStruct) FileSystem() (http.FileSystem, error) {
-	build, err := fs.Sub(frontend, "dist/ui/browser")
+	build, err := fs.Sub(frontend, "dist/frontend/browser")
 	if err != nil {
 		dep.Logger.Error(err.Error())
 		return nil, &utils.ServerError{}
