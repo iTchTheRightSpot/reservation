@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -61,12 +62,16 @@ func dateInTimezone(timezone string) (*time.Location, error) {
 }
 
 func construct(date time.Time, tp logType, variables ...interface{}) ([]byte, error) {
+	var sb strings.Builder
+	for _, v := range variables {
+		sb.WriteString(fmt.Sprintf("%s", v))
+	}
+	sb.WriteString("\n")
 	obj := discord{
 		Status: tp,
 		Time:   date,
-		Info:   fmt.Sprintf("%s", variables...),
+		Info:   sb.String(),
 	}
-
 	return json.MarshalIndent(obj, "", "  ")
 }
 
@@ -109,8 +114,9 @@ func (l *logger) Error(variables ...interface{}) {
 		log.Print(obj)
 		return
 	}
-	log.Print(string(js))
-	l.post(string(js))
+	str := string(js)
+	log.Print(str)
+	l.post(str)
 }
 
 func (l *logger) Log(variables ...interface{}) {
@@ -124,8 +130,9 @@ func (l *logger) Log(variables ...interface{}) {
 		log.Print(obj)
 		return
 	}
-	log.Print(string(js))
-	l.post(string(js))
+	v := string(js)
+	log.Print(v)
+	l.post(v)
 }
 
 func (l *logger) Fatal(variables ...interface{}) {

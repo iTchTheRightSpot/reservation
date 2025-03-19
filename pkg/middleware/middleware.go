@@ -63,13 +63,7 @@ func (dep *Middleware) logging(next http.Handler) http.Handler {
 		start := dep.Logger.Date()
 		ip := dep.requestIP(r)
 		id := uuid.NewString()
-		str := fmt.Sprintf(
-			`
-			[Request] ID: %s
-			IP: %s
-			Method: %s
-			Path: %s`, id, ip, r.Method, r.URL.Path,
-		)
+		str := fmt.Sprintf("\n\t[Request] ID: %s\n\tIP: %s\n\tMethod: %s\n\tPath: %s\n", id, ip, r.Method, r.URL.Path)
 		dep.Logger.Log(str)
 		obj := &wrappedWriter{
 			ResponseWriter: w,
@@ -78,14 +72,8 @@ func (dep *Middleware) logging(next http.Handler) http.Handler {
 		next.ServeHTTP(obj, r)
 		end := dep.Logger.Date()
 		str = fmt.Sprintf(
-			`
-			[Response] ID: %s
-			IP: %s
-			Status: %d
-			Method: %s
-			Path: %s
-			Duration: %v seconds`, id, ip, obj.status, r.Method, r.URL.Path, end.Sub(start).Seconds(),
-		)
+			"\n\t[Response] ID: %s\n\tIP: %s\n\tStatus: %d\n\tMethod: %s\n\tPath: %s\n\tDuration: %v seconds\n",
+			id, ip, obj.status, r.Method, r.URL.Path, end.Sub(start).Seconds())
 		dep.Logger.Log(str)
 	})
 }
