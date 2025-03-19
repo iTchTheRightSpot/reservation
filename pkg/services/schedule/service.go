@@ -57,7 +57,7 @@ func (dep *scheduleService) Create(ctx context.Context, dto *schedule.SchedulePa
 	segments, err := dto.CheckForOverlappingSegments(dep.logger.Date(), dep.logger.Timezone())
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return err
+		return &utils.BadRequestError{Message: err.Error()}
 	}
 
 	staff, err := dep.adapters.StaffStore.StaffByUUID(ctx, dto.StaffId)

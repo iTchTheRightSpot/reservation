@@ -2,6 +2,7 @@ package reservation
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	reservationModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
 	serviceModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
@@ -28,8 +29,9 @@ func TestReservationService(t *testing.T) {
 			t.Parallel()
 
 			serviceStore := &service_type.MockServiceTypeStore{}
+			mess := "staff not found"
 			adapters := &stores.Adapters{
-				StaffStore:   &staff.MockStaffStore{StaffByUUIDError: fmt.Errorf("staff not found")},
+				StaffStore:   &staff.MockStaffStore{StaffByUUIDError: errors.New(mess)},
 				ServiceStore: serviceStore,
 			}
 			s := NewReservationService(mockLog, adapters, nil, nil)
@@ -42,8 +44,8 @@ func TestReservationService(t *testing.T) {
 				t.Errorf("expect error but given nil")
 			}
 
-			if err.Error() != "invalid staff id" {
-				t.Errorf("expect %s given %s", "staff not found", err.Error())
+			if err.Error() != mess {
+				t.Errorf("expect %s given %s", mess, err.Error())
 			}
 
 			if serviceStore.ServicesByStaffIdCalled {
@@ -55,9 +57,10 @@ func TestReservationService(t *testing.T) {
 			t.Parallel()
 
 			scheduleStore := &schedule.MockScheduleStore{}
+			mess := "no matchStaffServices"
 			adapters := &stores.Adapters{
 				StaffStore:    &staff.MockStaffStore{StaffByUUIDReturn: &staffModel.StaffEntity{}},
-				ServiceStore:  &service_type.MockServiceTypeStore{ServicesByStaffIdError: fmt.Errorf("no matchStaffServices")},
+				ServiceStore:  &service_type.MockServiceTypeStore{ServicesByStaffIdError: errors.New(mess)},
 				ScheduleStore: scheduleStore,
 			}
 			s := NewReservationService(mockLog, adapters, nil, nil)
@@ -70,8 +73,8 @@ func TestReservationService(t *testing.T) {
 				t.Errorf("expect error but given nil")
 			}
 
-			if err.Error() != "invalid service for staff" {
-				t.Errorf("expect %s given %s", "invalid service for staff", err.Error())
+			if err.Error() != mess {
+				t.Errorf("expect %s given %s", mess, err.Error())
 			}
 
 			if scheduleStore.CountSchedulesInRangeAndVisibilityCalled {

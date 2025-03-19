@@ -37,7 +37,7 @@ func TestAccountService(t *testing.T) {
 		if err == nil {
 			t.Errorf("expect err, given nil")
 		}
-		m := "invalid staff id"
+		m := "invalid user"
 		if err.Error() != m {
 			t.Errorf("expect '%s', given %s", m, err.Error())
 		}
