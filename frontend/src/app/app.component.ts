@@ -18,18 +18,18 @@ import { AsyncPipe } from '@angular/common';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent {
-  private readonly messageService = inject(MessageService);
+  private readonly service = inject(MessageService);
 
   protected readonly toast$ = inject(ToastService).toast$.pipe(
     tap(obj => {
       if (obj.state === ToastEnum.ERROR)
-        this.messageService.add({
+        this.service.add({
           severity: 'error',
           summary: 'Error',
           detail: obj.message
         });
       else if (obj.state === ToastEnum.SUCCESS)
-        this.messageService.add({
+        this.service.add({
           severity: 'success',
           summary: 'Success',
           detail: obj.message
