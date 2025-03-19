@@ -32,7 +32,7 @@ jobs:
           username: emmanuelu17
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Docker compose up
+      - name: Start database
         run: |
           docker run --name pg \
           -p 5432:5432 \
@@ -48,7 +48,7 @@ jobs:
           openssl rsa -in keys/private.key -pubout -out keys/public.key
 
       - name: NPM install
-        run: cd ui/ && npm i && npm run build --verbose --configuration=production
+        run: cd frontend/ && npm i && npm run build --verbose --configuration=production
 
       - name: Install dependencies
         run: go get .
@@ -62,7 +62,7 @@ jobs:
 #      - name: Race test
 #        run: go clean -testcache && go test ./... --race
 
-      - name: Docker compose down
+      - name: Stop database
         run: docker stop pg
 
       - name: Build binary

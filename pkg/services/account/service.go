@@ -2,7 +2,6 @@ package account
 
 import (
 	"context"
-	"errors"
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
@@ -38,7 +37,7 @@ func (dep *accountService) ActiveUser(ctx context.Context, obj *models.JwtObj) (
 	s, err := dep.adp.ProfileStore.ProfileByStaffUUID(ctx, obj.UserId)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, &utils.NotFoundError{Message: "invalid user id"}
+		return nil, err
 	}
 	return &models.ActiveUser{
 		UserId:         obj.UserId,
@@ -79,13 +78,13 @@ func (dep *accountService) Login(ctx context.Context, obj *models.Login) (*model
 
 	if err = dep.ps.Validate([]byte(prp.Profile.Password), []byte(obj.Password)); err != nil {
 		dep.logger.Error(err.Error())
-		return nil, &utils.NotFoundError{Message: "invalid email or password"}
+		return nil, err
 	}
 
 	staf, err := dep.adp.StaffStore.StaffByProfileId(ctx, prp.Profile.ProfileId)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New("invalid email or password")
+		return nil, err
 	}
 
 	acs := dep.accessControls(prp)
@@ -95,13 +94,13 @@ func (dep *accountService) Login(ctx context.Context, obj *models.Login) (*model
 
 func (dep *accountService) Register(ctx context.Context, obj *models.ProfilePayload) error {
 	if _, err := dep.adp.ProfileStore.ProfileByEmail(ctx, obj.Email); err == nil {
-		return errors.New("email already used")
+		return err
 	}
 
 	pass, err := dep.ps.Encode(obj.Password)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return &utils.BadRequestError{Message: "error encoding password. please try a different password"}
+		return err
 	}
 
 	return dep.adp.Transaction.RunInTransaction(func(adps *stores.Adapters) error {
@@ -113,25 +112,25 @@ func (dep *accountService) Register(ctx context.Context, obj *models.ProfilePayl
 		}
 		if err = adps.ProfileStore.Save(ctx, &p); err != nil {
 			dep.logger.Error(err.Error())
-			return &utils.InsertionError{Message: "error creating account. profile"}
+			return err
 		}
 
 		r := models.RoleEntity{Role: models.STAFF, ProfileId: p.ProfileId}
 		if err = adps.RoleStore.Save(ctx, &r); err != nil {
 			dep.logger.Error(err.Error())
-			return &utils.InsertionError{Message: "error creating account. role"}
+			return err
 		}
 
 		if err = adps.PermissionStore.Save(ctx, &models.PermissionEntity{Permission: models.READ, RoleId: r.RoleId}); err != nil {
 			dep.logger.Error(err.Error())
-			return &utils.InsertionError{Message: "error creating account. permission"}
+			return err
 		}
 
 		bio := "Ready to put a smile on your face 🌞"
 		err = adps.StaffStore.Save(ctx, &staff.StaffEntity{ProfileId: &p.ProfileId, UUID: uuid.New(), Bio: &bio})
 		if err != nil {
 			dep.logger.Error(err.Error())
-			return &utils.InsertionError{Message: "error creating account. saving"}
+			return err
 		}
 
 		dep.staffCache.Clear()
@@ -143,7 +142,7 @@ func (dep *accountService) AddRoleAndPermission(ctx context.Context, o *models.R
 	prp, err := dep.adp.ProfileStore.ProfileRolesAndPermissionByStaffUUID(ctx, o.UserId)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return &utils.NotFoundError{Message: "invalid staff id"}
+		return err
 	}
 
 	return dep.adp.Transaction.RunInTransaction(func(adps *stores.Adapters) error {
@@ -164,7 +163,7 @@ func (dep *accountService) AddRoleAndPermission(ctx context.Context, o *models.R
 						err = adps.PermissionStore.Save(ctx, &models.PermissionEntity{RoleId: rp.Role.RoleId, Permission: p})
 						if err != nil {
 							dep.logger.Error(err.Error())
-							return &utils.InsertionError{Message: "error saving permission " + string(p)}
+							return err
 						}
 					}
 				}
@@ -175,7 +174,7 @@ func (dep *accountService) AddRoleAndPermission(ctx context.Context, o *models.R
 
 				if err != nil {
 					dep.logger.Error(err.Error())
-					return &utils.InsertionError{Message: "error saving role " + string(enum.Role)}
+					return err
 				}
 
 				for _, p := range enum.Permissions {
@@ -183,7 +182,7 @@ func (dep *accountService) AddRoleAndPermission(ctx context.Context, o *models.R
 
 					if err != nil {
 						dep.logger.Error(err.Error())
-						return &utils.InsertionError{Message: "error saving permission " + string(p)}
+						return err
 					}
 				}
 			}
@@ -198,7 +197,7 @@ func (dep *accountService) DeleteRole(ctx context.Context, staffUUID, role strin
 	prp, err := dep.adp.ProfileStore.ProfileRolesAndPermissionByStaffUUID(ctx, staffUUID)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return &utils.NotFoundError{Message: "invalid staff id"}
+		return err
 	}
 
 	idx := slices.IndexFunc(prp.RolePermission, func(e models.RolePermissionEntity) bool {
@@ -206,14 +205,14 @@ func (dep *accountService) DeleteRole(ctx context.Context, staffUUID, role strin
 	})
 
 	if idx == -1 {
-		return &utils.NotFoundError{Message: "role does not exist"}
+		return err
 	}
 
 	return dep.adp.Transaction.RunInTransaction(func(adps *stores.Adapters) error {
 		c, err := adps.RoleStore.Delete(ctx, prp.RolePermission[idx].Role.RoleId)
 		if err != nil {
 			dep.logger.Error(err.Error())
-			return &utils.InsertionError{Message: "error deleting role"}
+			return err
 		}
 		dep.logger.Log("number of roles affected after role deletion", c)
 		dep.staffCache.Clear()
@@ -225,7 +224,7 @@ func (dep *accountService) DeletePermission(ctx context.Context, staffUUID, role
 	prp, err := dep.adp.ProfileStore.ProfileRolesAndPermissionByStaffUUID(ctx, staffUUID)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return &utils.NotFoundError{Message: "invalid staff id"}
+		return err
 	}
 
 	idx := slices.IndexFunc(prp.RolePermission, func(e models.RolePermissionEntity) bool {
@@ -247,7 +246,7 @@ func (dep *accountService) DeletePermission(ctx context.Context, staffUUID, role
 	c, err := dep.adp.PermissionStore.Delete(ctx, prp.RolePermission[idx].Permissions[idx1].PermissionId)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return &utils.InsertionError{Message: "error deleting permission"}
+		return err
 	}
 
 	dep.staffCache.Clear()

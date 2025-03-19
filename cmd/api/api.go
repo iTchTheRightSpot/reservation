@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"github.com/iTchTheRightSpot/erp-golang/cmd"
 	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/ui"
+	"github.com/iTchTheRightSpot/erp-golang/frontend"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"github.com/rs/cors"
 	"net/http"
@@ -26,15 +26,15 @@ func (s *ErpServer) Serve() {
 		AllowCredentials: true,
 	})
 
-	f := ui.FrontendStruct{Logger: s.Logger}
-	open, err := f.Open()
+	f := frontend.FrontendStruct{Logger: s.Logger}
+	open, err := f.FileSystem()
 	if err != nil {
 		s.Logger.Fatal(err.Error())
 	}
 
 	server := http.Server{
 		Addr:              s.Env.Address,
-		WriteTimeout:      10 * time.Second,
+		WriteTimeout:      5 * time.Second,
 		IdleTimeout:       30 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       5 * time.Second,

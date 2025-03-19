@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -42,7 +41,7 @@ func (dep *profileStore) ProfileByStaffUUID(ctx context.Context, userId string) 
 
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New("error retrieving profile by userId")
+		return nil, &utils.InsertionError{Message: "error retrieving profile by userId"}
 	}
 
 	return &p, nil
@@ -75,10 +74,15 @@ func (dep *profileStore) ProfileRolesAndPermissionByEmail(ctx context.Context, e
 	rows, err := dep.db.QueryContext(ctx, q, email)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New("error retrieving profile, roles, and permissions")
+		return nil, &utils.NotFoundError{Message: "error retrieving p,r, and p by email"}
 	}
 
-	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
+	defer func(rows *sql.Rows) {
+		if err = rows.Close(); err != nil {
+			dep.logger.Error(err.Error())
+			err = &utils.ServerError{Message: "error closing stream after p,r,p by email"}
+		}
+	}(rows)
 
 	var result *models.ProfileRolePermissionEntity
 
@@ -88,19 +92,19 @@ func (dep *profileStore) ProfileRolesAndPermissionByEmail(ctx context.Context, e
 
 		if err = rows.Scan(&profileData, &rolePermData); err != nil {
 			dep.logger.Error(err.Error())
-			return nil, errors.New("error scanning database rows")
+			return nil, &utils.ServerError{Message: "error scanning database rows by email"}
 		}
 
 		var pro models.ProfileEntity
 		if err = json.Unmarshal(profileData, &pro); err != nil {
 			dep.logger.Error(err.Error())
-			return nil, errors.New("error unmarshalling profile data")
+			return nil, &utils.ServerError{Message: "error unmarshalling profile data by email"}
 		}
 
 		var rolePerms []models.RolePermissionEntity
 		if err = json.Unmarshal(rolePermData, &rolePerms); err != nil {
 			dep.logger.Error(err.Error())
-			return nil, errors.New("error unmarshalling role permissions data")
+			return nil, &utils.ServerError{Message: "error unmarshalling role permissions data by email"}
 		}
 
 		result = &models.ProfileRolePermissionEntity{
@@ -111,14 +115,14 @@ func (dep *profileStore) ProfileRolesAndPermissionByEmail(ctx context.Context, e
 
 	if err = rows.Err(); err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New("error iterating through rows")
+		return nil, &utils.ServerError{Message: "error iterating through rows by email"}
 	}
 
 	if result == nil {
-		return nil, errors.New("profile not found")
+		return nil, &utils.NotFoundError{Message: "profile not found by email"}
 	}
 
-	return result, nil
+	return result, err
 }
 
 func (dep *profileStore) ProfileByEmail(ctx context.Context, email string) (*models.ProfileEntity, error) {
@@ -129,7 +133,7 @@ func (dep *profileStore) ProfileByEmail(ctx context.Context, email string) (*mod
 
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New("error retrieving profile by email")
+		return nil, &utils.NotFoundError{Message: "error retrieving profile by email"}
 	}
 
 	return &p, nil
@@ -137,7 +141,7 @@ func (dep *profileStore) ProfileByEmail(ctx context.Context, email string) (*mod
 
 func (dep *profileStore) Save(ctx context.Context, p *models.ProfileEntity) error {
 	if p == nil {
-		return errors.New("profile object is nil")
+		return &utils.ServerError{Message: "profile object is nil"}
 	}
 
 	q := `
@@ -151,7 +155,7 @@ func (dep *profileStore) Save(ctx context.Context, p *models.ProfileEntity) erro
 
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return errors.New("error saving to profile table")
+		return &utils.InsertionError{}
 	}
 
 	return nil
@@ -185,10 +189,15 @@ func (dep *profileStore) ProfileRolesAndPermissionByStaffUUID(ctx context.Contex
 	rows, err := dep.db.QueryContext(ctx, q, uid)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New("error retrieving profile, roles, and permissions")
+		return nil, &utils.NotFoundError{Message: "error retrieving p,r,p by uuid"}
 	}
 
-	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
+	defer func(rows *sql.Rows) {
+		if err = rows.Close(); err != nil {
+			dep.logger.Error(err.Error())
+			err = &utils.ServerError{Message: "error closing stream after p,r,p by uuid"}
+		}
+	}(rows)
 
 	var result *models.ProfileRolePermissionEntity
 
@@ -198,19 +207,19 @@ func (dep *profileStore) ProfileRolesAndPermissionByStaffUUID(ctx context.Contex
 
 		if err = rows.Scan(&profileData, &rolePermData); err != nil {
 			dep.logger.Error(err.Error())
-			return nil, errors.New("error scanning database rows")
+			return nil, &utils.ServerError{Message: "error scanning database rows by uuid"}
 		}
 
 		var pro models.ProfileEntity
 		if err = json.Unmarshal(profileData, &pro); err != nil {
 			dep.logger.Error(err.Error())
-			return nil, errors.New("error unmarshalling profile data")
+			return nil, &utils.ServerError{Message: "error unmarshalling profile data by email uuid"}
 		}
 
 		var rolePerms []models.RolePermissionEntity
 		if err = json.Unmarshal(rolePermData, &rolePerms); err != nil {
 			dep.logger.Error(err.Error())
-			return nil, errors.New("error unmarshalling role permissions data")
+			return nil, &utils.ServerError{Message: "error unmarshalling role permissions data by uuid"}
 		}
 
 		result = &models.ProfileRolePermissionEntity{
@@ -221,12 +230,12 @@ func (dep *profileStore) ProfileRolesAndPermissionByStaffUUID(ctx context.Contex
 
 	if err = rows.Err(); err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New("error iterating through rows")
+		return nil, &utils.ServerError{Message: "error iterating through rows by uuid"}
 	}
 
 	if result == nil {
-		return nil, errors.New("profile not found")
+		return nil, &utils.NotFoundError{Message: "profile not found by uuid"}
 	}
 
-	return result, nil
+	return result, err
 }

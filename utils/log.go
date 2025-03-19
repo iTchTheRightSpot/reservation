@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -60,6 +61,20 @@ func dateInTimezone(timezone string) (*time.Location, error) {
 	return location, nil
 }
 
+func construct(date time.Time, tp logType, variables ...interface{}) ([]byte, error) {
+	var sb strings.Builder
+	for _, v := range variables {
+		sb.WriteString(fmt.Sprintf("%s", v))
+	}
+	sb.WriteString("\n")
+	obj := discord{
+		Status: tp,
+		Time:   date,
+		Info:   sb.String(),
+	}
+	return json.MarshalIndent(obj, "", "  ")
+}
+
 func (l *logger) post(mess string) {
 	type content struct {
 		C string `json:"content"`
@@ -89,48 +104,47 @@ func (l *logger) Date() time.Time {
 }
 
 func (l *logger) Error(variables ...interface{}) {
-	obj := discord{
-		Status: iError,
-		Time:   l.Date(),
-		Info:   fmt.Sprintf("%v", variables),
-	}
-
-	js, err := json.MarshalIndent(obj, "", "  ")
+	js, err := construct(l.Date(), iError, variables)
 	if err != nil {
-		log.Printf("%s %s Failed to marshal log object: %v\n", l.Date(), iLog, err.Error())
+		obj := discord{
+			Status: iError,
+			Time:   l.Date(),
+			Info:   "failed to marshal ERROR object" + err.Error(),
+		}
+		log.Print(obj)
 		return
 	}
-	log.Printf("%s\n", string(js))
-	l.post(string(js))
+	str := string(js)
+	log.Print(str)
+	l.post(str)
 }
 
 func (l *logger) Log(variables ...interface{}) {
-	obj := discord{
-		Status: iLog,
-		Time:   l.Date(),
-		Info:   fmt.Sprintf("%v", variables),
-	}
-
-	js, err := json.MarshalIndent(obj, "", "  ")
+	js, err := construct(l.Date(), iLog, variables)
 	if err != nil {
-		log.Printf("%s %s Failed to marshal log object: %v\n", l.Date(), iLog, err.Error())
+		obj := discord{
+			Status: iError,
+			Time:   l.Date(),
+			Info:   "failed to marshal LOG object" + err.Error(),
+		}
+		log.Print(obj)
 		return
 	}
-	log.Printf("%s\n", string(js))
-	l.post(string(js))
+	v := string(js)
+	log.Print(v)
+	l.post(v)
 }
 
 func (l *logger) Fatal(variables ...interface{}) {
-	obj := discord{
-		Status: iFatal,
-		Time:   l.Date(),
-		Info:   fmt.Sprintf("%v", variables),
-	}
-
-	js, err := json.MarshalIndent(obj, "", "  ")
+	js, err := construct(l.Date(), iFatal, variables)
 	if err != nil {
-		log.Printf("%s %s Failed to marshal log object: %v\n", l.Date(), iLog, err.Error())
+		obj := discord{
+			Status: iFatal,
+			Time:   l.Date(),
+			Info:   "failed to marshal FATAL object" + err.Error(),
+		}
+		log.Print(obj)
 		return
 	}
-	log.Printf("%s\n", string(js))
+	log.Print(string(js))
 }

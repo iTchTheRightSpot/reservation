@@ -11,7 +11,7 @@ type NotFoundError struct {
 
 func (e *NotFoundError) Error() string {
 	if e.Message == "" {
-		return "err: not found"
+		return "not found"
 	}
 	return e.Message
 }
@@ -33,7 +33,7 @@ type BadRequestError struct {
 
 func (e *BadRequestError) Error() string {
 	if e.Message == "" {
-		return "error: bad request"
+		return "bad request"
 	}
 	return e.Message
 }

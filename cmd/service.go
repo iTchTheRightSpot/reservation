@@ -1,11 +1,8 @@
 package cmd
 
 import (
-	"context"
 	"database/sql"
-	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
 	staffModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
@@ -38,11 +35,6 @@ func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *
 	j := auth.NewJwtServiceAsymmetric(l, e)
 	//j := auth.NewJwtServiceSymmetric(l, e)
 
-	//if e.CookieParam.CookieSecure {
-	//	dummyUser(a, p)
-	//	demoUser(a, p)
-	//}
-
 	staffCache := pkg.NewInMemoryCache[string, []*staffModel.AllStaffsEntity](l, 10, 10)
 	return &serviceRegistry{
 		JwtService:         j,
@@ -54,79 +46,4 @@ func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *
 		PasswordService:    p,
 		MailService:        m,
 	}
-}
-
-func demoUser(a *stores.Adapters, ps auth.IPasswordService) {
-	ctx := context.Background()
-	pass, _ := ps.Encode("Fast#!@fooD123#$")
-	p := models.ProfileEntity{
-		Firstname: "Demo",
-		Lastname:  "User",
-		Email:     "demo@email.com",
-		Password:  string(pass),
-	}
-
-	_ = a.ProfileStore.Save(ctx, &p)
-
-	r1 := models.RoleEntity{Role: models.STAFF, ProfileId: p.ProfileId}
-	_ = a.RoleStore.Save(ctx, &r1)
-	_ = a.PermissionStore.Save(ctx, &models.PermissionEntity{Permission: models.READ, RoleId: r1.RoleId})
-
-	lorem := "Lorem ipsum dolor sit amet, consectetur adipisicing elit."
-	_ = a.StaffStore.Save(ctx, &staffModel.StaffEntity{
-		UUID:      uuid.New(),
-		Bio:       &lorem,
-		ProfileId: &p.ProfileId,
-	})
-}
-
-func dummyUser(a *stores.Adapters, ps auth.IPasswordService) {
-	ctx := context.Background()
-	pass, _ := ps.Encode("Password123@#$")
-	p := models.ProfileEntity{
-		Firstname: "Developer",
-		Lastname:  "Lastname",
-		Email:     "developer@email.com",
-		Password:  string(pass),
-	}
-
-	_ = a.ProfileStore.Save(ctx, &p)
-
-	r1 := models.RoleEntity{Role: models.STAFF, ProfileId: p.ProfileId}
-	_ = a.RoleStore.Save(ctx, &r1)
-	_ = a.PermissionStore.Save(ctx, &models.PermissionEntity{
-		Permission: models.READ,
-		RoleId:     r1.RoleId,
-	})
-	_ = a.PermissionStore.Save(ctx, &models.PermissionEntity{
-		Permission: models.WRITE,
-		RoleId:     r1.RoleId,
-	})
-	_ = a.PermissionStore.Save(ctx, &models.PermissionEntity{
-		Permission: models.DELETE,
-		RoleId:     r1.RoleId,
-	})
-
-	r2 := models.RoleEntity{Role: models.DEVELOPER, ProfileId: p.ProfileId}
-	_ = a.RoleStore.Save(ctx, &r2)
-	_ = a.PermissionStore.Save(ctx, &models.PermissionEntity{
-		Permission: models.READ,
-		RoleId:     r2.RoleId,
-	})
-	_ = a.PermissionStore.Save(ctx, &models.PermissionEntity{
-		Permission: models.WRITE,
-		RoleId:     r2.RoleId,
-	})
-	_ = a.PermissionStore.Save(ctx, &models.PermissionEntity{
-		Permission: models.DELETE,
-		RoleId:     r2.RoleId,
-	})
-
-	lorem := "Lorem ipsum dolor sit amet, consectetur adipisicing elit."
-	st := staffModel.StaffEntity{
-		UUID:      uuid.New(),
-		Bio:       &lorem,
-		ProfileId: &p.ProfileId,
-	}
-	_ = a.StaffStore.Save(ctx, &st)
 }

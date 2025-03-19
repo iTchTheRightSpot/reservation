@@ -5,14 +5,14 @@ WORKDIR /app
 
 COPY . .
 
-RUN cd ui/ && npm i && npm run build --verbose --configuration=production
+RUN cd frontend/ && npm i && npm run build --verbose --configuration=production
 
 # build golang
 FROM golang:1.24.0 AS  api
 
-WORKDIR /app
+WORKDIR /
 
-COPY --from=frontend /app /app
+COPY --from=frontend /app /
 RUN go mod download
 
 RUN CGO_ENABLED=0 go build -o salon
@@ -22,6 +22,6 @@ FROM gcr.io/distroless/static-debian12
 
 WORKDIR /
 
-COPY --from=api /app/salon /
+COPY --from=api /salon /
 
 CMD ["/salon"]

@@ -36,7 +36,7 @@ func (dep *scheduleService) Schedules(ctx context.Context, p *schedule.AllSchedu
 	to := time.Date(from.Year(), from.Month()+1, 0, 23, 59, 59, 999999999, from.Location())
 	schedules, err := dep.adapters.ScheduleStore.SchedulesInRange(ctx, s.StaffId, from, to)
 	if err != nil {
-		return nil, &utils.BadRequestError{Message: err.Error()}
+		return nil, err
 	}
 
 	res := make([]*schedule.ScheduleResponse, len(schedules))
@@ -74,7 +74,7 @@ func (dep *scheduleService) Create(ctx context.Context, dto *schedule.SchedulePa
 				IsVisible: segment.IsVisible,
 			})
 			if err != nil {
-				return &utils.InsertionError{Message: "duplicate schedule"}
+				return err
 			}
 		}
 		return nil
@@ -85,7 +85,7 @@ func (dep *scheduleService) Update(ctx context.Context, p *schedule.UpdateSchedu
 	o, err := dep.adapters.ScheduleStore.ScheduleByScheduleId(ctx, p.ScheduleId)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return &utils.NotFoundError{Message: "invalid schedule_id"}
+		return err
 	}
 
 	if o.IsVisible == p.IsVisible && o.IsReoccurring == p.IsReoccurring {
@@ -98,7 +98,7 @@ func (dep *scheduleService) Update(ctx context.Context, p *schedule.UpdateSchedu
 	_, err = dep.adapters.ScheduleStore.Update(ctx, o)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return &utils.InsertionError{Message: "error updating schedule"}
+		return err
 	}
 
 	return nil
@@ -108,7 +108,7 @@ func (dep *scheduleService) Delete(ctx context.Context, scheduleId uint64) error
 	o, err := dep.adapters.ScheduleStore.ScheduleByScheduleId(ctx, scheduleId)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return &utils.NotFoundError{Message: "invalid schedule_id"}
+		return err
 	}
 
 	count, err := dep.adapters.ReservationStore.CountReservationsInRange(ctx, o.StaffId, o.Start, o.End, reservation.CONFIRMED, reservation.CANCELLED)
@@ -126,7 +126,7 @@ func (dep *scheduleService) Delete(ctx context.Context, scheduleId uint64) error
 	_, err = dep.adapters.ScheduleStore.Delete(ctx, o.ScheduleId)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return &utils.InsertionError{Message: "error deleting schedule"}
+		return err
 	}
 
 	return nil
