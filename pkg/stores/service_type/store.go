@@ -3,8 +3,6 @@ package service_type
 import (
 	"context"
 	"database/sql"
-	"errors"
-	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -37,7 +35,7 @@ func (dep *serviceTypeStore) Update(ctx context.Context, s *service_type.Service
 	_, err := dep.db.ExecContext(ctx, q, s.ServiceId, s.Name, s.Price, s.IsVisible, s.Duration, s.CleanUpTime)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return errors.New("error updating service type")
+		return &utils.InsertionError{Message: "error updating service type"}
 	}
 	return nil
 }
@@ -48,10 +46,15 @@ func (dep *serviceTypeStore) ServiceTypes(ctx context.Context) ([]*service_type.
 	rows, err := dep.db.QueryContext(ctx, "SELECT * FROM service_type")
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New("exception retrieving services by status")
+		return nil, &utils.NotFoundError{Message: "error retrieving services"}
 	}
 
-	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
+	defer func(rows *sql.Rows) {
+		if err = rows.Close(); err != nil {
+			dep.logger.Error(err.Error())
+			err = &utils.ServerError{Message: "error closing stream after retrieving services"}
+		}
+	}(rows)
 
 	for rows.Next() {
 		var s service_type.ServiceTypeEntity
@@ -59,8 +62,8 @@ func (dep *serviceTypeStore) ServiceTypes(ctx context.Context) ([]*service_type.
 		err = rows.Scan(&s.ServiceId, &s.Name, &s.Price, &s.IsVisible, &s.Duration, &s.CleanUpTime)
 
 		if err != nil {
-			dep.logger.Error(err)
-			return nil, errors.New("exception scanning service by status")
+			dep.logger.Error(err.Error())
+			return nil, &utils.ServerError{Message: "error scanning services"}
 
 		}
 
@@ -69,7 +72,7 @@ func (dep *serviceTypeStore) ServiceTypes(ctx context.Context) ([]*service_type.
 
 	if err = rows.Err(); err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New("error iterating services by status")
+		return nil, &utils.ServerError{Message: "error iterating services"}
 	}
 
 	return arr, err
@@ -77,7 +80,7 @@ func (dep *serviceTypeStore) ServiceTypes(ctx context.Context) ([]*service_type.
 
 func (dep *serviceTypeStore) Save(ctx context.Context, s *service_type.ServiceTypeEntity) error {
 	if s == nil {
-		return errors.New("service type entity is nil")
+		return &utils.ServerError{Message: "service type cannot be nil"}
 	}
 
 	q := `
@@ -90,10 +93,9 @@ func (dep *serviceTypeStore) Save(ctx context.Context, s *service_type.ServiceTy
 	err := row.Scan(&s.ServiceId, &s.Name, &s.Price, &s.IsVisible, &s.Duration, &s.CleanUpTime)
 
 	if err != nil {
-		dep.logger.Error(err)
-		return errors.New("exception saving to service table")
+		dep.logger.Error(err.Error())
+		return &utils.InsertionError{}
 	}
-	dep.logger.Log("new service saved")
 	return nil
 }
 
@@ -110,8 +112,8 @@ func (dep *serviceTypeStore) ServiceTypeByName(ctx context.Context, name string)
 	err := row.Scan(&s.ServiceId, &s.Name, &s.Price, &s.IsVisible, &s.Duration, &s.CleanUpTime)
 
 	if err != nil {
-		dep.logger.Error(err)
-		return nil, fmt.Errorf("exception retrieving ServiceTypeByName %s", name)
+		dep.logger.Error(err.Error())
+		return nil, &utils.NotFoundError{}
 	}
 
 	return &s, nil
@@ -129,10 +131,15 @@ func (dep *serviceTypeStore) ServiceTypesByStaffId(ctx context.Context, staffId 
 	rows, err := dep.db.QueryContext(ctx, q, staffId, visible)
 	if err != nil {
 		dep.logger.Error(err)
-		return nil, errors.New("exception retrieving services")
+		return nil, &utils.NotFoundError{Message: "error retrieving services by staff id"}
 	}
 
-	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
+	defer func(rows *sql.Rows) {
+		if err = rows.Close(); err != nil {
+			dep.logger.Error(err.Error())
+			err = &utils.ServerError{Message: "error closing stream after services by staff id"}
+		}
+	}(rows)
 
 	for rows.Next() {
 		var s service_type.ServiceTypeEntity
@@ -140,8 +147,8 @@ func (dep *serviceTypeStore) ServiceTypesByStaffId(ctx context.Context, staffId 
 		err = rows.Scan(&s.ServiceId, &s.Name, &s.Price, &s.IsVisible, &s.Duration, &s.CleanUpTime)
 
 		if err != nil {
-			dep.logger.Error(err)
-			return nil, errors.New("exception scanning service")
+			dep.logger.Error(err.Error())
+			return nil, &utils.ServerError{Message: "error scanning service by staff id"}
 
 		}
 
@@ -150,7 +157,7 @@ func (dep *serviceTypeStore) ServiceTypesByStaffId(ctx context.Context, staffId 
 
 	if err = rows.Err(); err != nil {
 		dep.logger.Error(err)
-		return nil, errors.New("error iterating services")
+		return nil, &utils.ServerError{Message: "error iterating services by staff id"}
 	}
 
 	return arr, err
@@ -166,18 +173,23 @@ func (dep *serviceTypeStore) ServiceTypesByStaffUUID(ctx context.Context, uid st
 
 	rows, err := dep.db.QueryContext(ctx, q, uid)
 	if err != nil {
-		dep.logger.Error(err)
-		return nil, errors.New("exception retrieving services")
+		dep.logger.Error(err.Error())
+		return nil, &utils.NotFoundError{}
 	}
 
-	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
+	defer func(rows *sql.Rows) {
+		if err = rows.Close(); err != nil {
+			dep.logger.Error(err.Error())
+			err = &utils.ServerError{Message: "error closing stream after services by staff uuid"}
+		}
+	}(rows)
 
 	var arr []string
 	for rows.Next() {
 		var str string
 		if err = rows.Scan(&str); err != nil {
 			dep.logger.Error(err)
-			return nil, errors.New("exception scanning service types")
+			return nil, &utils.ServerError{Message: "error scanning service by staff uuid"}
 		}
 
 		arr = append(arr, str)
@@ -185,7 +197,7 @@ func (dep *serviceTypeStore) ServiceTypesByStaffUUID(ctx context.Context, uid st
 
 	if err = rows.Err(); err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New("error iterating service types")
+		return nil, &utils.ServerError{Message: "error iterating service by staff uuid"}
 	}
 
 	return arr, err

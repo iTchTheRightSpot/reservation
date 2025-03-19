@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"errors"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 	"golang.org/x/crypto/bcrypt"
 	"regexp"
@@ -27,27 +26,27 @@ func (dep *passwordService) PasswordRegex(str string) error {
 
 	// length check
 	if len(str) < 8 || len(str) > 20 {
-		return errors.New(mess)
+		return &utils.BadRequestError{Message: mess}
 	}
 
 	// check for at least one lowercase letter
 	if !regexp.MustCompile(`[a-z]`).MatchString(str) {
-		return errors.New(mess)
+		return &utils.BadRequestError{Message: mess}
 	}
 
 	// check for at least one uppercase letter
 	if !regexp.MustCompile(`[A-Z]`).MatchString(str) {
-		return errors.New(mess)
+		return &utils.BadRequestError{Message: mess}
 	}
 
 	// check for at least one digit
 	if !regexp.MustCompile(`\d`).MatchString(str) {
-		return errors.New(mess)
+		return &utils.BadRequestError{Message: mess}
 	}
 
 	// check for at least one special character
 	if !regexp.MustCompile(`[#?!@$%^&*-]`).MatchString(str) {
-		return errors.New(mess)
+		return &utils.BadRequestError{Message: mess}
 	}
 	return nil
 }
@@ -56,7 +55,7 @@ func (dep *passwordService) Encode(str string) ([]byte, error) {
 	ps, err := bcrypt.GenerateFromPassword([]byte(str), bcrypt.DefaultCost)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New("error encoding password")
+		return nil, &utils.ServerError{Message: "error encoding password"}
 	}
 	return ps, nil
 }
@@ -64,7 +63,7 @@ func (dep *passwordService) Encode(str string) ([]byte, error) {
 func (dep *passwordService) Validate(hash, str []byte) error {
 	if err := bcrypt.CompareHashAndPassword(hash, str); err != nil {
 		dep.logger.Error(err.Error())
-		return errors.New("passwords do not match")
+		return &utils.AuthenticationError{Message: "invalid email or password"}
 	}
 	return nil
 }

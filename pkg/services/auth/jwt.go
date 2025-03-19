@@ -2,7 +2,6 @@ package auth
 
 import (
 	"crypto/rsa"
-	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/iTchTheRightSpot/erp-golang/config"
@@ -82,7 +81,7 @@ func (dep *jwtService) Encode(o *models.JwtObj, expirationInSeconds int) (*model
 	token, err := claims.SignedString(dep.privKey)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New(err.Error())
+		return nil, &utils.ServerError{Message: "error encoding to jwt"}
 	}
 
 	return &models.JwtResponse{Token: token, ExpireAt: exp}, nil
@@ -99,26 +98,26 @@ func (dep *jwtService) Decode(str string) (*models.JwtObj, error) {
 	})
 
 	if err != nil {
-		dep.logger.Error(fmt.Sprintf("failed to parse token: %v", err))
+		dep.logger.Error(err.Error())
 		return nil, err
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		dep.logger.Error("failed to parse claims from token")
-		return nil, fmt.Errorf("failed to parse claims")
+		return nil, &utils.AuthenticationError{}
 	}
 
 	exp, err := claims.GetExpirationTime()
 	if err != nil {
 		dep.logger.Error(err)
-		return nil, fmt.Errorf("jwt expired")
+		return nil, &utils.AuthenticationError{}
 	}
 
 	obj, ok := claims["obj"].(map[string]interface{})
 	if !ok {
 		dep.logger.Error("invalid object format in claims")
-		return nil, fmt.Errorf("invalid object format in claims")
+		return nil, &utils.AuthenticationError{}
 	}
 
 	jwtObj := &models.JwtObj{ExpireAt: &exp.Time}
@@ -126,7 +125,7 @@ func (dep *jwtService) Decode(str string) (*models.JwtObj, error) {
 		jwtObj.UserId = uuid
 	} else {
 		dep.logger.Error("missing or invalid UserId in token claims")
-		return nil, fmt.Errorf("invalid or missing UserId")
+		return nil, &utils.AuthenticationError{}
 	}
 
 	if credentials, ok := obj["access_controls"].([]interface{}); ok {
@@ -153,10 +152,9 @@ func (dep *jwtService) Decode(str string) (*models.JwtObj, error) {
 		jwtObj.AccessControls = parsedRoles
 	} else {
 		dep.logger.Error("missing or invalid roles in token claims")
-		return nil, fmt.Errorf("invalid or missing roles")
+		return nil, &utils.AuthenticationError{}
 	}
 
-	dep.logger.Log("successfully validated jwt")
 	return jwtObj, nil
 }
 
@@ -186,7 +184,7 @@ func (dep *jwt1Service) Encode(o *models.JwtObj, expirationInSeconds int) (*mode
 	token, err := claims.SignedString(dep.symmetricKey)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New(err.Error())
+		return nil, &utils.ServerError{Message: "error encoding to jwt"}
 	}
 
 	return &models.JwtResponse{Token: token, ExpireAt: exp}, nil
@@ -201,26 +199,26 @@ func (dep *jwt1Service) Decode(str string) (*models.JwtObj, error) {
 	})
 
 	if err != nil {
-		dep.logger.Error(fmt.Sprintf("failed to parse token: %v", err))
-		return nil, err
+		dep.logger.Error(err.Error())
+		return nil, &utils.AuthenticationError{}
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		dep.logger.Error("failed to parse claims from token")
-		return nil, fmt.Errorf("failed to parse claims")
+		return nil, &utils.AuthenticationError{}
 	}
 
 	exp, err := claims.GetExpirationTime()
 	if err != nil {
 		dep.logger.Error(err)
-		return nil, fmt.Errorf("jwt expired")
+		return nil, &utils.AuthenticationError{}
 	}
 
 	obj, ok := claims["obj"].(map[string]interface{})
 	if !ok {
 		dep.logger.Error("invalid object format in claims")
-		return nil, fmt.Errorf("invalid object format in claims")
+		return nil, &utils.AuthenticationError{}
 	}
 
 	jwtObj := &models.JwtObj{ExpireAt: &exp.Time}
@@ -228,7 +226,7 @@ func (dep *jwt1Service) Decode(str string) (*models.JwtObj, error) {
 		jwtObj.UserId = uuid
 	} else {
 		dep.logger.Error("missing or invalid UserId in token claims")
-		return nil, fmt.Errorf("invalid or missing UserId")
+		return nil, &utils.AuthenticationError{}
 	}
 
 	if credentials, ok := obj["access_controls"].([]interface{}); ok {
@@ -255,9 +253,8 @@ func (dep *jwt1Service) Decode(str string) (*models.JwtObj, error) {
 		jwtObj.AccessControls = parsedRoles
 	} else {
 		dep.logger.Error("missing or invalid roles in token claims")
-		return nil, fmt.Errorf("invalid or missing roles")
+		return nil, &utils.AuthenticationError{}
 	}
 
-	dep.logger.Log("successfully validated jwt")
 	return jwtObj, nil
 }

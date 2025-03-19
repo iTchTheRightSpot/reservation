@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
@@ -57,10 +56,15 @@ func (dep *reservationStore) BookingsInRange(ctx context.Context, staffId uint64
 	rows, err := dep.db.QueryContext(ctx, q, staffId, from, to)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New("error retrieving bookings")
+		return nil, &utils.NotFoundError{Message: "error retrieving bookings in range"}
 	}
 
-	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
+	defer func(rows *sql.Rows) {
+		if err = rows.Close(); err != nil {
+			dep.logger.Error(err.Error())
+			err = &utils.ServerError{Message: "error closing stream after bookings in range"}
+		}
+	}(rows)
 
 	var arr []*reservation.CRMBookingsResponse
 
@@ -83,12 +87,12 @@ func (dep *reservationStore) BookingsInRange(ctx context.Context, staffId uint64
 			&data,
 		); err != nil {
 			dep.logger.Error(err.Error())
-			return nil, errors.New("error scanning database rows")
+			return nil, &utils.ServerError{Message: "error scanning database rows for bookings in range"}
 		}
 
 		if err = json.Unmarshal(data, &o.Services); err != nil {
 			dep.logger.Error(err.Error())
-			return nil, errors.New("error unmarshalling services from bookings")
+			return nil, &utils.ServerError{Message: "error unmarshalling services from bookings in range"}
 		}
 
 		arr = append(arr, &o)
@@ -96,7 +100,7 @@ func (dep *reservationStore) BookingsInRange(ctx context.Context, staffId uint64
 
 	if err = rows.Err(); err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New("error iterating through bookings rows")
+		return nil, &utils.NotFoundError{Message: "error iterating through bookings rows for bookings in range"}
 	}
 
 	return arr, err
@@ -108,12 +112,12 @@ func (dep *reservationStore) UpdateReservationStatus(ctx context.Context, reserv
 	r, err := dep.db.ExecContext(ctx, q, reservationId, status)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return 0, errors.New("error updating reservation status")
+		return 0, &utils.InsertionError{Message: "error updating reservation status"}
 	}
 
 	num, err := r.RowsAffected()
 	if err != nil {
-		return 0, errors.New("error displaying rows affected")
+		return 0, &utils.InsertionError{Message: "error displaying rows affected when updating reservation status"}
 	}
 
 	return num, nil
@@ -130,7 +134,7 @@ func (dep *reservationStore) ReservationById(ctx context.Context, reservationId 
 
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, fmt.Errorf("error retrieving reservation with id %v", reservationId)
+		return nil, &utils.NotFoundError{Message: "error retrieving reservation with id"}
 	}
 
 	return &r, nil
@@ -156,7 +160,7 @@ func (dep *reservationStore) CountReservationsInRange(ctx context.Context, staff
 	row := dep.db.QueryRowContext(ctx, q, staffId, start, end)
 	if err := row.Scan(&count); err != nil {
 		dep.logger.Error(err.Error())
-		return 0, fmt.Errorf("error counting reservations in range")
+		return 0, &utils.NotFoundError{Message: "error counting reservations in range"}
 	}
 
 	return count, nil
@@ -164,7 +168,7 @@ func (dep *reservationStore) CountReservationsInRange(ctx context.Context, staff
 
 func (dep *reservationStore) Save(ctx context.Context, r *reservation.Reservation) error {
 	if r == nil {
-		return errors.New("reservation cannot be nil")
+		return &utils.ServerError{Message: "reservation cannot be nil"}
 	}
 
 	q := `
@@ -181,9 +185,8 @@ func (dep *reservationStore) Save(ctx context.Context, r *reservation.Reservatio
 
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return errors.New("error saving reservation")
+		return &utils.InsertionError{Message: "error saving reservation"}
 	}
 
-	dep.logger.Error("reservation saved")
 	return nil
 }

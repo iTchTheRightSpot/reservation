@@ -55,19 +55,6 @@ func (dep *Middleware) timeout(next http.Handler) http.Handler {
 		ctx, cancel := context.WithTimeout(r.Context(), dur)
 		defer cancel()
 		next.ServeHTTP(w, r.WithContext(ctx))
-		//if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		//	dep.Logger.Error("request timeout")
-		//	w.Header().Set("Content-Type", "application/json")
-		//	code := http.StatusRequestTimeout
-		//	w.WriteHeader(code)
-		//	type obj struct {
-		//		Status  int
-		//		Message string
-		//	}
-		//	if err := json.NewEncoder(w).Encode(obj{Status: code, Message: "request timeout"}); err != nil {
-		//		dep.Logger.Error(err.Error())
-		//	}
-		//}
 	})
 }
 
@@ -77,7 +64,11 @@ func (dep *Middleware) logging(next http.Handler) http.Handler {
 		ip := dep.requestIP(r)
 		id := uuid.NewString()
 		str := fmt.Sprintf(
-			"\n[Request] ID: %s\nIP: %s\nMethod: %s\nPath: %s\n", id, ip, r.Method, r.URL.Path,
+			`
+			[Request] ID: %s
+			IP: %s
+			Method: %s
+			Path: %s`, id, ip, r.Method, r.URL.Path,
 		)
 		dep.Logger.Log(str)
 		obj := &wrappedWriter{
@@ -87,8 +78,13 @@ func (dep *Middleware) logging(next http.Handler) http.Handler {
 		next.ServeHTTP(obj, r)
 		end := dep.Logger.Date()
 		str = fmt.Sprintf(
-			"\n[Response] ID: %s\nIP: %s\nStatus: %d\nMethod: %s\nPath: %s\nDuration: %v seconds\n",
-			id, ip, obj.status, r.Method, r.URL.Path, end.Sub(start).Seconds(),
+			`
+			[Response] ID: %s
+			IP: %s
+			Status: %d
+			Method: %s
+			Path: %s
+			Duration: %v seconds`, id, ip, obj.status, r.Method, r.URL.Path, end.Sub(start).Seconds(),
 		)
 		dep.Logger.Log(str)
 	})

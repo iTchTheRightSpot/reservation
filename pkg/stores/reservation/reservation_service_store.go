@@ -2,7 +2,6 @@ package reservation
 
 import (
 	"context"
-	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -31,8 +30,7 @@ func (dep *reservationServiceStore) Save(ctx context.Context, e *reservation.Res
 	row := dep.db.QueryRowContext(ctx, q, e.ReservationId, e.ServiceId)
 	if err := row.Scan(&e.JunctionId, &e.ReservationId, &e.ServiceId); err != nil {
 		dep.logger.Error(err.Error())
-		return fmt.Errorf("error saving to reservation_service")
+		return &utils.InsertionError{}
 	}
-
 	return nil
 }

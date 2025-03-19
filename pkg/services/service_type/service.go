@@ -32,7 +32,7 @@ func (dep *serviceTypeImpl) Update(ctx context.Context, dto *service_type.Servic
 	s, err := dep.adapters.ServiceStore.ServiceTypeByName(ctx, strings.TrimSpace(dto.Name))
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return &utils.NotFoundError{Message: "cannot update invalid service type"}
+		return err
 	}
 	s.Name = strings.TrimSpace(dto.Name)
 	s.Price = dto.Price
@@ -46,7 +46,7 @@ func (dep *serviceTypeImpl) CRMServiceTypes(ctx context.Context) (interface{}, e
 	db, err := dep.adapters.ServiceStore.ServiceTypes(ctx)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, &utils.NotFoundError{Message: "an error occurred retrieving service types"}
+		return nil, err
 	}
 
 	type ui struct {
@@ -74,7 +74,7 @@ func (dep *serviceTypeImpl) ServiceTypes(ctx context.Context) (interface{}, erro
 	db, err := dep.adapters.ServiceStore.ServiceTypes(ctx)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, &utils.NotFoundError{Message: "an error occurred retrieving service types"}
+		return nil, err
 	}
 
 	type ui struct {
@@ -102,7 +102,7 @@ func (dep *serviceTypeImpl) StaffsByServiceTypes(ctx context.Context, services *
 	stafs, err := dep.adapters.StaffStore.StaffsByServices(ctx, services)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, &utils.NotFoundError{Message: "no staffs found for said service(s)"}
+		return nil, err
 	}
 
 	type ui struct {
@@ -141,7 +141,7 @@ func (dep *serviceTypeImpl) Create(ctx context.Context, p *service_type.ServiceT
 
 	if err := dep.adapters.ServiceStore.Save(ctx, &s); err != nil {
 		dep.logger.Error(err.Error())
-		return &utils.InsertionError{Message: err.Error()}
+		return err
 	}
 	return nil
 }
@@ -149,17 +149,17 @@ func (dep *serviceTypeImpl) Create(ctx context.Context, p *service_type.ServiceT
 func (dep *serviceTypeImpl) LinkServiceToStaff(ctx context.Context, obj *service_type.LinkServiceTypeToStaffPayload) error {
 	s, err := dep.adapters.StaffStore.StaffByUUID(ctx, obj.StaffUUID)
 	if err != nil {
-		return &utils.NotFoundError{Message: "invalid staff id"}
+		return err
 	}
 
 	service, err := dep.adapters.ServiceStore.ServiceTypeByName(ctx, obj.Service)
 	if err != nil {
-		return &utils.NotFoundError{Message: "invalid service name"}
+		return err
 	}
 
 	count, err := dep.adapters.StaffServiceStore.CountByStaffIdAndServiceId(ctx, s.StaffId, service.ServiceId)
 	if err != nil {
-		return &utils.InsertionError{Message: err.Error()}
+		return err
 	}
 
 	if count > 0 {
@@ -171,7 +171,7 @@ func (dep *serviceTypeImpl) LinkServiceToStaff(ctx context.Context, obj *service
 	})
 
 	if err != nil {
-		return &utils.InsertionError{Message: err.Error()}
+		return err
 	}
 
 	return nil
@@ -181,7 +181,7 @@ func (dep *serviceTypeImpl) ServicesByStaffUUID(ctx context.Context, staffUUID s
 	arr, err := dep.adapters.ServiceStore.ServiceTypesByStaffUUID(ctx, strings.TrimSpace(staffUUID))
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, &utils.NotFoundError{Message: "error retrieving services. Please double check staff id"}
+		return nil, err
 	}
 
 	if len(arr) == 0 {

@@ -35,8 +35,8 @@ func (dep *permissionStore) Save(ctx context.Context, p *models.PermissionEntity
 
 	row := dep.db.QueryRowContext(ctx, q, p.Permission, p.RoleId)
 	if err := row.Scan(&p.PermissionId, &p.Permission, &p.RoleId); err != nil {
-		dep.logger.Error(err)
-		return errors.New("exception saving to permission table")
+		dep.logger.Error(err.Error())
+		return &utils.InsertionError{Message: "exception saving to permission table"}
 	}
 
 	return nil
@@ -46,7 +46,12 @@ func (dep *permissionStore) Delete(ctx context.Context, permissionId uint64) (in
 	res, err := dep.db.ExecContext(ctx, "DELETE FROM permission WHERE permission_id = $1", permissionId)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return 0, errors.New("error deleting permission")
+		return 0, &utils.InsertionError{Message: "error deleting permission"}
 	}
-	return res.RowsAffected()
+	i, err := res.RowsAffected()
+	if err != nil {
+		dep.logger.Error(err.Error())
+		return 0, &utils.InsertionError{Message: "error deleting permission x2"}
+	}
+	return i, nil
 }

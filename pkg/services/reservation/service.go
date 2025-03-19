@@ -103,7 +103,7 @@ func (dep *reservationService) filterChunks(ctx context.Context, staffId uint64,
 
 				count, err := dep.adapters.ReservationStore.CountReservationsInRange(ctx, staffId, timeSlot, end, reservation.CONFIRMED)
 				if err != nil {
-					errChan <- &utils.BadRequestError{Message: err.Error()}
+					errChan <- err
 					return
 				}
 
@@ -138,7 +138,7 @@ func (dep *reservationService) AvailableDates(ctx context.Context, o *reservatio
 
 	staf, err := dep.adapters.StaffStore.StaffByUUID(ctx, o.StaffId)
 	if err != nil {
-		return nil, &utils.NotFoundError{Message: "invalid staff Id"}
+		return nil, err
 	}
 
 	services, err := dep.matchStaffServices(ctx, o.Services, staf)
@@ -152,7 +152,7 @@ func (dep *reservationService) AvailableDates(ctx context.Context, o *reservatio
 		ctx, staf.StaffId, o.StartDateTime, o.EndDateTime, true, duration)
 
 	if err != nil {
-		return nil, &utils.NotFoundError{Message: "invalid time to make a reservation"}
+		return nil, err
 	}
 
 	chunks := dep.generateChunks(schedules, duration)
@@ -169,7 +169,7 @@ func (dep *reservationService) AvailableDates(ctx context.Context, o *reservatio
 func (dep *reservationService) matchStaffServices(ctx context.Context, requestedServices []string, staffObj *staff.StaffEntity) ([]*service_type.ServiceTypeEntity, error) {
 	serviceEntities, err := dep.adapters.ServiceStore.ServiceTypesByStaffId(ctx, staffObj.StaffId, true)
 	if err != nil {
-		return nil, &utils.NotFoundError{Message: "invalid service for staff"}
+		return nil, err
 	}
 
 	arr := make([]*service_type.ServiceTypeEntity, 0)
@@ -250,7 +250,7 @@ func (dep *reservationService) createReservation(ctx context.Context, p *reserva
 
 		if err := adapters.ReservationStore.Save(ctx, reserv); err != nil {
 			dep.logger.Error(err.Error())
-			return &utils.InsertionError{Message: "error creating reservation"}
+			return err
 		}
 
 		for _, entity := range matchedServices {
@@ -260,7 +260,7 @@ func (dep *reservationService) createReservation(ctx context.Context, p *reserva
 			})
 			if err != nil {
 				dep.logger.Error(err)
-				return &utils.InsertionError{Message: "error creating reservation"}
+				return err
 			}
 		}
 		return nil
@@ -270,7 +270,7 @@ func (dep *reservationService) createReservation(ctx context.Context, p *reserva
 func (dep *reservationService) Create(ctx context.Context, p *reservation.ReservationPayload) error {
 	staffObj, err := dep.adapters.StaffStore.StaffByUUID(ctx, strings.TrimSpace(p.StaffId))
 	if err != nil {
-		return &utils.NotFoundError{Message: "invalid staff id"}
+		return err
 	}
 
 	services, err := dep.matchStaffServices(ctx, p.Services, staffObj)
@@ -315,7 +315,7 @@ func (dep *reservationService) Cancel(ctx context.Context, reservationId uint64)
 	r, err := dep.adapters.ReservationStore.ReservationById(ctx, reservationId)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return &utils.NotFoundError{Message: "invalid reservation id"}
+		return err
 	}
 
 	if reflect.DeepEqual(r.Status, reservation.CANCELLED) {
@@ -336,7 +336,7 @@ func (dep *reservationService) Bookings(ctx context.Context, o *reservation.CRMB
 	staf, err := dep.adapters.StaffStore.StaffByUUID(ctx, o.StaffId)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, &utils.NotFoundError{Message: "invalid staff id"}
+		return nil, err
 	}
 
 	from := time.Date(o.Year, time.Month(o.Month), 1, 0, 0, 0, 0, o.Timezone)
@@ -344,7 +344,7 @@ func (dep *reservationService) Bookings(ctx context.Context, o *reservation.CRMB
 
 	arr, err := dep.adapters.ReservationStore.BookingsInRange(ctx, staf.StaffId, from, to)
 	if err != nil {
-		return nil, &utils.NotFoundError{Message: "error retrieving bookings"}
+		return nil, err
 	}
 
 	if len(arr) == 0 {
@@ -358,7 +358,7 @@ func (dep *reservationService) UpdateBookingStatus(ctx context.Context, dto *res
 	num, err := dep.adapters.ReservationStore.UpdateReservationStatus(ctx, dto.ReservationId, dto.Status)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return &utils.InsertionError{Message: "error updating booking status"}
+		return err
 	}
 
 	if num == 0 {

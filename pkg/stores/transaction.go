@@ -2,7 +2,6 @@ package stores
 
 import (
 	"database/sql"
-	"errors"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
 )
 
@@ -20,8 +19,6 @@ func NewTransactionProvider(l utils.ILogger, db *sql.DB) ITransactionProvider {
 }
 
 func (p *transactionProvider) RunInTransaction(txFunc func(*Adapters) error) error {
-	p.logger.Log("transaction beginning isolation level options nil")
-
 	err := p.runInTx(p.db, func(tx *sql.Tx) error { return txFunc(NewAdapters(p.logger, tx, nil)) })
 	if err != nil {
 		p.logger.Error("transaction not committed", err.Error())
@@ -33,22 +30,32 @@ func (p *transactionProvider) RunInTransaction(txFunc func(*Adapters) error) err
 }
 
 func (p *transactionProvider) runInTx(db *sql.DB, fn func(*sql.Tx) error) error {
+	p.logger.Log("BEGINNING TRANSACTION")
+
 	tx, err := db.Begin()
 	if err != nil {
-		p.logger.Error("error starting transaction", err.Error())
-		return err
+		p.logger.Error("ERROR STARTING TRANSACTION", err.Error())
+		return &utils.ServerError{Message: "error starting transaction"}
 	}
 
 	if err = fn(tx); err == nil {
-		p.logger.Log("committing transaction")
-		return tx.Commit()
+		p.logger.Log("COMMITTING TRANSACTION")
+		if err = tx.Commit(); err != nil {
+			p.logger.Error(err.Error())
+			return &utils.InsertionError{Message: "error committing transaction"}
+		}
+		p.logger.Log("TRANSACTION COMMITTED SUCCESSFULLY")
+		return nil
 	}
 
-	if rollbackErr := tx.Rollback(); rollbackErr != nil {
-		p.logger.Error("failed to rollback transaction", "original error", err, "rollback error", rollbackErr)
-		return errors.Join(err, rollbackErr)
+	p.logger.Error("TRANSACTION FAILED", err.Error())
+	p.logger.Log("BEGINNING TRANSACTION ROLLBACK")
+
+	if rbe := tx.Rollback(); rbe != nil {
+		p.logger.Error("FAILED TO ROLLBACK TRANSACTION", rbe.Error())
+		return err
 	}
 
-	p.logger.Error("transaction rolled back due to error", err)
+	p.logger.Log("TRANSACTION ROLLED BACK SUCCESSFULLY")
 	return err
 }

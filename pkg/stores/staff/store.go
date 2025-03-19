@@ -62,9 +62,14 @@ func (dep *staffStore) AllStaffs(ctx context.Context) ([]*staff.AllStaffsEntity,
 	rows, err := dep.db.QueryContext(ctx, q)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New("error retrieving all staffs")
+		return nil, &utils.NotFoundError{Message: "error retrieving all staffs"}
 	}
-	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
+	defer func(rows *sql.Rows) {
+		if err = rows.Close(); err != nil {
+			dep.logger.Error(err.Error())
+			err = &utils.ServerError{Message: "error closing stream after retrieving all staffs"}
+		}
+	}(rows)
 
 	var result = make([]*staff.AllStaffsEntity, 0)
 
@@ -83,12 +88,12 @@ func (dep *staffStore) AllStaffs(ctx context.Context) ([]*staff.AllStaffsEntity,
 			&rolePermData,
 		); err != nil {
 			dep.logger.Error(err.Error())
-			return nil, errors.New("error scanning database rows")
+			return nil, &utils.ServerError{Message: "error scanning database rows after retrieving all staffs"}
 		}
 
 		if err = json.Unmarshal(rolePermData, &pd.AccessControls); err != nil {
 			dep.logger.Error(err.Error())
-			return nil, errors.New("error unmarshalling AllStaffs access control")
+			return nil, &utils.ServerError{Message: "error unmarshalling all staffs"}
 		}
 
 		result = append(result, &pd)
@@ -96,7 +101,7 @@ func (dep *staffStore) AllStaffs(ctx context.Context) ([]*staff.AllStaffsEntity,
 
 	if err = rows.Err(); err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New("error iterating through all staffs rows")
+		return nil, &utils.ServerError{Message: "error iterating through all staffs"}
 	}
 
 	return result, err
@@ -107,7 +112,7 @@ func (dep *staffStore) StaffByProfileId(ctx context.Context, profileId uint64) (
 	row := dep.db.QueryRowContext(ctx, "SELECT * FROM staff WHERE profile_id = $1", profileId)
 	if err := row.Scan(&r.StaffId, &r.UUID, &r.Bio, &r.ProfileId); err != nil {
 		dep.logger.Error(err.Error())
-		return nil, fmt.Errorf("no staff with id %v", profileId)
+		return nil, &utils.NotFoundError{Message: "invalid staff with id"}
 	}
 	return &r, nil
 }
@@ -147,10 +152,15 @@ func (dep *staffStore) StaffsByServices(ctx context.Context, s *[]string) ([]*st
 	rows, err := dep.db.QueryContext(ctx, q, args...)
 	if err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New("exception retrieving staffs by services")
+		return nil, &utils.NotFoundError{Message: "error retrieving staffs by services"}
 	}
 
-	defer func(rows *sql.Rows) { err = rows.Close() }(rows)
+	defer func(rows *sql.Rows) {
+		if err = rows.Close(); err != nil {
+			dep.logger.Error(err.Error())
+			err = &utils.ServerError{Message: "error closing stream after retrieving staffs by services"}
+		}
+	}(rows)
 
 	var arr []*staff.StaffStoreFrontDb
 
@@ -159,7 +169,7 @@ func (dep *staffStore) StaffsByServices(ctx context.Context, s *[]string) ([]*st
 
 		if err = rows.Scan(&sb.UUID, &sb.Name, &sb.ImageKey, &sb.Bio); err != nil {
 			dep.logger.Error(err)
-			return nil, errors.New("exception scanning staffs by services")
+			return nil, &utils.ServerError{Message: "exception scanning staffs by services"}
 		}
 
 		arr = append(arr, &sb)
@@ -167,7 +177,7 @@ func (dep *staffStore) StaffsByServices(ctx context.Context, s *[]string) ([]*st
 
 	if err = rows.Err(); err != nil {
 		dep.logger.Error(err.Error())
-		return nil, errors.New("error iterating staffs by services")
+		return nil, &utils.ServerError{Message: "error iterating staffs by services"}
 	}
 
 	return arr, err

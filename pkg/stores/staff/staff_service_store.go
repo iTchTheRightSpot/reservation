@@ -2,7 +2,6 @@ package staff
 
 import (
 	"context"
-	"errors"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
@@ -24,7 +23,7 @@ func NewStaffServiceStore(l utils.ILogger, db pkg.Db) IStaffServiceStore {
 
 func (dep *staffServiceStore) Save(ctx context.Context, s *staff.StaffServiceEntity) error {
 	if s == nil {
-		return errors.New("StaffServiceEntity cannot be nil")
+		return &utils.ServerError{Message: "StaffServiceEntity cannot be nil"}
 	}
 	q := `
         INSERT INTO staff_service (staff_id, service_id)
@@ -35,10 +34,9 @@ func (dep *staffServiceStore) Save(ctx context.Context, s *staff.StaffServiceEnt
 	row := dep.db.QueryRowContext(ctx, q, s.StaffId, s.ServiceId)
 	if err := row.Scan(&s.JunctionId, &s.StaffId, &s.ServiceId); err != nil {
 		dep.logger.Error(err.Error())
-		return errors.New("exception linking service to staff")
+		return &utils.InsertionError{Message: "error linking service to staff"}
 	}
 
-	dep.logger.Log("saved to staff_service table")
 	return nil
 }
 
@@ -50,7 +48,7 @@ func (dep *staffServiceStore) CountByStaffIdAndServiceId(ctx context.Context, st
 	row := dep.db.QueryRowContext(ctx, q, staffId, serviceId)
 	if err := row.Scan(&count); err != nil {
 		dep.logger.Error(err.Error())
-		return 0, errors.New("error count staff service")
+		return 0, &utils.NotFoundError{Message: "error counting staff services"}
 	}
 
 	return count, nil
