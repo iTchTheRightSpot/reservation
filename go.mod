@@ -1,10 +1,9 @@
 module github.com/iTchTheRightSpot/erp-golang
 
 go 1.24.0
-
 require (
 	github.com/go-playground/validator/v10 v10.25.0
-	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/golang-migrate/migrate/v4 v4.18.2
 	github.com/google/uuid v1.6.0
 	github.com/lib/pq v1.10.9
