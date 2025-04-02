@@ -35,8 +35,7 @@ type Middleware struct {
 }
 
 func (dep *Middleware) Initialize(router *http.ServeMux) http.Handler {
-	return dep.logging(dep.timeout(dep.redirect(router)))
-	//return dep.logging(dep.redirect(router))
+	return dep.logging(dep.redirect(router))
 }
 
 // https://stackoverflow.com/questions/27234861/correct-way-of-getting-clients-ip-addresses-from-http-request
@@ -49,21 +48,12 @@ func (dep *Middleware) requestIP(r *http.Request) string {
 	return r.RemoteAddr
 }
 
-func (dep *Middleware) timeout(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		dur := time.Second * time.Duration(5)
-		ctx, cancel := context.WithTimeout(r.Context(), dur)
-		defer cancel()
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
 func (dep *Middleware) logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := dep.Logger.Date()
 		ip := dep.requestIP(r)
 		id := uuid.NewString()
-		str := fmt.Sprintf("\n\t[Request] ID: %s\n\tIP: %s\n\tMethod: %s\n\tPath: %s\n", id, ip, r.Method, r.URL.Path)
+		str := fmt.Sprintf("[Request] ID: %s IP: %s Method: %s tPath: %s", id, ip, r.Method, r.URL.Path)
 		dep.Logger.Log(str)
 		obj := &wrappedWriter{
 			ResponseWriter: w,
@@ -72,7 +62,7 @@ func (dep *Middleware) logging(next http.Handler) http.Handler {
 		next.ServeHTTP(obj, r)
 		end := dep.Logger.Date()
 		str = fmt.Sprintf(
-			"\n\t[Response] ID: %s\n\tIP: %s\n\tStatus: %d\n\tMethod: %s\n\tPath: %s\n\tDuration: %v seconds\n",
+			"[Response] ID: %s IP: %s Status: %d Method: %s Path: %s Duration: %v seconds",
 			id, ip, obj.status, r.Method, r.URL.Path, end.Sub(start).Seconds())
 		dep.Logger.Log(str)
 	})
