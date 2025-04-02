@@ -1,66 +1,56 @@
-# Reservation application powered by Angular, Go & PostgresSQL
+# Reservation App (Angular, Go, & PostgreSQL)
 
-## About
-Service similar to Square reservation
+A feature-rich reservation system for small businesses, like salons.
 
-## Core Requirements
+## Core Features
 
-1. **Serverside serve angular app**
-   
-2. **Authentication & Authorization**
-   - Authentication by email & password
-   - Role & permission based authorization using jwt
-     - To access protected resources, each request must contain jwt as a cookie.
+### 1. **Monolith Application**
+   - **Frontend**: Angular served from Go binary.
 
-3. **Staff**
-    - **Schedule**
-      - Only staffs with `WRITE` permission can create working hours for other staffs.
-      - Allow bulk creation of schedules with the following constraints:
-      - No conflicts in working hrs.
-      - A schedule can only be deleted if no reservation is attached to it.
-      - Schedules cannot be created for past date.
-      - **Autonomous Weekly Recurring Schedule**
-        - Similar to marking a reoccurring alarm, autonomous schedule that runs weekly, for schedules
-        that have been marked as reoccurring. Cron would fire once a week.
-   - **Services**
-      - Only staffs with `WRITE or DELETE` permission can create or delete a service.
-      - A service cannot be deleted if it has an existing relationship with another table.
-      Instead, it's visibility can be marked as false so clients can reserve for said service.
-      - Only staff with `WRITE` can assign a service to another staff.
-    - **Reservations**
-      - A reservation can include multiple services.
-      - A reservation must have a quoted amount.
-      - No overbooking.
-      - A reservation can never be deleted rather cancelled.
-      - Said staff should receive a notification on reservation creation and status change.
-      - For a reservation status to be marked as `COMPLETED`, it has to have a payment detail.
-      That is an existing relationship with payment_detail.
-      - Both staff & client should receive a notification 1 day before a `PENDING` appointment.
+### 2. **Authentication & Authorization**
+   - **Login**: Email & password-based.
+   - **Roles & Permissions**: Role-based access; authorized via 'GSESSION' cookie.
 
-4. **Clients**
-   - **Services**
-     - A client should see all the services offered.
-     - n number of services can be for one reservation.
-     - Every service can have a max price of `DECIMAL(6, 2)`.
-   - **Reservations**
-     - A client can only be shown n valid reservation times for 1 staff.
-     - Reservation times should be adjusted to a clients' timezone.
-     - Clients cannot reschedule a reservation. The reservation has to be cancelled.
-     - A reservation cannot be made for past dates.
-     - Clients & staffs should receive notifications on appointment status change.
+### 3. **Staff Management**
+   - **Schedule**:
+     - Only staff with `WRITE` permission can create schedules.
+     - Bulk schedule creation & no conflicts.
+     - Schedules can only be deleted if not linked to a reservation.
+     - Weekly recurring schedules.
+   - **Services**:
+     - Staff with `WRITE` or `DELETE` permission can manage services.
+     - Services linked to other data like reservation, or staff can’t be deleted but can be hidden.
+     - Only staff with `WRITE` can assign services to others.
+   - **Reservations**:
+     - Allow Multiple services per reservation.
+     - Quoted price required.
+     - No overbooking; cannot delete, only cancel.
+     - Staff notified on creation or status change.
+     - Reservation status set to `COMPLETED` only with payment info.
+     - 1-day reminder notifications for pending appointments.
 
-5. **Payment**
-    - Only staffs can send invoices to clients.
-    - Clients should be able to pay via online invoice.
+### 4. **Client Management**
+   - **Services**:
+     - Clients can view all services.
+     - Multiple services can be reserved.
+     - Max price per service: `DECIMAL(6, 2)`.
+   - **Reservations**:
+     - Clients see valid available times per staff in their timezone.
+     - Reservations for future dates only; no rescheduling, only cancellations.
+     - Clients and staff receive notifications on status changes.
 
-# Development docs
+### 5. **Payment**
+   - **Invoices**: Only staff can send invoices.
+   - **Online Payment**: Clients can pay via an online invoice.
+
+## Development docs
 1. [Db Schema](https://dbdiagram.io/d/chidi-salon-6780316c6b7fa355c3705d78).
 2. [Validator](https://github.com/go-playground/validator/blob/master/README.md).
 3. [Go migrate](https://github.com/golang-migrate/migrate/blob/master/README.md).
 4. [PG](https://neon.tech/postgresql/postgresql-tutorial/postgresql-foreign-key).
 5. [In-memory caching](https://www.codingexplorations.com/blog/harnessing-in-memory-caching-in-go).
 
-## Development details
+## Development cmds
 1. `migrate create -ext sql -dir ./database/migrations/ -seq create_users_table`.
 2. `docker run --rm -v $(pwd)/database/migrations:/database/migrations migrate/migrate create -ext sql -dir ./database/migrations/ -seq payment_detail`
 3. `go clean -testcache`
