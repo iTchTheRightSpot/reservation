@@ -1,11 +1,11 @@
 package main
 
 import (
+	"database/sql"
 	"github.com/iTchTheRightSpot/erp-golang/cmd/api"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
-	"log"
 )
 
 func main() {
@@ -18,8 +18,7 @@ func main() {
 	if env.Profile == "production" {
 		lg, err := utils.NewLogger("UTC", env.Discord)
 		if err != nil {
-			log.Fatal("failed to instantiate logger ", err.Error())
-			return
+			l.Fatal("failed to instantiate logger ", err.Error())
 		}
 		l = lg
 	}
