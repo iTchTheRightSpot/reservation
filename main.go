@@ -30,6 +30,12 @@ func main() {
 		l.Fatal(err.Error())
 	}
 
+	 defer func(db *sql.DB) {
+                if err = db.Close(); err != nil {
+                        l.Error("error defer closing db connection " + err.Error())
+                }
+        }(db)
+
 	if env.CookieParam.CookieSecure {
 		if err = database.Migrate(db); err != nil {
 			l.Fatal(err.Error())
