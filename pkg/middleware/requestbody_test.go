@@ -3,8 +3,8 @@ package middleware
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
+	log "github.com/iTchTheRightSpot/utility/utils"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,7 +13,7 @@ import (
 func TestRequestBodyMiddleware(t *testing.T) {
 	t.Parallel()
 
-	logger := utils.NewDevLogger()
+	logger := log.DevLogger("UTC")
 
 	t.Run("should accept request valid request body", func(t *testing.T) {
 		t.Parallel()

@@ -2,7 +2,8 @@ package schedule
 
 import (
 	"fmt"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/utils"
+	log "github.com/iTchTheRightSpot/utility/utils"
 	"testing"
 	"time"
 )
@@ -10,7 +11,7 @@ import (
 func TestScheduleModel(t *testing.T) {
 	t.Parallel()
 
-	logger := utils.NewDevLogger()
+	logger := log.DevLogger("UTC")
 	timezone := logger.Timezone()
 
 	t.Run("return error schedule in the past", func(t *testing.T) {
@@ -37,10 +38,11 @@ func TestScheduleModel(t *testing.T) {
 
 		// assert appropriate error
 		s := err.Error()
-		g := fmt.Sprintf("%s is in the past ", timeSlots[0].Start)
+		g := fmt.Sprintf("%s is in the past", timeSlots[0].Start)
 
 		if s != g {
 			t.Errorf("expect %s to equal given %s", s, g)
+			t.FailNow()
 		}
 	})
 

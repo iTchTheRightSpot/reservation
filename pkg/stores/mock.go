@@ -1,27 +1,13 @@
 package stores
 
 import (
-	"database/sql"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/reservation"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/service_type"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"context"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores/profile"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores/reservation"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores/schedule"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores/service_type"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores/staff"
 )
-
-type mockLiveTransactionProvider struct {
-	logger utils.ILogger
-	tx     *sql.Tx
-}
-
-func MockLiveTransactionProvider(l utils.ILogger, tx *sql.Tx) ITransactionProvider {
-	return &mockLiveTransactionProvider{logger: l, tx: tx}
-}
-
-func (p *mockLiveTransactionProvider) RunInTransaction(txFunc func(adapters *Adapters) error) error {
-	return txFunc(NewAdapters(p.logger, p.tx, nil))
-}
 
 type MockUnitTransactionProvider struct {
 	ProfileStore      profile.IProfileStore
@@ -34,7 +20,7 @@ type MockUnitTransactionProvider struct {
 	ReservationStore  reservation.IReservationStore
 }
 
-func (m *MockUnitTransactionProvider) RunInTransaction(txFunc func(adapters *Adapters) error) error {
+func (m *MockUnitTransactionProvider) RunInTransaction(_ context.Context, txFunc func(adapters *Adapters) error) error {
 	return txFunc(&Adapters{
 		ProfileStore:      m.ProfileStore,
 		RoleStore:         m.RoleStore,

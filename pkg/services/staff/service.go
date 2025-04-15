@@ -2,10 +2,10 @@ package staff
 
 import (
 	"context"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
-	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/pkg/models/staff"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores"
+	"github.com/iTchTheRightSpot/utility/cache"
+	"github.com/iTchTheRightSpot/utility/utils"
 )
 
 type IStaffService interface {
@@ -15,11 +15,11 @@ type IStaffService interface {
 type staffService struct {
 	logger   utils.ILogger
 	adapters *stores.Adapters
-	cache    pkg.ICache[string, []*staff.AllStaffsEntity]
+	cache    cache.ICache[string, []*staff.AllStaffsEntity]
 	key      string
 }
 
-func NewStaffService(l utils.ILogger, a *stores.Adapters, c pkg.ICache[string, []*staff.AllStaffsEntity]) IStaffService {
+func NewStaffService(l utils.ILogger, a *stores.Adapters, c cache.ICache[string, []*staff.AllStaffsEntity]) IStaffService {
 	return &staffService{logger: l, adapters: a, cache: c, key: "key"}
 }
 
@@ -31,7 +31,7 @@ func (dep *staffService) AllUsers(ctx context.Context) ([]*staff.AllStaffsEntity
 
 	arr, err := dep.adapters.StaffStore.AllStaffs(ctx)
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return nil, &utils.NotFoundError{Message: "error retrieving staffs"}
 	}
 

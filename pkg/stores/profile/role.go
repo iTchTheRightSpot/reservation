@@ -2,9 +2,9 @@ package profile
 
 import (
 	"context"
-	"github.com/iTchTheRightSpot/erp-golang/pkg"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/pkg"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
+	"github.com/iTchTheRightSpot/utility/utils"
 )
 
 type IRoleStore interface {
@@ -34,7 +34,7 @@ func (dep *roleStore) Save(ctx context.Context, r *models.RoleEntity) error {
 
 	row := dep.db.QueryRowContext(ctx, q, r.Role, r.ProfileId)
 	if err := row.Scan(&r.RoleId, &r.Role, &r.ProfileId); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return &utils.InsertionError{}
 	}
 
@@ -44,7 +44,7 @@ func (dep *roleStore) Save(ctx context.Context, r *models.RoleEntity) error {
 func (dep *roleStore) Delete(ctx context.Context, roleId uint64) (int64, error) {
 	res, err := dep.db.ExecContext(ctx, "DELETE FROM role WHERE role_id = $1", roleId)
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return 0, &utils.InsertionError{Message: "error deleting role"}
 	}
 	i, err := res.RowsAffected()

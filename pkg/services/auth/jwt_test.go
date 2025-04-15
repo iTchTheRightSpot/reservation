@@ -1,9 +1,11 @@
 package auth
 
 import (
-	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"context"
+	"github.com/iTchTheRightSpot/reservation/config"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
+	"github.com/iTchTheRightSpot/reservation/utils"
+	log "github.com/iTchTheRightSpot/utility/utils"
 	"os"
 	"testing"
 )
@@ -20,8 +22,9 @@ func TestJwtService(t *testing.T) {
 	t.Run("should generate and validate jwt", func(t *testing.T) {
 		t.Parallel()
 
-		s := NewJwtServiceAsymmetric(utils.NewDevLogger(), con)
+		s := NewJwtServiceAsymmetric(log.DevLogger("UTC"), con)
 
+		ctx := context.Background()
 		cred := make([]models.RolePermissionEnum, 2)
 		cred[0] = models.RolePermissionEnum{
 			Role:        models.STAFF,
@@ -35,13 +38,13 @@ func TestJwtService(t *testing.T) {
 		o := &models.JwtObj{AccessControls: cred, UserId: "staff-uuid"}
 
 		// method to test & assert
-		obj, err := s.Encode(o, utils.TwoDaysInSeconds)
+		obj, err := s.Encode(ctx, o, utils.TwoDaysInSeconds)
 		if err != nil {
 			t.Errorf("exception generating jwt %s", err)
 		}
 
 		// method to test & assert
-		v, err := s.Decode(obj.Token)
+		v, err := s.Decode(ctx, obj.Token)
 		if err != nil {
 			t.Errorf("exception validating generated token jwt %s", err)
 		}

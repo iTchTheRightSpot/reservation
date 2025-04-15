@@ -7,23 +7,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/database"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers"
-	scheduleHandler "github.com/iTchTheRightSpot/erp-golang/pkg/handlers/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
-	scheduleModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
-	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/mail"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/reservation"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/config"
+	"github.com/iTchTheRightSpot/reservation/database"
+	"github.com/iTchTheRightSpot/reservation/pkg/handlers"
+	scheduleHandler "github.com/iTchTheRightSpot/reservation/pkg/handlers/schedule"
+	"github.com/iTchTheRightSpot/reservation/pkg/middleware"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
+	model "github.com/iTchTheRightSpot/reservation/pkg/models/reservation"
+	scheduleModel "github.com/iTchTheRightSpot/reservation/pkg/models/schedule"
+	"github.com/iTchTheRightSpot/reservation/pkg/models/service_type"
+	"github.com/iTchTheRightSpot/reservation/pkg/models/staff"
+	"github.com/iTchTheRightSpot/reservation/pkg/services/auth"
+	"github.com/iTchTheRightSpot/reservation/pkg/services/mail"
+	"github.com/iTchTheRightSpot/reservation/pkg/services/reservation"
+	"github.com/iTchTheRightSpot/reservation/pkg/services/schedule"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores"
+	"github.com/iTchTheRightSpot/reservation/utils"
+	"github.com/iTchTheRightSpot/utility/cache"
+	logg "github.com/iTchTheRightSpot/utility/utils"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -74,15 +75,15 @@ func TestReservationHandler(t *testing.T) {
 
 	// given
 	mux := http.NewServeMux()
-	logger := utils.NewDevLogger()
+	logger := logg.DevLogger("UTC")
 	prov := stores.NewTransactionProvider(logger, db)
 	adapters := stores.NewAdapters(logger, db, prov)
 	jwtSer := auth.NewJwtServiceAsymmetric(logger, env)
 	ware := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
 	s := schedule.NewScheduleService(logger, adapters)
-	cache := pkg.NewInMemoryCache[string, []*model.ReservationTimeSlots](logger, 30, 30)
+	c := cache.SyncMapInMemoryCache[string, []*model.ReservationTimeSlots](logger, 30, 30)
 	mailService := &mail.MockMailService{}
-	rs := reservation.NewReservationService(logger, adapters, cache, mailService)
+	rs := reservation.NewReservationService(logger, adapters, c, mailService)
 
 	ctx := context.Background()
 	staff1, err := handlers.PreSaveStaff(ctx, adapters)
@@ -310,7 +311,7 @@ func TestReservationHandler(t *testing.T) {
 					t.Errorf("expected status code %d, got %d", http.StatusBadRequest, rr.Code)
 				}
 
-				var obj utils.Error
+				var obj logg.Error
 				if err = json.NewDecoder(rr.Body).Decode(&obj); err != nil {
 					t.Error(err.Error())
 				}
@@ -335,7 +336,7 @@ func TestReservationHandler(t *testing.T) {
 	})
 
 	t.Run("CRM", func(t *testing.T) {
-		obj, _ := jwtSer.Encode(
+		obj, _ := jwtSer.Encode(context.Background(),
 			&models.JwtObj{
 				UserId: staff1.UUID.String(),
 				AccessControls: []models.RolePermissionEnum{
@@ -497,7 +498,7 @@ func createSchedule(t *testing.T, jwtSer auth.IJwtService, staff1 *staff.StaffEn
 		{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 	}
 
-	obj, err := jwtSer.Encode(
+	obj, err := jwtSer.Encode(context.Background(),
 		&models.JwtObj{
 			UserId:         staff1.UUID.String(),
 			AccessControls: cred,

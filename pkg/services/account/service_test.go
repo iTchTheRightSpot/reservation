@@ -3,20 +3,20 @@ package account
 import (
 	"context"
 	"errors"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	staffModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
-	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
+	staffModel "github.com/iTchTheRightSpot/reservation/pkg/models/staff"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores/profile"
+	"github.com/iTchTheRightSpot/utility/cache"
+	"github.com/iTchTheRightSpot/utility/utils"
 	"testing"
 )
 
 func TestAccountService(t *testing.T) {
 	t.Parallel()
 
-	lg := utils.NewDevLogger()
-	cac := pkg.NewInMemoryCache[string, []*staffModel.AllStaffsEntity](lg, 10, 0)
+	lg := utils.DevLogger("UTC")
+	cac := cache.SyncMapInMemoryCache[string, []*staffModel.AllStaffsEntity](lg, 10, 0)
 	ctx := context.Background()
 
 	t.Run("should return error when adding role & permission. Invalid staff id", func(t *testing.T) {

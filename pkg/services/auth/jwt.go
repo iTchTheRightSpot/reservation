@@ -1,12 +1,13 @@
 package auth
 
 import (
+	"context"
 	"crypto/rsa"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/config"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
+	"github.com/iTchTheRightSpot/utility/utils"
 	"os"
 	"time"
 )
@@ -40,8 +41,8 @@ func loadPublicKey(path string) (*rsa.PublicKey, error) {
 }
 
 type IJwtService interface {
-	Encode(o *models.JwtObj, expirationInSeconds int) (*models.JwtResponse, error)
-	Decode(str string) (*models.JwtObj, error)
+	Encode(ctx context.Context, o *models.JwtObj, expirationInSeconds int) (*models.JwtResponse, error)
+	Decode(ctx context.Context, str string) (*models.JwtObj, error)
 }
 
 type jwtService struct {
@@ -53,18 +54,18 @@ type jwtService struct {
 func NewJwtServiceAsymmetric(l utils.ILogger, env *config.SecretVariables) IJwtService {
 	priv, err := loadPrivateKey(env.PrivateKeyPath)
 	if err != nil {
-		l.Fatal(err)
+		l.Fatal(err.Error())
 	}
 
 	pub, err := loadPublicKey(env.PublicKeyPath)
 	if err != nil {
-		l.Fatal(err)
+		l.Fatal(err.Error())
 	}
 
 	return &jwtService{logger: l, privKey: priv, pubKey: pub}
 }
 
-func (dep *jwtService) Encode(o *models.JwtObj, expirationInSeconds int) (*models.JwtResponse, error) {
+func (dep *jwtService) Encode(ctx context.Context, o *models.JwtObj, expirationInSeconds int) (*models.JwtResponse, error) {
 	exp := dep.logger.Date().Add(time.Duration(expirationInSeconds) * time.Second)
 
 	claims := jwt.NewWithClaims(
@@ -80,43 +81,42 @@ func (dep *jwtService) Encode(o *models.JwtObj, expirationInSeconds int) (*model
 
 	token, err := claims.SignedString(dep.privKey)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		return nil, &utils.ServerError{Message: "error encoding to jwt"}
+		dep.logger.Error(ctx, err.Error())
+		return nil, &utils.ServerError{}
 	}
 
 	return &models.JwtResponse{Token: token, ExpireAt: exp}, nil
 }
 
-func (dep *jwtService) Decode(str string) (*models.JwtObj, error) {
+func (dep *jwtService) Decode(ctx context.Context, str string) (*models.JwtObj, error) {
 	token, err := jwt.Parse(str, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-			errMsg := fmt.Sprintf("unexpected signing method: %v", token.Header["alg"])
-			dep.logger.Error(errMsg)
-			return nil, &utils.AuthenticationError{Message: errMsg}
+			dep.logger.Error(ctx, "unexpected signing method", token.Header["alg"])
+			return nil, &utils.AuthenticationError{}
 		}
 		return dep.pubKey, nil
 	})
 
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return nil, err
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		dep.logger.Error("failed to parse claims from token")
+		dep.logger.Error(ctx, "failed to parse claims from token")
 		return nil, &utils.AuthenticationError{}
 	}
 
 	exp, err := claims.GetExpirationTime()
 	if err != nil {
-		dep.logger.Error(err)
+		dep.logger.Error(ctx, err)
 		return nil, &utils.AuthenticationError{}
 	}
 
 	obj, ok := claims["obj"].(map[string]interface{})
 	if !ok {
-		dep.logger.Error("invalid object format in claims")
+		dep.logger.Error(ctx, "invalid object format in claims")
 		return nil, &utils.AuthenticationError{}
 	}
 
@@ -124,7 +124,7 @@ func (dep *jwtService) Decode(str string) (*models.JwtObj, error) {
 	if uuid, ok := obj["user_id"].(string); ok {
 		jwtObj.UserId = uuid
 	} else {
-		dep.logger.Error("missing or invalid UserId in token claims")
+		dep.logger.Error(ctx, "missing or invalid UserId in token claims")
 		return nil, &utils.AuthenticationError{}
 	}
 
@@ -151,7 +151,7 @@ func (dep *jwtService) Decode(str string) (*models.JwtObj, error) {
 
 		jwtObj.AccessControls = parsedRoles
 	} else {
-		dep.logger.Error("missing or invalid roles in token claims")
+		dep.logger.Error(ctx, "missing or invalid roles in token claims")
 		return nil, &utils.AuthenticationError{}
 	}
 
@@ -167,7 +167,7 @@ func NewJwtServiceSymmetric(l utils.ILogger, env *config.SecretVariables) IJwtSe
 	return &jwt1Service{logger: l, symmetricKey: env.SymmetricKey}
 }
 
-func (dep *jwt1Service) Encode(o *models.JwtObj, expirationInSeconds int) (*models.JwtResponse, error) {
+func (dep *jwt1Service) Encode(ctx context.Context, o *models.JwtObj, expirationInSeconds int) (*models.JwtResponse, error) {
 	exp := dep.logger.Date().Add(time.Duration(expirationInSeconds) * time.Second)
 
 	claims := jwt.NewWithClaims(
@@ -183,41 +183,42 @@ func (dep *jwt1Service) Encode(o *models.JwtObj, expirationInSeconds int) (*mode
 
 	token, err := claims.SignedString(dep.symmetricKey)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		return nil, &utils.ServerError{Message: "error encoding to jwt"}
+		dep.logger.Error(ctx, err.Error())
+		return nil, &utils.ServerError{}
 	}
 
 	return &models.JwtResponse{Token: token, ExpireAt: exp}, nil
 }
 
-func (dep *jwt1Service) Decode(str string) (*models.JwtObj, error) {
+func (dep *jwt1Service) Decode(ctx context.Context, str string) (*models.JwtObj, error) {
 	token, err := jwt.Parse(str, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			dep.logger.Error(ctx, "unexpected signing method", token.Header["alg"])
+			return nil, &utils.AuthenticationError{}
 		}
 		return []byte(dep.symmetricKey), nil
 	})
 
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return nil, &utils.AuthenticationError{}
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		dep.logger.Error("failed to parse claims from token")
+		dep.logger.Error(ctx, "failed to parse claims from token")
 		return nil, &utils.AuthenticationError{}
 	}
 
 	exp, err := claims.GetExpirationTime()
 	if err != nil {
-		dep.logger.Error(err)
+		dep.logger.Error(ctx, err)
 		return nil, &utils.AuthenticationError{}
 	}
 
 	obj, ok := claims["obj"].(map[string]interface{})
 	if !ok {
-		dep.logger.Error("invalid object format in claims")
+		dep.logger.Error(ctx, "invalid object format in claims")
 		return nil, &utils.AuthenticationError{}
 	}
 
@@ -225,7 +226,7 @@ func (dep *jwt1Service) Decode(str string) (*models.JwtObj, error) {
 	if uuid, ok := obj["user_id"].(string); ok {
 		jwtObj.UserId = uuid
 	} else {
-		dep.logger.Error("missing or invalid UserId in token claims")
+		dep.logger.Error(ctx, "missing or invalid UserId in token claims")
 		return nil, &utils.AuthenticationError{}
 	}
 
@@ -252,7 +253,7 @@ func (dep *jwt1Service) Decode(str string) (*models.JwtObj, error) {
 
 		jwtObj.AccessControls = parsedRoles
 	} else {
-		dep.logger.Error("missing or invalid roles in token claims")
+		dep.logger.Error(ctx, "missing or invalid roles in token claims")
 		return nil, &utils.AuthenticationError{}
 	}
 

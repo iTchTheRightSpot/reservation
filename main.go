@@ -1,11 +1,12 @@
 package main
 
 import (
+	"context"
 	"database/sql"
-	"github.com/iTchTheRightSpot/erp-golang/cmd/api"
-	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/database"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/cmd/api"
+	"github.com/iTchTheRightSpot/reservation/config"
+	"github.com/iTchTheRightSpot/reservation/database"
+	"github.com/iTchTheRightSpot/utility/utils"
 )
 
 func main() {
@@ -13,35 +14,29 @@ func main() {
 	obj := config.SecretVariables{}
 	env := obj.Config()
 
-	// logger
-	var l = utils.NewDevLogger()
+	lg := utils.DevLogger("UTC")
 	if env.Profile == "production" {
-		lg, err := utils.NewLogger("UTC", env.Discord)
-		if err != nil {
-			l.Fatal("failed to instantiate logger ", err.Error())
-		}
-		l = lg
+		lg = utils.ProdLogger("UTC", env.Discord)
 	}
 
-	// connect to database
 	db, err := database.ConnectToPostgres(env.DbConnectionString)
 	if err != nil {
-		l.Fatal(err.Error())
+		lg.Fatal(err.Error())
 	}
 
-	 defer func(db *sql.DB) {
-                if err = db.Close(); err != nil {
-                        l.Error("error defer closing db connection " + err.Error())
-                }
-        }(db)
+	defer func(db *sql.DB) {
+		if err = db.Close(); err != nil {
+			lg.Error(context.Background(), "error defer closing db connection "+err.Error())
+		}
+	}(db)
 
 	if env.CookieParam.CookieSecure {
 		if err = database.Migrate(db); err != nil {
-			l.Fatal(err.Error())
+			lg.Fatal(err.Error())
 		}
 	}
 
 	// start server
-	server := api.ErpServer{Db: db, Logger: l, Env: env}
+	server := api.ErpServer{Db: db, Logger: lg, Env: env}
 	server.Serve()
 }

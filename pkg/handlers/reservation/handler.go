@@ -2,12 +2,12 @@ package reservation
 
 import (
 	"encoding/json"
-	"github.com/iTchTheRightSpot/erp-golang/pkg"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/reservation"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/pkg"
+	"github.com/iTchTheRightSpot/reservation/pkg/middleware"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
+	model "github.com/iTchTheRightSpot/reservation/pkg/models/reservation"
+	"github.com/iTchTheRightSpot/reservation/pkg/services/reservation"
+	log "github.com/iTchTheRightSpot/utility/utils"
 	"net/http"
 	"strconv"
 	"strings"
@@ -16,12 +16,12 @@ import (
 
 type ReservationHandler struct {
 	mux     *http.ServeMux
-	logger  utils.ILogger
+	logger  log.ILogger
 	ware    *middleware.Middleware
 	service reservation.IReservationService
 }
 
-func NewReservationHandler(mux *http.ServeMux, l utils.ILogger, w *middleware.Middleware, s reservation.IReservationService) *ReservationHandler {
+func NewReservationHandler(mux *http.ServeMux, l log.ILogger, w *middleware.Middleware, s reservation.IReservationService) *ReservationHandler {
 	return &ReservationHandler{mux: mux, logger: l, service: s, ware: w}
 }
 
@@ -43,21 +43,21 @@ func (dep *ReservationHandler) Register() {
 }
 
 func (dep *ReservationHandler) create(w http.ResponseWriter, r *http.Request) {
-	dto, err := pkg.ReadBody[model.ReservationPayload](r)
+	dto, err := pkg.ReadBody[model.ReservationPayload](dep.logger, r)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
 	err = dep.service.Create(r.Context(), dto)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
-	dep.logger.Log("reservation created")
+	dep.logger.Log(r.Context(), "reservation created")
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -65,22 +65,22 @@ func (dep *ReservationHandler) availableDates(w http.ResponseWriter, r *http.Req
 	query := r.URL.Query()
 	day, err := strconv.Atoi(query.Get("day"))
 	if err != nil {
-		dep.logger.Error("day missing err: ", err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: "day missing"})
+		dep.logger.Error(r.Context(), "day missing err: ", err.Error())
+		log.ErrorResponse(w, &log.BadRequestError{Message: "day missing"})
 		return
 	}
 
 	month, err := strconv.Atoi(query.Get("month"))
 	if err != nil {
-		dep.logger.Error("month missing err: ", err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: "month missing"})
+		dep.logger.Error(r.Context(), "month missing err: ", err.Error())
+		log.ErrorResponse(w, &log.BadRequestError{Message: "month missing"})
 		return
 	}
 
 	year, err := strconv.Atoi(query.Get("year"))
 	if err != nil {
-		dep.logger.Error("year missing err: ", err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: "year missing"})
+		dep.logger.Error(r.Context(), "year missing err: ", err.Error())
+		log.ErrorResponse(w, &log.BadRequestError{Message: "year missing"})
 		return
 	}
 
@@ -93,8 +93,8 @@ func (dep *ReservationHandler) availableDates(w http.ResponseWriter, r *http.Req
 	}
 
 	if err = middleware.ValidatorInstance.Struct(p); err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return
 	}
 
@@ -103,8 +103,8 @@ func (dep *ReservationHandler) availableDates(w http.ResponseWriter, r *http.Req
 	if zone != "" {
 		location, err = time.LoadLocation(zone)
 		if err != nil {
-			dep.logger.Error(err.Error())
-			utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+			dep.logger.Error(r.Context(), err.Error())
+			log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 			return
 		}
 	}
@@ -114,8 +114,8 @@ func (dep *ReservationHandler) availableDates(w http.ResponseWriter, r *http.Req
 
 	dates, err := dep.service.AvailableDates(r.Context(), &p)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
@@ -124,34 +124,36 @@ func (dep *ReservationHandler) availableDates(w http.ResponseWriter, r *http.Req
 
 	if dates == nil || len(dates) < 1 {
 		if err = json.NewEncoder(w).Encode(make([]model.ReservationTimeSlots, 0)); err != nil {
-			dep.logger.Error(err.Error())
+			dep.logger.Error(r.Context(), err.Error())
+			http.Error(w, "server error", 500)
 		}
 		return
 	}
 
 	if err = json.NewEncoder(w).Encode(dates); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(r.Context(), err.Error())
+		http.Error(w, "server error", 500)
 	}
 }
 
 func (dep *ReservationHandler) cancel(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(r.PathValue("reservation_id"), 10, 64)
 	if err != nil {
-		dep.logger.Error(err.Error())
-
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: "invalid reservation id"})
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, &log.BadRequestError{Message: "invalid reservation id"})
 		return
 	}
 
 	if err = dep.service.Cancel(r.Context(), uint64(id)); err != nil {
-		utils.ErrorResponse(w, err)
+		log.ErrorResponse(w, err)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNoContent)
 	if _, err = w.Write([]byte("reservation cancelled")); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(r.Context(), err.Error())
+		http.Error(w, "server error", 500)
 	}
 }
 
@@ -160,30 +162,30 @@ func (dep *ReservationHandler) bookings(w http.ResponseWriter, r *http.Request) 
 
 	month, err := strconv.Atoi(query.Get("month"))
 	if err != nil {
-		dep.logger.Error("month missing err: ", err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: "month missing"})
+		dep.logger.Error(r.Context(), "month missing err: ", err.Error())
+		log.ErrorResponse(w, &log.BadRequestError{Message: "month missing"})
 		return
 	}
 
 	year, err := strconv.Atoi(query.Get("year"))
 	if err != nil {
-		dep.logger.Error("year missing err: ", err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: "year missing"})
+		dep.logger.Error(r.Context(), "year missing err: ", err.Error())
+		log.ErrorResponse(w, &log.BadRequestError{Message: "year missing"})
 		return
 	}
 
 	var location *time.Location
 	zone := query.Get("timezone")
 	if zone == "" {
-		dep.logger.Error("timezone missing")
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: "timezone missing"})
+		dep.logger.Error(r.Context(), "timezone missing")
+		log.ErrorResponse(w, &log.BadRequestError{Message: "timezone missing"})
 		return
 	}
 
 	location, err = time.LoadLocation(zone)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return
 	}
 
@@ -195,15 +197,15 @@ func (dep *ReservationHandler) bookings(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if err = middleware.ValidatorInstance.Struct(p); err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	dates, err := dep.service.Bookings(r.Context(), &p)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
@@ -211,21 +213,22 @@ func (dep *ReservationHandler) bookings(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusOK)
 
 	if err = json.NewEncoder(w).Encode(dates); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(r.Context(), err.Error())
+		http.Error(w, "server error", 500)
 	}
 }
 
 func (dep *ReservationHandler) updateBookingStatus(w http.ResponseWriter, r *http.Request) {
-	dto, err := pkg.ReadBody[model.UpdateBookingPayload](r)
+	dto, err := pkg.ReadBody[model.UpdateBookingPayload](dep.logger, r)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
 	if err = dep.service.UpdateBookingStatus(r.Context(), dto); err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
@@ -233,20 +236,20 @@ func (dep *ReservationHandler) updateBookingStatus(w http.ResponseWriter, r *htt
 }
 
 func (dep *ReservationHandler) manualCreate(w http.ResponseWriter, r *http.Request) {
-	dto, err := pkg.ReadBody[model.ReservationPayload](r)
+	dto, err := pkg.ReadBody[model.ReservationPayload](dep.logger, r)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
 	err = dep.service.ManualCreate(r.Context(), dto)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
-	dep.logger.Log("manually created reservation")
+	dep.logger.Log(r.Context(), "manually created reservation")
 	w.WriteHeader(http.StatusCreated)
 }

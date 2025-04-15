@@ -1,8 +1,8 @@
 package mail
 
 import (
-	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/config"
+	"github.com/iTchTheRightSpot/utility/utils"
 )
 
 type IMailService interface {

@@ -4,12 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"github.com/google/uuid"
-	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/database"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
-	profileStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/config"
+	"github.com/iTchTheRightSpot/reservation/database"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
+	"github.com/iTchTheRightSpot/reservation/pkg/models/staff"
+	profileStore "github.com/iTchTheRightSpot/reservation/pkg/stores/profile"
+	"github.com/iTchTheRightSpot/utility/utils"
 	"log"
 	"reflect"
 	"testing"
@@ -58,7 +58,7 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 func TestStaffStore(t *testing.T) {
 	t.Parallel()
 
-	mockLog := utils.NewDevLogger()
+	mockLog := utils.DevLogger("UTC")
 
 	t.Run("should save staff and find by uuid", func(t *testing.T) {
 		t.Parallel()

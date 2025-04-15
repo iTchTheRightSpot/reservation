@@ -3,10 +3,11 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/config"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
+	"github.com/iTchTheRightSpot/reservation/pkg/services/auth"
+	"github.com/iTchTheRightSpot/reservation/utils"
+	log "github.com/iTchTheRightSpot/utility/utils"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -25,7 +26,7 @@ func TestMiddleware(t *testing.T) {
 	sv := &config.SecretVariables{}
 	env := sv.Config()
 
-	logger := utils.NewDevLogger()
+	logger := log.DevLogger("UTC")
 
 	t.Run("Authentication middleware", func(t *testing.T) {
 		t.Parallel()

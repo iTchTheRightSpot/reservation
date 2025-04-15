@@ -1,7 +1,8 @@
 package auth
 
 import (
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
+	"context"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
 )
 
 type MockJwtService struct {
@@ -13,12 +14,12 @@ type MockJwtService struct {
 	ValidateJwtError  error
 }
 
-func (m *MockJwtService) Encode(*models.JwtObj, int) (*models.JwtResponse, error) {
+func (m *MockJwtService) Encode(context.Context, *models.JwtObj, int) (*models.JwtResponse, error) {
 	m.GenerateJwtCalled = true
 	return m.JwtResponse, m.GenerateJwtError
 }
 
-func (m *MockJwtService) Decode(string) (*models.JwtObj, error) {
+func (m *MockJwtService) Decode(context.Context, string) (*models.JwtObj, error) {
 	m.ValidateJwtCalled = true
 	return m.StaffJwtObj, m.ValidateJwtError
 }

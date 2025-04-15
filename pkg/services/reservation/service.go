@@ -3,14 +3,14 @@ package reservation
 import (
 	"context"
 	"fmt"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
-	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/mail"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/pkg/models/reservation"
+	"github.com/iTchTheRightSpot/reservation/pkg/models/schedule"
+	"github.com/iTchTheRightSpot/reservation/pkg/models/service_type"
+	"github.com/iTchTheRightSpot/reservation/pkg/models/staff"
+	"github.com/iTchTheRightSpot/reservation/pkg/services/mail"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores"
+	"github.com/iTchTheRightSpot/utility/cache"
+	log "github.com/iTchTheRightSpot/utility/utils"
 	"math"
 	"reflect"
 	"slices"
@@ -30,16 +30,16 @@ type IReservationService interface {
 }
 
 type reservationService struct {
-	logger   utils.ILogger
+	logger   log.ILogger
 	adapters *stores.Adapters
-	cache    pkg.ICache[string, []*reservation.ReservationTimeSlots]
+	cache    cache.ICache[string, []*reservation.ReservationTimeSlots]
 	mail     mail.IMailService
 }
 
 func NewReservationService(
-	l utils.ILogger,
+	l log.ILogger,
 	a *stores.Adapters,
-	c pkg.ICache[string, []*reservation.ReservationTimeSlots],
+	c cache.ICache[string, []*reservation.ReservationTimeSlots],
 	m mail.IMailService,
 ) IReservationService {
 	return &reservationService{logger: l, adapters: a, cache: c, mail: m}
@@ -188,8 +188,8 @@ func (dep *reservationService) matchStaffServices(ctx context.Context, requested
 
 	if len(arr) != len(requestedServices) {
 		mess := "1 or more services were not found for selected staff"
-		dep.logger.Error(mess)
-		return nil, &utils.BadRequestError{Message: mess}
+		dep.logger.Error(ctx, mess)
+		return nil, &log.BadRequestError{Message: mess}
 	}
 
 	return arr, nil
@@ -198,7 +198,7 @@ func (dep *reservationService) matchStaffServices(ctx context.Context, requested
 func (dep *reservationService) dateInTimezone(p *reservation.ReservationPayload) (time.Time, error) {
 	num, err := strconv.ParseInt(p.Time, 10, 64)
 	if err != nil {
-		return time.Time{}, &utils.BadRequestError{Message: err.Error()}
+		return time.Time{}, &log.BadRequestError{Message: err.Error()}
 	}
 
 	if p.Timezone == "" {
@@ -207,7 +207,7 @@ func (dep *reservationService) dateInTimezone(p *reservation.ReservationPayload)
 
 	l, err := time.LoadLocation(p.Timezone)
 	if err != nil {
-		return time.Time{}, &utils.BadRequestError{Message: err.Error()}
+		return time.Time{}, &log.BadRequestError{Message: err.Error()}
 	}
 
 	return time.UnixMilli(num).In(l).In(dep.logger.Timezone()), nil
@@ -232,7 +232,7 @@ func (dep *reservationService) sumUpServicePrice(s []*service_type.ServiceTypeEn
 }
 
 func (dep *reservationService) createReservation(ctx context.Context, p *reservation.ReservationPayload, matchedServices []*service_type.ServiceTypeEntity, s *staff.StaffEntity, start time.Time, end time.Time) error {
-	return dep.adapters.Transaction.RunInTransaction(func(adapters *stores.Adapters) error {
+	return dep.adapters.Transaction.RunInTransaction(ctx, func(adapters *stores.Adapters) error {
 		priceSum := dep.sumUpServicePrice(matchedServices)
 
 		reserv := &reservation.Reservation{
@@ -249,7 +249,7 @@ func (dep *reservationService) createReservation(ctx context.Context, p *reserva
 		}
 
 		if err := adapters.ReservationStore.Save(ctx, reserv); err != nil {
-			dep.logger.Error(err.Error())
+			dep.logger.Error(ctx, err.Error())
 			return err
 		}
 
@@ -259,7 +259,7 @@ func (dep *reservationService) createReservation(ctx context.Context, p *reserva
 				ServiceId:     entity.ServiceId,
 			})
 			if err != nil {
-				dep.logger.Error(err)
+				dep.logger.Error(ctx, err)
 				return err
 			}
 		}
@@ -280,14 +280,14 @@ func (dep *reservationService) Create(ctx context.Context, p *reservation.Reserv
 
 	start, err := dep.dateInTimezone(p)
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return err
 	}
 
 	if start.Before(dep.logger.Date()) {
 		mess := "cannot make a reservation for a past day"
-		dep.logger.Error(mess)
-		return &utils.BadRequestError{Message: mess}
+		dep.logger.Error(ctx, mess)
+		return &log.BadRequestError{Message: mess}
 	}
 
 	end := start.Add(time.Second * time.Duration(dep.sumUpServiceDuration(services)))
@@ -299,8 +299,8 @@ func (dep *reservationService) Create(ctx context.Context, p *reservation.Reserv
 
 	if count < 1 {
 		mess := "invalid reservation time"
-		dep.logger.Error(mess)
-		return &utils.BadRequestError{Message: mess}
+		dep.logger.Error(ctx, mess)
+		return &log.BadRequestError{Message: mess}
 	}
 
 	if err = dep.createReservation(ctx, p, services, staffObj, start, end); err != nil {
@@ -314,18 +314,18 @@ func (dep *reservationService) Create(ctx context.Context, p *reservation.Reserv
 func (dep *reservationService) Cancel(ctx context.Context, reservationId uint64) error {
 	r, err := dep.adapters.ReservationStore.ReservationById(ctx, reservationId)
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return err
 	}
 
 	if reflect.DeepEqual(r.Status, reservation.CANCELLED) {
-		return &utils.BadRequestError{Message: "reservation already cancelled"}
+		return &log.BadRequestError{Message: "reservation already cancelled"}
 	}
 
 	_, err = dep.adapters.ReservationStore.UpdateReservationStatus(ctx, r.ReservationId, reservation.CANCELLED)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		return &utils.InsertionError{Message: "error cancelling reservation"}
+		dep.logger.Error(ctx, err.Error())
+		return &log.InsertionError{Message: "error cancelling reservation"}
 	}
 
 	dep.cache.Clear()
@@ -335,7 +335,7 @@ func (dep *reservationService) Cancel(ctx context.Context, reservationId uint64)
 func (dep *reservationService) Bookings(ctx context.Context, o *reservation.CRMBookingsPayload) (interface{}, error) {
 	staf, err := dep.adapters.StaffStore.StaffByUUID(ctx, o.StaffId)
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return nil, err
 	}
 
@@ -357,18 +357,18 @@ func (dep *reservationService) Bookings(ctx context.Context, o *reservation.CRMB
 func (dep *reservationService) UpdateBookingStatus(ctx context.Context, dto *reservation.UpdateBookingPayload) error {
 	num, err := dep.adapters.ReservationStore.UpdateReservationStatus(ctx, dto.ReservationId, dto.Status)
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return err
 	}
 
 	if num == 0 {
-		return &utils.NotFoundError{Message: "update failed. invalid reservation id"}
+		return &log.NotFoundError{Message: "update failed. invalid reservation id"}
 	}
 
-	dep.logger.Log("number of booking status rows affected", num)
+	dep.logger.Log(ctx, "number of booking status rows affected", num)
 	return nil
 }
 
 func (dep *reservationService) ManualCreate(ctx context.Context, p *reservation.ReservationPayload) error {
-	return &utils.InsertionError{Message: "service layer implemented"}
+	return &log.InsertionError{Message: "service layer implemented"}
 }

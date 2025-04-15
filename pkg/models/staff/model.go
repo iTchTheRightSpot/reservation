@@ -2,7 +2,7 @@ package staff
 
 import (
 	"github.com/google/uuid"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
 )
 
 type StaffEntity struct {

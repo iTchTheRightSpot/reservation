@@ -1,3 +1,5 @@
 # To create pub & priv keys
 
-`openssl genrsa -out keys/private.key 2048 && openssl rsa -in keys/private.key -pubout -out keys/public.key`
+```code
+openssl genrsa -out private.key 2048 && openssl rsa -in private.key -pubout -out public.key
+```

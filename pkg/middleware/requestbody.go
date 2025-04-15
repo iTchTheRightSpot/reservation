@@ -3,9 +3,8 @@ package middleware
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"github.com/go-playground/validator/v10"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/utility/utils"
 	"io"
 	"net/http"
 )
@@ -19,7 +18,7 @@ type RequestBodyMiddleware[T any] struct {
 func (dep *RequestBodyMiddleware[T]) RequestBody(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Body == nil {
-			dep.Logger.Error("request body is nil")
+			dep.Logger.Error(r.Context(), "request body is nil")
 			utils.ErrorResponse(w, &utils.BadRequestError{Message: "invalid request body"})
 			return
 		}
@@ -27,21 +26,21 @@ func (dep *RequestBodyMiddleware[T]) RequestBody(next http.Handler) http.Handler
 		var payload T
 
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-			dep.Logger.Error(err.Error())
+			dep.Logger.Error(r.Context(), err.Error())
 			utils.ErrorResponse(w, &utils.BadRequestError{Message: "invalid request body"})
 			return
 		}
 
 		if err := ValidatorInstance.Struct(payload); err != nil {
-			dep.Logger.Error(err)
+			dep.Logger.Error(r.Context(), err)
 			utils.ErrorResponse(w, &utils.BadRequestError{Message: "invalid request body"})
 			return
 		}
 
 		by, err := json.Marshal(payload)
 		if err != nil {
-			dep.Logger.Error(err.Error())
-			utils.ErrorResponse(w, errors.New("internal server error"))
+			dep.Logger.Error(r.Context(), err.Error())
+			utils.ErrorResponse(w, &utils.ServerError{})
 			return
 		}
 		r.Body = io.NopCloser(bytes.NewBuffer(by))

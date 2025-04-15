@@ -4,15 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	reservationModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
-	serviceModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
-	staffModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/reservation"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/service_type"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	reservationModel "github.com/iTchTheRightSpot/reservation/pkg/models/reservation"
+	serviceModel "github.com/iTchTheRightSpot/reservation/pkg/models/service_type"
+	staffModel "github.com/iTchTheRightSpot/reservation/pkg/models/staff"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores/reservation"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores/schedule"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores/service_type"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores/staff"
+	log "github.com/iTchTheRightSpot/utility/utils"
 	"testing"
 	"time"
 )
@@ -20,7 +20,7 @@ import (
 func TestReservationService(t *testing.T) {
 	t.Parallel()
 
-	mockLog := utils.NewDevLogger()
+	mockLog := log.DevLogger("UTC")
 
 	t.Run("creating a reservation", func(t *testing.T) {
 		t.Parallel()

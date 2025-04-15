@@ -6,16 +6,17 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/database"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/config"
+	"github.com/iTchTheRightSpot/reservation/database"
+	"github.com/iTchTheRightSpot/reservation/pkg/handlers"
+	"github.com/iTchTheRightSpot/reservation/pkg/middleware"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
+	model "github.com/iTchTheRightSpot/reservation/pkg/models/schedule"
+	"github.com/iTchTheRightSpot/reservation/pkg/services/auth"
+	"github.com/iTchTheRightSpot/reservation/pkg/services/schedule"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores"
+	"github.com/iTchTheRightSpot/reservation/utils"
+	logg "github.com/iTchTheRightSpot/utility/utils"
 	"log"
 	"math/rand"
 	"net/http"
@@ -62,7 +63,7 @@ func TestScheduleHandler(t *testing.T) {
 
 	// given
 	mux := http.NewServeMux()
-	logger := utils.NewDevLogger()
+	logger := logg.DevLogger("UTC")
 	prov := stores.NewTransactionProvider(logger, db)
 	adapters := stores.NewAdapters(logger, db, prov)
 	jwtSer := auth.NewJwtServiceAsymmetric(logger, env)
@@ -92,7 +93,7 @@ func TestScheduleHandler(t *testing.T) {
 				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 			}
 
-			obj, err := jwtSer.Encode(
+			obj, err := jwtSer.Encode(context.Background(),
 				&models.JwtObj{
 					UserId:         staff1.UUID.String(),
 					AccessControls: cred,
@@ -161,7 +162,7 @@ func TestScheduleHandler(t *testing.T) {
 				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.READ}},
 			}
 
-			obj, _ := jwtSer.Encode(
+			obj, _ := jwtSer.Encode(context.Background(),
 				&models.JwtObj{
 					UserId:         staff1.UUID.String(),
 					AccessControls: cred,
@@ -199,7 +200,7 @@ func TestScheduleHandler(t *testing.T) {
 				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.READ}},
 			}
 
-			obj, _ := jwtSer.Encode(
+			obj, _ := jwtSer.Encode(context.Background(),
 				&models.JwtObj{
 					UserId:         staff1.UUID.String(),
 					AccessControls: cred,
@@ -227,7 +228,7 @@ func TestScheduleHandler(t *testing.T) {
 				{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 			}
 
-			obj, _ := jwtSer.Encode(
+			obj, _ := jwtSer.Encode(context.Background(),
 				&models.JwtObj{
 					UserId:         staff1.UUID.String(),
 					AccessControls: cred,
@@ -271,7 +272,7 @@ func TestScheduleHandler(t *testing.T) {
 			{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 		}
 
-		obj, err := jwtSer.Encode(
+		obj, err := jwtSer.Encode(context.Background(),
 			&models.JwtObj{
 				UserId:         staff1.UUID.String(),
 				AccessControls: cred,
@@ -351,7 +352,7 @@ func TestScheduleHandler(t *testing.T) {
 			{Role: models.STAFF, Permissions: []models.PermissionEnum{models.WRITE}},
 		}
 
-		obj, _ := jwtSer.Encode(
+		obj, _ := jwtSer.Encode(context.Background(),
 			&models.JwtObj{
 				UserId:         staff1.UUID.String(),
 				AccessControls: cred,
@@ -398,7 +399,7 @@ func TestScheduleHandler(t *testing.T) {
 			t.Error(err.Error())
 		}
 
-		obj, _ := jwtSer.Encode(
+		obj, _ := jwtSer.Encode(context.Background(),
 			&models.JwtObj{
 				UserId: staff1.UUID.String(),
 				AccessControls: []models.RolePermissionEnum{
@@ -434,7 +435,7 @@ func TestScheduleHandler(t *testing.T) {
 	})
 
 	t.Run("delete schedule", func(t *testing.T) {
-		obj, _ := jwtSer.Encode(
+		obj, _ := jwtSer.Encode(context.Background(),
 			&models.JwtObj{
 				UserId: staff1.UUID.String(),
 				AccessControls: []models.RolePermissionEnum{

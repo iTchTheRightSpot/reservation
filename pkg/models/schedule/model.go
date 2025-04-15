@@ -1,9 +1,9 @@
 package schedule
 
 import (
-	"errors"
 	"fmt"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/utils"
+	log "github.com/iTchTheRightSpot/utility/utils"
 	"slices"
 	"time"
 )
@@ -59,7 +59,7 @@ type ScheduledPeriod struct {
 
 func (dto *SchedulePayload) CheckForOverlappingSegments(now time.Time, timezone *time.Location) ([]ScheduledPeriod, error) {
 	if dto.Times == nil {
-		return nil, errors.New("time_slots cannot be nil")
+		return nil, &log.BadRequestError{Message: "time_slots cannot be nil"}
 	}
 
 	arr := make([]ScheduledPeriod, len(*dto.Times))
@@ -67,7 +67,7 @@ func (dto *SchedulePayload) CheckForOverlappingSegments(now time.Time, timezone 
 	for idx, slot := range *dto.Times {
 		parse, err := time.Parse(utils.TimeFormat, slot.Start)
 		if err != nil {
-			return nil, err
+			return nil, &log.BadRequestError{Message: fmt.Sprintf("error parsing %s ", slot.Start)}
 		}
 
 		start := parse.In(timezone)
@@ -75,7 +75,7 @@ func (dto *SchedulePayload) CheckForOverlappingSegments(now time.Time, timezone 
 		// validate no date in the past
 		if now.After(start) {
 			times := *dto.Times
-			return nil, fmt.Errorf("%s is in the past ", times[idx].Start)
+			return nil, &log.BadRequestError{Message: fmt.Sprintf("%s is in the past", times[idx].Start)}
 		}
 
 		end := start.Add(time.Duration(slot.Duration) * time.Second)
@@ -83,7 +83,7 @@ func (dto *SchedulePayload) CheckForOverlappingSegments(now time.Time, timezone 
 		// validate start and end are within the same dat
 		if start.Day() != end.Day() || start.Month() != end.Month() || start.Year() != end.Year() {
 			t := *dto.Times
-			return nil, fmt.Errorf("%s plus duration cannot include the next day", t[idx].Start)
+			return nil, &log.BadRequestError{Message: fmt.Sprintf("%s plus duration cannot include the next day", t[idx].Start)}
 		}
 
 		// validate no conflicts
@@ -92,7 +92,7 @@ func (dto *SchedulePayload) CheckForOverlappingSegments(now time.Time, timezone 
 		})
 
 		if conflict {
-			return nil, fmt.Errorf("conflicting date %s & duration %v", slot.Start, slot.Duration)
+			return nil, &log.BadRequestError{Message: fmt.Sprintf("conflicting date %s & duration %v", slot.Start, slot.Duration)}
 		}
 
 		arr[idx] = ScheduledPeriod{

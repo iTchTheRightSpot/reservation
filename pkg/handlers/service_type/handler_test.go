@@ -7,17 +7,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/database"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	serviceModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/service_type"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/config"
+	"github.com/iTchTheRightSpot/reservation/database"
+	"github.com/iTchTheRightSpot/reservation/pkg/handlers"
+	"github.com/iTchTheRightSpot/reservation/pkg/middleware"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
+	serviceModel "github.com/iTchTheRightSpot/reservation/pkg/models/service_type"
+	"github.com/iTchTheRightSpot/reservation/pkg/models/staff"
+	"github.com/iTchTheRightSpot/reservation/pkg/services/auth"
+	"github.com/iTchTheRightSpot/reservation/pkg/services/service_type"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores"
+	"github.com/iTchTheRightSpot/reservation/utils"
+	logg "github.com/iTchTheRightSpot/utility/utils"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -61,7 +62,7 @@ func TestServiceTypeHandler(t *testing.T) {
 	})
 
 	// given
-	logger := utils.NewDevLogger()
+	logger := logg.DevLogger("UTC")
 	mux := http.NewServeMux()
 	prov := stores.NewTransactionProvider(logger, db)
 	adapters := stores.NewAdapters(logger, db, prov)
@@ -96,7 +97,7 @@ func TestServiceTypeHandler(t *testing.T) {
 				Permissions: []models.PermissionEnum{models.WRITE, models.READ},
 			},
 		}
-		jwtObj, _ := jwtSer.Encode(
+		jwtObj, _ := jwtSer.Encode(context.Background(),
 			&models.JwtObj{
 				UserId:         "staff-uuid",
 				AccessControls: cred,
@@ -181,7 +182,7 @@ func TestServiceTypeHandler(t *testing.T) {
 		})
 
 		t.Run("should link service to staff & also reject", func(t *testing.T) {
-			obj, err := jwtSer.Encode(
+			obj, err := jwtSer.Encode(context.Background(),
 				&models.JwtObj{
 					UserId:         save.staff.UUID.String(),
 					AccessControls: cred,
