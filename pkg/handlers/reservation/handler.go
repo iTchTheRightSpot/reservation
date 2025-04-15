@@ -126,14 +126,14 @@ func (dep *ReservationHandler) availableDates(w http.ResponseWriter, r *http.Req
 	if dates == nil || len(dates) < 1 {
 		if err = json.NewEncoder(w).Encode(make([]model.ReservationTimeSlots, 0)); err != nil {
 			dep.logger.Error(r.Context(), err.Error())
-			http.Error(w, "server error", 500)
+			log.ErrorResponse(w, &log.ServerError{})
 		}
 		return
 	}
 
 	if err = json.NewEncoder(w).Encode(dates); err != nil {
 		dep.logger.Error(r.Context(), err.Error())
-		http.Error(w, "server error", 500)
+		log.ErrorResponse(w, &log.ServerError{})
 	}
 }
 
@@ -154,7 +154,7 @@ func (dep *ReservationHandler) cancel(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 	if _, err = w.Write([]byte("reservation cancelled")); err != nil {
 		dep.logger.Error(r.Context(), err.Error())
-		http.Error(w, "server error", 500)
+		log.ErrorResponse(w, &log.ServerError{})
 	}
 }
 
@@ -215,7 +215,7 @@ func (dep *ReservationHandler) bookings(w http.ResponseWriter, r *http.Request) 
 
 	if err = json.NewEncoder(w).Encode(dates); err != nil {
 		dep.logger.Error(r.Context(), err.Error())
-		http.Error(w, "server error", 500)
+		log.ErrorResponse(w, &log.ServerError{})
 	}
 }
 

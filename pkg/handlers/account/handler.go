@@ -82,7 +82,7 @@ func (dep *AccountHandler) activeUser(w http.ResponseWriter, r *http.Request) {
 
 	if err = json.NewEncoder(w).Encode(a); err != nil {
 		dep.logger.Critical(r.Context(), err.Error())
-		http.Error(w, "server error", 500)
+		log.ErrorResponse(w, &log.ServerError{})
 	}
 }
 

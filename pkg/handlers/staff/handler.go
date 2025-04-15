@@ -37,6 +37,6 @@ func (dep *StaffHandler) allStaffs(w http.ResponseWriter, r *http.Request) {
 
 	if err = json.NewEncoder(w).Encode(arr); err != nil {
 		dep.logger.Error(r.Context(), err.Error())
-		http.Error(w, "server error", 500)
+		utils.ErrorResponse(w, &utils.ServerError{})
 	}
 }

@@ -163,7 +163,7 @@ func (dep *ScheduleHandler) schedulesByStaff(w http.ResponseWriter, r *http.Requ
 
 	if err = json.NewEncoder(w).Encode(arr); err != nil {
 		dep.logger.Error(r.Context(), err.Error())
-		http.Error(w, "server error", 500)
+		log.ErrorResponse(w, &log.ServerError{})
 	}
 }
 
@@ -224,6 +224,6 @@ func (dep *ScheduleHandler) schedules(w http.ResponseWriter, r *http.Request) {
 
 	if err = json.NewEncoder(w).Encode(arr); err != nil {
 		dep.logger.Error(r.Context(), err.Error())
-		http.Error(w, "server error", 500)
+		log.ErrorResponse(w, &log.ServerError{})
 	}
 }

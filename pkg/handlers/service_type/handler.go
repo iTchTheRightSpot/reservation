@@ -93,7 +93,7 @@ func (dep *ServiceTypeHandler) services(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusOK)
 	if err = json.NewEncoder(w).Encode(arr); err != nil {
 		dep.logger.Error(r.Context(), err.Error())
-		http.Error(w, "server error", 500)
+		log.ErrorResponse(w, &log.ServerError{})
 	}
 }
 
@@ -133,7 +133,7 @@ func (dep *ServiceTypeHandler) staffsByServices(w http.ResponseWriter, r *http.R
 
 	if err = json.NewEncoder(w).Encode(arr); err != nil {
 		dep.logger.Error(r.Context(), err.Error())
-		http.Error(w, "server error", 500)
+		log.ErrorResponse(w, &log.ServerError{})
 	}
 }
 
@@ -149,7 +149,7 @@ func (dep *ServiceTypeHandler) crmServices(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusOK)
 	if err = json.NewEncoder(w).Encode(arr); err != nil {
 		dep.logger.Error(r.Context(), err.Error())
-		http.Error(w, "server error", 500)
+		log.ErrorResponse(w, &log.ServerError{})
 	}
 }
 
@@ -189,7 +189,7 @@ func (dep *ServiceTypeHandler) serviceTypesByStaffUUID(w http.ResponseWriter, r 
 
 	if err = json.NewEncoder(w).Encode(arr); err != nil {
 		dep.logger.Error(r.Context(), err.Error())
-		http.Error(w, "server error", 500)
+		log.ErrorResponse(w, &log.ServerError{})
 	}
 }
 
@@ -197,6 +197,6 @@ func (dep *ServiceTypeHandler) deLinkServiceFromStaff(w http.ResponseWriter, r *
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNotImplemented)
 	if err := json.NewEncoder(w).Encode(log.InsertionError{Message: "route not implemented"}); err != nil {
-		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, &log.ServerError{})
 	}
 }
