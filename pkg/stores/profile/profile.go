@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"github.com/iTchTheRightSpot/erp-golang/pkg"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
+	"github.com/iTchTheRightSpot/reservation/pkg"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
 	log "github.com/iTchTheRightSpot/utility/utils"
 )
 

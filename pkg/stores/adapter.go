@@ -1,12 +1,12 @@
 package stores
 
 import (
-	"github.com/iTchTheRightSpot/erp-golang/pkg"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/reservation"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/service_type"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"
+	"github.com/iTchTheRightSpot/reservation/pkg"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores/profile"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores/reservation"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores/schedule"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores/service_type"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores/staff"
 	"github.com/iTchTheRightSpot/utility/utils"
 )
 

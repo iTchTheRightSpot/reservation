@@ -2,7 +2,7 @@ package schedule
 
 import (
 	"fmt"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/utils"
 	log "github.com/iTchTheRightSpot/utility/utils"
 	"testing"
 	"time"

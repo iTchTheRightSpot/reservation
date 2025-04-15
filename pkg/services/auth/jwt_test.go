@@ -2,9 +2,9 @@ package auth
 
 import (
 	"context"
-	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/config"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
+	"github.com/iTchTheRightSpot/reservation/utils"
 	log "github.com/iTchTheRightSpot/utility/utils"
 	"os"
 	"testing"

@@ -2,12 +2,12 @@ package schedule
 
 import (
 	"encoding/json"
-	"github.com/iTchTheRightSpot/erp-golang/pkg"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/pkg"
+	"github.com/iTchTheRightSpot/reservation/pkg/middleware"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
+	model "github.com/iTchTheRightSpot/reservation/pkg/models/schedule"
+	"github.com/iTchTheRightSpot/reservation/pkg/services/schedule"
+	"github.com/iTchTheRightSpot/reservation/utils"
 	log "github.com/iTchTheRightSpot/utility/utils"
 	"net/http"
 	"strconv"

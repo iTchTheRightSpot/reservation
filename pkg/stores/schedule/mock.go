@@ -2,7 +2,7 @@ package schedule
 
 import (
 	"context"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
+	"github.com/iTchTheRightSpot/reservation/pkg/models/schedule"
 	"time"
 )
 

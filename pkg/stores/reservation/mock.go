@@ -2,7 +2,7 @@ package reservation
 
 import (
 	"context"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
+	"github.com/iTchTheRightSpot/reservation/pkg/models/reservation"
 	"time"
 )
 

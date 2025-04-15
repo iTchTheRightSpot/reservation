@@ -2,7 +2,7 @@ package config
 
 import (
 	"cmp"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/utils"
 	"net/http"
 	"os"
 	"regexp"

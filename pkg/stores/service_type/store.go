@@ -3,8 +3,8 @@ package service_type
 import (
 	"context"
 	"database/sql"
-	"github.com/iTchTheRightSpot/erp-golang/pkg"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
+	"github.com/iTchTheRightSpot/reservation/pkg"
+	"github.com/iTchTheRightSpot/reservation/pkg/models/service_type"
 	"github.com/iTchTheRightSpot/utility/utils"
 )
 

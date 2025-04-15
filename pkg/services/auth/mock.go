@@ -2,7 +2,7 @@ package auth
 
 import (
 	"context"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
 )
 
 type MockJwtService struct {

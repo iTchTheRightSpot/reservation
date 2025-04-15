@@ -3,8 +3,8 @@ package schedule
 import (
 	"context"
 	"database/sql"
-	"github.com/iTchTheRightSpot/erp-golang/pkg"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
+	"github.com/iTchTheRightSpot/reservation/pkg"
+	"github.com/iTchTheRightSpot/reservation/pkg/models/schedule"
 	"github.com/iTchTheRightSpot/utility/utils"
 	"time"
 )

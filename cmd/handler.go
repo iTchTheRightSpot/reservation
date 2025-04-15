@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"database/sql"
-	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers/account"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers/reservation"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers/service_type"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/handlers/staff"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
+	"github.com/iTchTheRightSpot/reservation/config"
+	"github.com/iTchTheRightSpot/reservation/pkg/handlers/account"
+	"github.com/iTchTheRightSpot/reservation/pkg/handlers/reservation"
+	"github.com/iTchTheRightSpot/reservation/pkg/handlers/schedule"
+	"github.com/iTchTheRightSpot/reservation/pkg/handlers/service_type"
+	"github.com/iTchTheRightSpot/reservation/pkg/handlers/staff"
+	"github.com/iTchTheRightSpot/reservation/pkg/middleware"
 	"github.com/iTchTheRightSpot/utility/utils"
 	"net/http"
 )

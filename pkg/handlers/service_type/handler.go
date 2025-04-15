@@ -2,11 +2,11 @@ package service_type
 
 import (
 	"encoding/json"
-	"github.com/iTchTheRightSpot/erp-golang/pkg"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/service_type"
+	"github.com/iTchTheRightSpot/reservation/pkg"
+	"github.com/iTchTheRightSpot/reservation/pkg/middleware"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
+	model "github.com/iTchTheRightSpot/reservation/pkg/models/service_type"
+	"github.com/iTchTheRightSpot/reservation/pkg/services/service_type"
 	log "github.com/iTchTheRightSpot/utility/utils"
 	"net/http"
 )

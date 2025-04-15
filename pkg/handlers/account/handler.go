@@ -2,13 +2,13 @@ package account
 
 import (
 	"encoding/json"
-	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/pkg"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/account"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/reservation/config"
+	"github.com/iTchTheRightSpot/reservation/pkg"
+	"github.com/iTchTheRightSpot/reservation/pkg/middleware"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
+	"github.com/iTchTheRightSpot/reservation/pkg/services/account"
+	"github.com/iTchTheRightSpot/reservation/pkg/services/auth"
+	"github.com/iTchTheRightSpot/reservation/utils"
 	log "github.com/iTchTheRightSpot/utility/utils"
 	"net/http"
 )

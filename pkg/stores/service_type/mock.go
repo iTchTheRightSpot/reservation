@@ -2,7 +2,7 @@ package service_type
 
 import (
 	"context"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
+	"github.com/iTchTheRightSpot/reservation/pkg/models/service_type"
 )
 
 type MockServiceTypeStore struct {

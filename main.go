@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"database/sql"
-	"github.com/iTchTheRightSpot/erp-golang/cmd/api"
-	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/database"
+	"github.com/iTchTheRightSpot/reservation/cmd/api"
+	"github.com/iTchTheRightSpot/reservation/config"
+	"github.com/iTchTheRightSpot/reservation/database"
 	"github.com/iTchTheRightSpot/utility/utils"
 )
 

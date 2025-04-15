@@ -3,9 +3,9 @@ package api
 import (
 	"context"
 	"database/sql"
-	"github.com/iTchTheRightSpot/erp-golang/cmd"
-	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/frontend"
+	"github.com/iTchTheRightSpot/reservation/cmd"
+	"github.com/iTchTheRightSpot/reservation/config"
+	"github.com/iTchTheRightSpot/reservation/frontend"
 	"github.com/iTchTheRightSpot/utility/utils"
 	"github.com/rs/cors"
 	"net/http"

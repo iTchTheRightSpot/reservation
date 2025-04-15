@@ -2,9 +2,9 @@ package staff
 
 import (
 	"encoding/json"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/staff"
+	"github.com/iTchTheRightSpot/reservation/pkg/middleware"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
+	"github.com/iTchTheRightSpot/reservation/pkg/services/staff"
 	"github.com/iTchTheRightSpot/utility/utils"
 	"net/http"
 )

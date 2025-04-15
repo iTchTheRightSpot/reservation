@@ -2,8 +2,8 @@ package staff
 
 import (
 	"context"
-	"github.com/iTchTheRightSpot/erp-golang/pkg"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
+	"github.com/iTchTheRightSpot/reservation/pkg"
+	"github.com/iTchTheRightSpot/reservation/pkg/models/staff"
 	"github.com/iTchTheRightSpot/utility/utils"
 )
 

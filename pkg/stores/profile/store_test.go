@@ -3,9 +3,9 @@ package profile
 import (
 	"context"
 	"database/sql"
-	"github.com/iTchTheRightSpot/erp-golang/config"
-	"github.com/iTchTheRightSpot/erp-golang/database"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
+	"github.com/iTchTheRightSpot/reservation/config"
+	"github.com/iTchTheRightSpot/reservation/database"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
 	"github.com/iTchTheRightSpot/utility/utils"
 	"log"
 	"reflect"

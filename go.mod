@@ -1,4 +1,4 @@
-module github.com/iTchTheRightSpot/erp-golang
+module github.com/iTchTheRightSpot/reservation
 
 go 1.24.2
 

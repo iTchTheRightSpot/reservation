@@ -2,11 +2,11 @@ package reservation
 
 import (
 	"encoding/json"
-	"github.com/iTchTheRightSpot/erp-golang/pkg"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/services/reservation"
+	"github.com/iTchTheRightSpot/reservation/pkg"
+	"github.com/iTchTheRightSpot/reservation/pkg/middleware"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
+	model "github.com/iTchTheRightSpot/reservation/pkg/models/reservation"
+	"github.com/iTchTheRightSpot/reservation/pkg/services/reservation"
 	log "github.com/iTchTheRightSpot/utility/utils"
 	"net/http"
 	"strconv"

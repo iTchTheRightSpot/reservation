@@ -2,8 +2,8 @@ package profile
 
 import (
 	"context"
-	"github.com/iTchTheRightSpot/erp-golang/pkg"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
+	"github.com/iTchTheRightSpot/reservation/pkg"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
 	"github.com/iTchTheRightSpot/utility/utils"
 )
 

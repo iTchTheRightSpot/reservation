@@ -3,9 +3,9 @@ package schedule
 import (
 	"context"
 	"fmt"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
+	"github.com/iTchTheRightSpot/reservation/pkg/models/reservation"
+	"github.com/iTchTheRightSpot/reservation/pkg/models/schedule"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores"
 	log "github.com/iTchTheRightSpot/utility/utils"
 	"time"
 )

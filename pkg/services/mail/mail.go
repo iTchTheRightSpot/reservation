@@ -1,7 +1,7 @@
 package mail
 
 import (
-	"github.com/iTchTheRightSpot/erp-golang/config"
+	"github.com/iTchTheRightSpot/reservation/config"
 	"github.com/iTchTheRightSpot/utility/utils"
 )
 

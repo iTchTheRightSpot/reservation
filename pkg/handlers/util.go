@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
-	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
+	"github.com/iTchTheRightSpot/reservation/pkg/models"
+	"github.com/iTchTheRightSpot/reservation/pkg/models/staff"
+	"github.com/iTchTheRightSpot/reservation/pkg/stores"
 )
 
 func DeleteAll(db *sql.DB) error {
