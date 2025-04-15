@@ -7,6 +7,7 @@ import (
 	"github.com/iTchTheRightSpot/reservation/pkg/models"
 	model "github.com/iTchTheRightSpot/reservation/pkg/models/reservation"
 	"github.com/iTchTheRightSpot/reservation/pkg/services/reservation"
+	mid "github.com/iTchTheRightSpot/utility/middleware"
 	log "github.com/iTchTheRightSpot/utility/utils"
 	"net/http"
 	"strconv"
@@ -28,7 +29,7 @@ func NewReservationHandler(mux *http.ServeMux, l log.ILogger, w *middleware.Midd
 func (dep *ReservationHandler) Register() {
 	dep.mux.HandleFunc("GET /reservation", dep.availableDates)
 	dep.mux.HandleFunc("POST /reservation/cancel/{reservation_id}", dep.cancel)
-	m1 := middleware.RequestBodyMiddleware[model.ReservationPayload]{Logger: dep.logger}
+	m1 := mid.RequestBodyMiddleware[model.ReservationPayload]{Logger: dep.logger, Validator: dep.ware.Validator}
 	dep.mux.Handle("POST /reservation", m1.RequestBody(http.HandlerFunc(dep.create)))
 
 	// protected routes
@@ -38,7 +39,7 @@ func (dep *ReservationHandler) Register() {
 
 	// write
 	dep.mux.Handle("POST /crm/reservation", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(m1.RequestBody(http.HandlerFunc(dep.manualCreate)), &rp)))
-	m2 := middleware.RequestBodyMiddleware[model.UpdateBookingPayload]{Logger: dep.logger}
+	m2 := mid.RequestBodyMiddleware[model.UpdateBookingPayload]{Logger: dep.logger, Validator: dep.ware.Validator}
 	dep.mux.Handle("PUT /crm/reservation", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(m2.RequestBody(http.HandlerFunc(dep.updateBookingStatus)), &rp)))
 }
 
@@ -92,7 +93,7 @@ func (dep *ReservationHandler) availableDates(w http.ResponseWriter, r *http.Req
 		Year:     year,
 	}
 
-	if err = middleware.ValidatorInstance.Struct(p); err != nil {
+	if err = dep.ware.Validator.Struct(p); err != nil {
 		dep.logger.Error(r.Context(), err.Error())
 		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return
@@ -196,7 +197,7 @@ func (dep *ReservationHandler) bookings(w http.ResponseWriter, r *http.Request) 
 		Timezone: location,
 	}
 
-	if err = middleware.ValidatorInstance.Struct(p); err != nil {
+	if err = dep.ware.Validator.Struct(p); err != nil {
 		dep.logger.Error(r.Context(), err.Error())
 		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return

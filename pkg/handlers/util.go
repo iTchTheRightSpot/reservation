@@ -10,6 +10,8 @@ import (
 	"github.com/iTchTheRightSpot/reservation/pkg/stores"
 )
 
+// everything below is needed for testing
+
 func DeleteAll(db *sql.DB) error {
 	if _, err := db.Exec("TRUNCATE permission, role, profile, schedule, staff_service, reservation_service, payment_detail, reservation, service_type, staff"); err != nil {
 		return err

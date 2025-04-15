@@ -45,8 +45,8 @@ github.com/hashicorp/errwrap v1.1.0 h1:OxrOeh75EUXMY8TBjag2fzXGZ40LB6IKw45YeGUDY
 github.com/hashicorp/errwrap v1.1.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
 github.com/hashicorp/go-multierror v1.1.1 h1:H5DkEtf6CXdFp0N0Em5UCwQpXMWke8IA0+lD48awMYo=
 github.com/hashicorp/go-multierror v1.1.1/go.mod h1:iw975J/qwKPdAO1clOe2L8331t/9/fmwbPZ6JB6eMoM=
-github.com/iTchTheRightSpot/utility v0.0.0-20250415060258-0be768dd004c h1:U9ShkkFfxOC5Laf0Lb6uV+o6lUbOGSnPZLncGCY0ltM=
-github.com/iTchTheRightSpot/utility v0.0.0-20250415060258-0be768dd004c/go.mod h1:31cJF4hWxGfUWhevQkPAGOldh+BKDaLtnkJ1+PbORks=
+github.com/iTchTheRightSpot/utility v0.0.0-20250415191436-4297ca5c563a h1:XD26NqzkIlnqkbNNeEcxOFxOWek55NgGky7+Go/rJ0c=
+github.com/iTchTheRightSpot/utility v0.0.0-20250415191436-4297ca5c563a/go.mod h1:tdFarp9WOhmHFM198ZQGL0UI9dDzM/vTBR0XExqWEYE=
 github.com/leodido/go-urn v1.4.0 h1:WT9HwE9SGECu3lg4d/dIA+jxlljEa1/ffXKmRjqdmIQ=
 github.com/leodido/go-urn v1.4.0/go.mod h1:bvxc+MVxLKB4z00jd1z+Dvzr47oO32F/QSNjSBOlFxI=
 github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=

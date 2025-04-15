@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/reservation/config"
 	"github.com/iTchTheRightSpot/reservation/database"
@@ -66,7 +67,7 @@ func TestStaffHandler(t *testing.T) {
 	prov := stores.NewTransactionProvider(logger, db)
 	adp := stores.NewAdapters(logger, db, prov)
 	jwtSer := auth.NewJwtServiceAsymmetric(logger, env)
-	m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
+	m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam, Validator: validator.New()}
 	cach := cache.SyncMapInMemoryCache[string, []*model.AllStaffsEntity](logger, 10, 10)
 	s := staff.NewStaffService(logger, adp, cach)
 

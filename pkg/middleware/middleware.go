@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"github.com/iTchTheRightSpot/reservation/pkg/models"
 	"github.com/iTchTheRightSpot/reservation/pkg/services/auth"
 	"github.com/iTchTheRightSpot/reservation/utils"
@@ -22,6 +23,7 @@ type Middleware struct {
 	Param     *utils.CookieParam
 	ApiPrefix string
 	FS        http.FileSystem
+	Validator *validator.Validate
 }
 
 func (dep *Middleware) Initialize(mux *http.ServeMux) http.Handler {

@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/reservation/config"
 	"github.com/iTchTheRightSpot/reservation/database"
@@ -67,7 +68,7 @@ func TestServiceTypeHandler(t *testing.T) {
 	prov := stores.NewTransactionProvider(logger, db)
 	adapters := stores.NewAdapters(logger, db, prov)
 	jwtSer := auth.NewJwtServiceAsymmetric(logger, env)
-	m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
+	m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam, Validator: validator.New()}
 	s := service_type.NewServiceImpl(logger, adapters)
 
 	// register all routes

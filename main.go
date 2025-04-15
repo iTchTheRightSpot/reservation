@@ -6,6 +6,7 @@ import (
 	"github.com/iTchTheRightSpot/reservation/cmd/api"
 	"github.com/iTchTheRightSpot/reservation/config"
 	"github.com/iTchTheRightSpot/reservation/database"
+	ut "github.com/iTchTheRightSpot/reservation/utils"
 	"github.com/iTchTheRightSpot/utility/utils"
 )
 
@@ -16,7 +17,7 @@ func main() {
 
 	lg := utils.DevLogger("UTC")
 	if env.Profile == "production" {
-		lg = utils.ProdLogger("UTC", env.Discord)
+		lg = utils.ProdLogger(ut.TimeFormat, "UTC", env.Discord)
 	}
 
 	db, err := database.ConnectToPostgres(env.DbConnectionString)
