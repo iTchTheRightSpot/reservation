@@ -8,6 +8,7 @@ import (
 	model "github.com/iTchTheRightSpot/reservation/pkg/models/schedule"
 	"github.com/iTchTheRightSpot/reservation/pkg/services/schedule"
 	"github.com/iTchTheRightSpot/reservation/utils"
+	mid "github.com/iTchTheRightSpot/utility/middleware"
 	log "github.com/iTchTheRightSpot/utility/utils"
 	"net/http"
 	"strconv"
@@ -34,10 +35,10 @@ func (dep *ScheduleHandler) Register() {
 	dep.mux.Handle("GET /schedules/staff", dep.ware.Authentication(dep.ware.HasRole(http.HandlerFunc(dep.schedulesByStaff), &rp.Role)))
 
 	// write
-	m1 := middleware.RequestBodyMiddleware[model.SchedulePayload]{Logger: dep.logger}
+	m1 := mid.RequestBodyMiddleware[model.SchedulePayload]{Logger: dep.logger, Validator: dep.ware.Validator}
 	dep.mux.Handle("POST /schedule", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(m1.RequestBody(http.HandlerFunc(dep.create)), rp)))
 
-	m2 := middleware.RequestBodyMiddleware[model.UpdateSchedulePayload]{Logger: dep.logger}
+	m2 := mid.RequestBodyMiddleware[model.UpdateSchedulePayload]{Logger: dep.logger, Validator: dep.ware.Validator}
 	dep.mux.Handle("PUT /schedule", dep.ware.Authentication(dep.ware.HasRoleAndPermissions(m2.RequestBody(http.HandlerFunc(dep.update)), rp)))
 	dep.mux.Handle("DELETE /schedule/{schedule_id}", dep.ware.Authentication(
 		dep.ware.HasRoleAndPermissions(
@@ -144,7 +145,7 @@ func (dep *ScheduleHandler) schedulesByStaff(w http.ResponseWriter, r *http.Requ
 		Timezone:  location,
 	}
 
-	if err = middleware.ValidatorInstance.Struct(payload); err != nil {
+	if err = dep.ware.Validator.Struct(payload); err != nil {
 		dep.logger.Error(r.Context(), err.Error())
 		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return
@@ -205,7 +206,7 @@ func (dep *ScheduleHandler) schedules(w http.ResponseWriter, r *http.Request) {
 		Timezone:  location,
 	}
 
-	if err = middleware.ValidatorInstance.Struct(payload); err != nil {
+	if err = dep.ware.Validator.Struct(payload); err != nil {
 		dep.logger.Error(r.Context(), err.Error())
 		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return

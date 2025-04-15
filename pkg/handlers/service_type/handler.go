@@ -7,6 +7,7 @@ import (
 	"github.com/iTchTheRightSpot/reservation/pkg/models"
 	model "github.com/iTchTheRightSpot/reservation/pkg/models/service_type"
 	"github.com/iTchTheRightSpot/reservation/pkg/services/service_type"
+	mid "github.com/iTchTheRightSpot/utility/middleware"
 	log "github.com/iTchTheRightSpot/utility/utils"
 	"net/http"
 )
@@ -43,7 +44,7 @@ func (dep *ServiceTypeHandler) Register() {
 	))
 
 	// writes
-	m1 := middleware.RequestBodyMiddleware[model.LinkServiceTypeToStaffPayload]{Logger: dep.logger}
+	m1 := mid.RequestBodyMiddleware[model.LinkServiceTypeToStaffPayload]{Logger: dep.logger, Validator: dep.ware.Validator}
 	dep.mux.Handle("POST /crm/service/staff", dep.ware.Authentication(
 		dep.ware.HasRoleAndPermissions(
 			m1.RequestBody(http.HandlerFunc(dep.linkServiceToStaff)),
@@ -56,7 +57,7 @@ func (dep *ServiceTypeHandler) Register() {
 			&models.RolePermissionEnum{Role: models.STAFF, Permissions: []models.PermissionEnum{models.DELETE}},
 		)),
 	)
-	m2 := middleware.RequestBodyMiddleware[model.ServiceTypePayload]{Logger: dep.logger}
+	m2 := mid.RequestBodyMiddleware[model.ServiceTypePayload]{Logger: dep.logger, Validator: dep.ware.Validator}
 	dep.mux.Handle("POST /crm/service", dep.ware.Authentication(
 		dep.ware.HasRoleAndPermissions(m2.RequestBody(http.HandlerFunc(dep.create)), rp)))
 	dep.mux.Handle("PUT /crm/service", dep.ware.Authentication(

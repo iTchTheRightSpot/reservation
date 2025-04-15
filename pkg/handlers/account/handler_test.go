@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/reservation/config"
 	"github.com/iTchTheRightSpot/reservation/database"
@@ -71,7 +72,7 @@ func TestAccountHandler(t *testing.T) {
 	acs := account.NewAccountService(l, adp, jwtSer, ps, cache.SyncMapInMemoryCache[string, []*staff.AllStaffsEntity](l, 10, 10))
 
 	// register handler
-	m := &middleware.Middleware{Logger: l, Auth: jwtSer, Param: env.CookieParam}
+	m := &middleware.Middleware{Logger: l, Auth: jwtSer, Param: env.CookieParam, Validator: validator.New()}
 	NewAccountHandler(mux, m, l, env, ps, acs).Register()
 
 	// given

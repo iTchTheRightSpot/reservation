@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"database/sql"
+	"github.com/go-playground/validator/v10"
 	"github.com/iTchTheRightSpot/reservation/config"
 	"github.com/iTchTheRightSpot/reservation/pkg/handlers/account"
 	"github.com/iTchTheRightSpot/reservation/pkg/handlers/reservation"
@@ -24,7 +25,7 @@ type HandlerRegistry struct {
 
 func NewHandlerRegistry(db *sql.DB, l utils.ILogger, e *config.SecretVariables, f http.FileSystem) *HandlerRegistry {
 	s := newServiceRegistry(db, l, e)
-	ware := middleware.Middleware{Logger: l, Auth: s.JwtService, Param: e.CookieParam, ApiPrefix: e.ApiPrefix, FS: f}
+	ware := middleware.Middleware{Logger: l, Auth: s.JwtService, Param: e.CookieParam, ApiPrefix: e.ApiPrefix, FS: f, Validator: validator.New()}
 	return &HandlerRegistry{f: f, lg: l, env: e, mux: http.NewServeMux(), sr: s, ware: &ware}
 }
 

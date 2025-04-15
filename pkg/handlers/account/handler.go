@@ -9,6 +9,7 @@ import (
 	"github.com/iTchTheRightSpot/reservation/pkg/services/account"
 	"github.com/iTchTheRightSpot/reservation/pkg/services/auth"
 	"github.com/iTchTheRightSpot/reservation/utils"
+	mid "github.com/iTchTheRightSpot/utility/middleware"
 	log "github.com/iTchTheRightSpot/utility/utils"
 	"net/http"
 )
@@ -28,7 +29,7 @@ func NewAccountHandler(mux *http.ServeMux, w *middleware.Middleware, l log.ILogg
 
 func (dep *AccountHandler) Register() {
 	// public
-	m1 := middleware.RequestBodyMiddleware[models.Login]{Logger: dep.logger}
+	m1 := mid.RequestBodyMiddleware[models.Login]{Logger: dep.logger, Validator: dep.ware.Validator}
 	dep.mux.Handle("POST /account/login", m1.RequestBody(http.HandlerFunc(dep.login)))
 
 	// protected
@@ -37,7 +38,7 @@ func (dep *AccountHandler) Register() {
 
 	// write
 	dep.mux.Handle("POST /logout", dep.ware.Authentication(http.HandlerFunc(dep.logout)))
-	m2 := middleware.RequestBodyMiddleware[models.ProfilePayload]{Logger: dep.logger}
+	m2 := mid.RequestBodyMiddleware[models.ProfilePayload]{Logger: dep.logger, Validator: dep.ware.Validator}
 	dep.mux.Handle("POST /account/register", dep.ware.Authentication(
 		dep.ware.HasRoleAndPermissions(
 			m2.RequestBody(http.HandlerFunc(dep.register)),
@@ -45,7 +46,7 @@ func (dep *AccountHandler) Register() {
 		),
 	))
 
-	m3 := middleware.RequestBodyMiddleware[models.RoleAndPermissionPayload]{Logger: dep.logger}
+	m3 := mid.RequestBodyMiddleware[models.RoleAndPermissionPayload]{Logger: dep.logger, Validator: dep.ware.Validator}
 	dev := models.DEVELOPER
 	dep.mux.Handle("POST /account/role-permission", dep.ware.Authentication(
 		dep.ware.HasRole(

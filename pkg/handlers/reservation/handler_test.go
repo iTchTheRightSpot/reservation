@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/iTchTheRightSpot/reservation/config"
 	"github.com/iTchTheRightSpot/reservation/database"
@@ -79,7 +80,7 @@ func TestReservationHandler(t *testing.T) {
 	prov := stores.NewTransactionProvider(logger, db)
 	adapters := stores.NewAdapters(logger, db, prov)
 	jwtSer := auth.NewJwtServiceAsymmetric(logger, env)
-	ware := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
+	ware := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam, Validator: validator.New()}
 	s := schedule.NewScheduleService(logger, adapters)
 	c := cache.SyncMapInMemoryCache[string, []*model.ReservationTimeSlots](logger, 30, 30)
 	mailService := &mail.MockMailService{}
