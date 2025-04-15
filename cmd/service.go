@@ -5,7 +5,6 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/reservation"
 	staffModel "github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
-	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/account"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/mail"
@@ -14,7 +13,8 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/utility/cache"
+	log "github.com/iTchTheRightSpot/utility/utils"
 )
 
 type serviceRegistry struct {
@@ -28,20 +28,19 @@ type serviceRegistry struct {
 	AccountService     account.IAccountService
 }
 
-func newServiceRegistry(s *sql.DB, l utils.ILogger, e *config.SecretVariables) *serviceRegistry {
+func newServiceRegistry(s *sql.DB, l log.ILogger, e *config.SecretVariables) *serviceRegistry {
 	a := stores.NewAdapters(l, s, stores.NewTransactionProvider(l, s))
 	m := mail.NewMailService(l, e)
 	p := auth.NewPasswordService(l)
 	j := auth.NewJwtServiceAsymmetric(l, e)
-	//j := auth.NewJwtServiceSymmetric(l, e)
 
-	staffCache := pkg.NewInMemoryCache[string, []*staffModel.AllStaffsEntity](l, 10, 10)
+	staffCache := cache.SyncMapInMemoryCache[string, []*staffModel.AllStaffsEntity](l, 10, 10)
 	return &serviceRegistry{
 		JwtService:         j,
 		ScheduleService:    schedule.NewScheduleService(l, a),
 		ServiceImpl:        service_type.NewServiceImpl(l, a),
 		StaffService:       staff.NewStaffService(l, a, staffCache),
-		ReservationService: reservation.NewReservationService(l, a, pkg.NewInMemoryCache[string, []*model.ReservationTimeSlots](l, 30, 30), m),
+		ReservationService: reservation.NewReservationService(l, a, cache.SyncMapInMemoryCache[string, []*model.ReservationTimeSlots](l, 30, 30), m),
 		AccountService:     account.NewAccountService(l, a, j, p, staffCache),
 		PasswordService:    p,
 		MailService:        m,

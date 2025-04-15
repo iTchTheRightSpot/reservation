@@ -8,6 +8,7 @@ import (
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
+	log "github.com/iTchTheRightSpot/utility/utils"
 	"net/http"
 	"strconv"
 	"strings"
@@ -17,11 +18,11 @@ import (
 type ScheduleHandler struct {
 	mux     *http.ServeMux
 	ware    *middleware.Middleware
-	logger  utils.ILogger
+	logger  log.ILogger
 	service schedule.IScheduleService
 }
 
-func NewScheduleHandler(mux *http.ServeMux, w *middleware.Middleware, l utils.ILogger, s schedule.IScheduleService) *ScheduleHandler {
+func NewScheduleHandler(mux *http.ServeMux, w *middleware.Middleware, l log.ILogger, s schedule.IScheduleService) *ScheduleHandler {
 	return &ScheduleHandler{mux: mux, ware: w, logger: l, service: s}
 }
 
@@ -47,56 +48,56 @@ func (dep *ScheduleHandler) Register() {
 }
 
 func (dep *ScheduleHandler) create(w http.ResponseWriter, r *http.Request) {
-	dto, err := pkg.ReadBody[model.SchedulePayload](r)
+	dto, err := pkg.ReadBody[model.SchedulePayload](dep.logger, r)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	if err = dep.service.Create(r.Context(), dto); err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
-	dep.logger.Log("new schedule created")
+	dep.logger.Log(r.Context(), "new schedule created")
 	w.WriteHeader(http.StatusCreated)
 }
 
 func (dep *ScheduleHandler) update(w http.ResponseWriter, r *http.Request) {
-	dto, err := pkg.ReadBody[model.UpdateSchedulePayload](r)
+	dto, err := pkg.ReadBody[model.UpdateSchedulePayload](dep.logger, r)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	if err = dep.service.Update(r.Context(), dto); err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
-	dep.logger.Log("schedule updated")
+	dep.logger.Log(r.Context(), "schedule updated")
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func (dep *ScheduleHandler) delete(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(r.PathValue("schedule_id"), 10, 64)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: "Bad request, invalid schedule_id"})
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, &log.BadRequestError{Message: "invalid schedule_id"})
 		return
 	}
 
 	if err = dep.service.Delete(r.Context(), id); err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
-	dep.logger.Log("schedule deleted")
+	dep.logger.Log(r.Context(), "schedule deleted")
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -105,13 +106,13 @@ func (dep *ScheduleHandler) schedulesByStaff(w http.ResponseWriter, r *http.Requ
 
 	month, err := strconv.Atoi(query.Get("month"))
 	if err != nil {
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	year, err := strconv.Atoi(query.Get("year"))
 	if err != nil {
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return
 	}
 
@@ -120,7 +121,7 @@ func (dep *ScheduleHandler) schedulesByStaff(w http.ResponseWriter, r *http.Requ
 	if query.Get("timezone") != "" {
 		location, err = time.LoadLocation(query.Get("timezone"))
 		if err != nil {
-			utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+			log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 			return
 		}
 	}
@@ -129,8 +130,8 @@ func (dep *ScheduleHandler) schedulesByStaff(w http.ResponseWriter, r *http.Requ
 	if staffId == "" {
 		obj, ok := r.Context().Value(utils.UserContextKey).(*models.JwtObj)
 		if !ok || obj == nil {
-			dep.logger.Error("jwt object not present in request")
-			utils.ErrorResponse(w, &utils.AuthenticationError{})
+			dep.logger.Error(r.Context(), "jwt object not present in request")
+			log.ErrorResponse(w, &log.AuthenticationError{})
 			return
 		}
 		staffId = obj.UserId
@@ -144,15 +145,15 @@ func (dep *ScheduleHandler) schedulesByStaff(w http.ResponseWriter, r *http.Requ
 	}
 
 	if err = middleware.ValidatorInstance.Struct(payload); err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	arr, err := dep.service.Schedules(r.Context(), &payload)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
@@ -160,7 +161,8 @@ func (dep *ScheduleHandler) schedulesByStaff(w http.ResponseWriter, r *http.Requ
 	w.WriteHeader(http.StatusOK)
 
 	if err = json.NewEncoder(w).Encode(arr); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(r.Context(), err.Error())
+		http.Error(w, "server error", 500)
 	}
 }
 
@@ -169,13 +171,13 @@ func (dep *ScheduleHandler) schedules(w http.ResponseWriter, r *http.Request) {
 
 	month, err := strconv.Atoi(query.Get("month"))
 	if err != nil {
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	year, err := strconv.Atoi(query.Get("year"))
 	if err != nil {
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return
 	}
 
@@ -184,15 +186,15 @@ func (dep *ScheduleHandler) schedules(w http.ResponseWriter, r *http.Request) {
 	if query.Get("timezone") != "" {
 		location, err = time.LoadLocation(query.Get("timezone"))
 		if err != nil {
-			utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+			log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 			return
 		}
 	}
 
 	obj, ok := r.Context().Value(utils.UserContextKey).(*models.JwtObj)
 	if !ok || obj == nil {
-		dep.logger.Error("jwt object not present in request")
-		utils.ErrorResponse(w, &utils.AuthenticationError{})
+		dep.logger.Error(r.Context(), "jwt object not present in request")
+		log.ErrorResponse(w, &log.AuthenticationError{})
 		return
 	}
 
@@ -204,15 +206,15 @@ func (dep *ScheduleHandler) schedules(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = middleware.ValidatorInstance.Struct(payload); err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	arr, err := dep.service.Schedules(r.Context(), &payload)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
@@ -220,6 +222,7 @@ func (dep *ScheduleHandler) schedules(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err = json.NewEncoder(w).Encode(arr); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(r.Context(), err.Error())
+		http.Error(w, "server error", 500)
 	}
 }

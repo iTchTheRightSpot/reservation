@@ -6,7 +6,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/database"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/utility/utils"
 	"log"
 	"reflect"
 	"testing"
@@ -50,7 +50,7 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 }
 
 func TestProfileStore(t *testing.T) {
-	mockLog := utils.NewDevLogger()
+	mockLog := utils.DevLogger("UTC")
 
 	t.Run("should Save profile when image_key is not null", func(t *testing.T) {
 		con, fn := setupTest(t)

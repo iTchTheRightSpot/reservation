@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
+	log "github.com/iTchTheRightSpot/utility/utils"
 	"io"
 	"net/http"
 	"time"
@@ -33,19 +33,21 @@ func WriteCookie(w http.ResponseWriter, param *utils.CookieParam, token string, 
 	)
 }
 
-func ReadBody[T any](r *http.Request) (*T, error) {
+func ReadBody[T any](lg log.ILogger, r *http.Request) (*T, error) {
 	if r.Body == nil {
-		return nil, fmt.Errorf("request body cannot be nil")
+		return nil, &log.ServerError{Message: "request body cannot be nil"}
 	}
 
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read request body: %w", err)
+		lg.Error(r.Context(), err.Error())
+		return nil, &log.ServerError{Message: "failed to read request body"}
 	}
 
 	var payload T
 	if err = json.Unmarshal(bodyBytes, &payload); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal request body: %w", err)
+		lg.Error(r.Context(), err.Error())
+		return nil, &log.ServerError{Message: "failed to unmarshal request body"}
 	}
 
 	return &payload, nil

@@ -9,7 +9,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	staffStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/utility/utils"
 	"log"
 	"reflect"
 	"testing"
@@ -56,7 +56,7 @@ func setupTest(t *testing.T) (*sql.Tx, func()) {
 func TestScheduleStore(t *testing.T) {
 	t.Parallel()
 
-	mockLog := utils.NewDevLogger()
+	mockLog := utils.DevLogger("UTC")
 
 	t.Run("should save staff schedule", func(t *testing.T) {
 		t.Parallel()

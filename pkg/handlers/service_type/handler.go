@@ -7,18 +7,18 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/service_type"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	log "github.com/iTchTheRightSpot/utility/utils"
 	"net/http"
 )
 
 type ServiceTypeHandler struct {
 	mux     *http.ServeMux
-	logger  utils.ILogger
+	logger  log.ILogger
 	service service_type.IServiceType
 	ware    *middleware.Middleware
 }
 
-func NewServiceTypeHandler(mux *http.ServeMux, l utils.ILogger, s service_type.IServiceType, w *middleware.Middleware) *ServiceTypeHandler {
+func NewServiceTypeHandler(mux *http.ServeMux, l log.ILogger, s service_type.IServiceType, w *middleware.Middleware) *ServiceTypeHandler {
 	return &ServiceTypeHandler{
 		mux:     mux,
 		logger:  l,
@@ -64,16 +64,16 @@ func (dep *ServiceTypeHandler) Register() {
 }
 
 func (dep *ServiceTypeHandler) create(w http.ResponseWriter, r *http.Request) {
-	dto, err := pkg.ReadBody[model.ServiceTypePayload](r)
+	dto, err := pkg.ReadBody[model.ServiceTypePayload](dep.logger, r)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	if err = dep.service.Create(r.Context(), dto); err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
@@ -83,29 +83,30 @@ func (dep *ServiceTypeHandler) create(w http.ResponseWriter, r *http.Request) {
 func (dep *ServiceTypeHandler) services(w http.ResponseWriter, r *http.Request) {
 	arr, err := dep.service.ServiceTypes(r.Context())
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err = json.NewEncoder(w).Encode(arr); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(r.Context(), err.Error())
+		http.Error(w, "server error", 500)
 	}
 }
 
 func (dep *ServiceTypeHandler) update(w http.ResponseWriter, r *http.Request) {
-	dto, err := pkg.ReadBody[model.ServiceTypePayload](r)
+	dto, err := pkg.ReadBody[model.ServiceTypePayload](dep.logger, r)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	if err = dep.service.Update(r.Context(), dto); err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
@@ -115,67 +116,70 @@ func (dep *ServiceTypeHandler) update(w http.ResponseWriter, r *http.Request) {
 func (dep *ServiceTypeHandler) staffsByServices(w http.ResponseWriter, r *http.Request) {
 	services := r.URL.Query()["name"]
 	if services == nil || len(services) < 1 {
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: "bad request, missing services type(s)"})
+		log.ErrorResponse(w, &log.BadRequestError{Message: "bad request, missing services type(s)"})
 		return
 	}
 
 	arr, err := dep.service.StaffsByServiceTypes(r.Context(), &services)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+
 	if err = json.NewEncoder(w).Encode(arr); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(r.Context(), err.Error())
+		http.Error(w, "server error", 500)
 	}
 }
 
 func (dep *ServiceTypeHandler) crmServices(w http.ResponseWriter, r *http.Request) {
 	arr, err := dep.service.CRMServiceTypes(r.Context())
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err = json.NewEncoder(w).Encode(arr); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(r.Context(), err.Error())
+		http.Error(w, "server error", 500)
 	}
 }
 
 func (dep *ServiceTypeHandler) linkServiceToStaff(w http.ResponseWriter, r *http.Request) {
-	dto, err := pkg.ReadBody[model.LinkServiceTypeToStaffPayload](r)
+	dto, err := pkg.ReadBody[model.LinkServiceTypeToStaffPayload](dep.logger, r)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	if err = dep.service.LinkServiceToStaff(r.Context(), dto); err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
-	dep.logger.Log("successfully linked service to staff")
+	dep.logger.Log(r.Context(), "successfully linked service to staff")
 	w.WriteHeader(http.StatusCreated)
 }
 
 func (dep *ServiceTypeHandler) serviceTypesByStaffUUID(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("staff_id")
 	if len(id) < 1 {
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: "staff_id missing. bad request"})
+		log.ErrorResponse(w, &log.BadRequestError{Message: "staff_id missing. bad request"})
 		return
 	}
 
 	arr, err := dep.service.ServicesByStaffUUID(r.Context(), id)
 	if err != nil {
-		utils.ErrorResponse(w, err)
+		log.ErrorResponse(w, err)
 		return
 	}
 
@@ -183,14 +187,15 @@ func (dep *ServiceTypeHandler) serviceTypesByStaffUUID(w http.ResponseWriter, r 
 	w.WriteHeader(http.StatusOK)
 
 	if err = json.NewEncoder(w).Encode(arr); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(r.Context(), err.Error())
+		http.Error(w, "server error", 500)
 	}
 }
 
 func (dep *ServiceTypeHandler) deLinkServiceFromStaff(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNotImplemented)
-	if err := json.NewEncoder(w).Encode(utils.InsertionError{Message: "route not implemented"}); err != nil {
-		dep.logger.Error(err.Error())
+	if err := json.NewEncoder(w).Encode(log.InsertionError{Message: "route not implemented"}); err != nil {
+		dep.logger.Error(r.Context(), err.Error())
 	}
 }

@@ -1,14 +1,16 @@
 module github.com/iTchTheRightSpot/erp-golang
 
-go 1.24.0
+go 1.24.2
+
 require (
-	github.com/go-playground/validator/v10 v10.25.0
+	github.com/go-playground/validator/v10 v10.26.0
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/golang-migrate/migrate/v4 v4.18.2
 	github.com/google/uuid v1.6.0
+	github.com/iTchTheRightSpot/utility v0.0.0-20250415060258-0be768dd004c
 	github.com/lib/pq v1.10.9
 	github.com/rs/cors v1.11.1
-	golang.org/x/crypto v0.35.0
+	golang.org/x/crypto v0.37.0
 )
 
 require (
@@ -19,7 +21,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	golang.org/x/net v0.36.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/net v0.39.0 // indirect
+	golang.org/x/sys v0.32.0 // indirect
+	golang.org/x/text v0.24.0 // indirect
 )

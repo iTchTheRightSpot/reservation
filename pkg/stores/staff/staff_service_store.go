@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/utility/utils"
 )
 
 type IStaffServiceStore interface {
@@ -33,7 +33,7 @@ func (dep *staffServiceStore) Save(ctx context.Context, s *staff.StaffServiceEnt
 
 	row := dep.db.QueryRowContext(ctx, q, s.StaffId, s.ServiceId)
 	if err := row.Scan(&s.JunctionId, &s.StaffId, &s.ServiceId); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return &utils.InsertionError{Message: "error linking service to staff"}
 	}
 
@@ -47,7 +47,7 @@ func (dep *staffServiceStore) CountByStaffIdAndServiceId(ctx context.Context, st
 
 	row := dep.db.QueryRowContext(ctx, q, staffId, serviceId)
 	if err := row.Scan(&count); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return 0, &utils.NotFoundError{Message: "error counting staff services"}
 	}
 

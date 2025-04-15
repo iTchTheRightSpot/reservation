@@ -1,11 +1,12 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"github.com/iTchTheRightSpot/erp-golang/cmd"
 	"github.com/iTchTheRightSpot/erp-golang/config"
 	"github.com/iTchTheRightSpot/erp-golang/frontend"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/utility/utils"
 	"github.com/rs/cors"
 	"net/http"
 	"time"
@@ -20,7 +21,7 @@ type ErpServer struct {
 func (s *ErpServer) Serve() {
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{s.Env.FrontEnd},
-		AllowedMethods:   []string{http.MethodPost, http.MethodGet, http.MethodPut, http.MethodDelete, http.MethodOptions},
+		AllowedMethods:   []string{http.MethodPost, http.MethodGet, http.MethodPut, http.MethodDelete},
 		AllowedHeaders:   []string{"Origin", "Content-Type", "Accept", "Cookie"},
 		ExposedHeaders:   []string{"Content-Length"},
 		AllowCredentials: true,
@@ -41,6 +42,6 @@ func (s *ErpServer) Serve() {
 		Handler:           c.Handler(cmd.NewHandlerRegistry(s.Db, s.Logger, s.Env, open).Initialize()),
 	}
 
-	s.Logger.Log("starting server on PORT", s.Env.Address)
+	s.Logger.Log(context.Background(), "starting server on PORT", s.Env.Address)
 	s.Logger.Fatal("server stopped ", server.ListenAndServe())
 }

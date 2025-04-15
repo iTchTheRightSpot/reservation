@@ -1,12 +1,13 @@
 package auth
 
 import (
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"context"
+	"github.com/iTchTheRightSpot/utility/utils"
 	"testing"
 )
 
 func TestProfileModel(t *testing.T) {
-	instance := NewPasswordService(utils.NewDevLogger())
+	instance := NewPasswordService(utils.DevLogger("UTC"))
 
 	t.Run("regex. password has no uppercase", func(t *testing.T) {
 		if err := instance.PasswordRegex("password123#!"); err == nil {
@@ -41,15 +42,16 @@ func TestProfileModel(t *testing.T) {
 	t.Run("should encode & validate password", func(t *testing.T) {
 		// given
 		str := "password"
+		ctx := context.Background()
 
 		// method to test & assert
-		encode, err := instance.Encode(str)
+		encode, err := instance.Encode(ctx, str)
 		if err != nil {
 			t.Error(err.Error())
 		}
 
 		// method to test & assert
-		if err = instance.Validate(encode, []byte(str)); err != nil {
+		if err = instance.Validate(ctx, encode, []byte(str)); err != nil {
 			t.Error(err.Error())
 		}
 	})

@@ -5,7 +5,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/staff"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/utility/utils"
 	"net/http"
 )
 
@@ -36,6 +36,7 @@ func (dep *StaffHandler) allStaffs(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err = json.NewEncoder(w).Encode(arr); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(r.Context(), err.Error())
+		http.Error(w, "server error", 500)
 	}
 }

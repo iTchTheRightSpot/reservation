@@ -12,11 +12,12 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	model "github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
-	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/utility/cache"
+	logg "github.com/iTchTheRightSpot/utility/utils"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -61,19 +62,19 @@ func TestStaffHandler(t *testing.T) {
 	})
 
 	mux := http.NewServeMux()
-	logger := utils.NewDevLogger()
+	logger := logg.DevLogger("UTC")
 	prov := stores.NewTransactionProvider(logger, db)
 	adp := stores.NewAdapters(logger, db, prov)
 	jwtSer := auth.NewJwtServiceAsymmetric(logger, env)
 	m := &middleware.Middleware{Logger: logger, Auth: jwtSer, Param: env.CookieParam}
-	cach := pkg.NewInMemoryCache[string, []*model.AllStaffsEntity](logger, 10, 10)
+	cach := cache.SyncMapInMemoryCache[string, []*model.AllStaffsEntity](logger, 10, 10)
 	s := staff.NewStaffService(logger, adp, cach)
 
 	// register routes
 	NewStaffHandler(mux, m, logger, s).Register()
 
 	t.Run("should return all staffs", func(t *testing.T) {
-		obj, _ := jwtSer.Encode(
+		obj, _ := jwtSer.Encode(context.Background(),
 			&models.JwtObj{
 				UserId: "uuid",
 				AccessControls: []models.RolePermissionEnum{

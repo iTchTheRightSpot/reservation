@@ -2,10 +2,9 @@ package profile
 
 import (
 	"context"
-	"errors"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	log "github.com/iTchTheRightSpot/utility/utils"
 )
 
 type IPermissionStore interface {
@@ -14,17 +13,17 @@ type IPermissionStore interface {
 }
 
 type permissionStore struct {
-	logger utils.ILogger
+	logger log.ILogger
 	db     pkg.Db
 }
 
-func NewPermissionStore(l utils.ILogger, db pkg.Db) IPermissionStore {
+func NewPermissionStore(l log.ILogger, db pkg.Db) IPermissionStore {
 	return &permissionStore{logger: l, db: db}
 }
 
 func (dep *permissionStore) Save(ctx context.Context, p *models.PermissionEntity) error {
 	if p == nil {
-		return errors.New("permission object is nil")
+		return &log.ServerError{Message: "permission object is nil"}
 	}
 
 	q := `
@@ -35,8 +34,8 @@ func (dep *permissionStore) Save(ctx context.Context, p *models.PermissionEntity
 
 	row := dep.db.QueryRowContext(ctx, q, p.Permission, p.RoleId)
 	if err := row.Scan(&p.PermissionId, &p.Permission, &p.RoleId); err != nil {
-		dep.logger.Error(err.Error())
-		return &utils.InsertionError{Message: "exception saving to permission table"}
+		dep.logger.Error(ctx, err.Error())
+		return &log.InsertionError{Message: "error saving to permission"}
 	}
 
 	return nil
@@ -45,13 +44,13 @@ func (dep *permissionStore) Save(ctx context.Context, p *models.PermissionEntity
 func (dep *permissionStore) Delete(ctx context.Context, permissionId uint64) (int64, error) {
 	res, err := dep.db.ExecContext(ctx, "DELETE FROM permission WHERE permission_id = $1", permissionId)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		return 0, &utils.InsertionError{Message: "error deleting permission"}
+		dep.logger.Error(ctx, err.Error())
+		return 0, &log.InsertionError{Message: "error deleting permission"}
 	}
 	i, err := res.RowsAffected()
 	if err != nil {
-		dep.logger.Error(err.Error())
-		return 0, &utils.InsertionError{Message: "error deleting permission x2"}
+		dep.logger.Error(ctx, err.Error())
+		return 0, &log.InsertionError{Message: "error rows affected"}
 	}
 	return i, nil
 }

@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/schedule"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/utility/utils"
 	"time"
 )
 
@@ -41,13 +41,13 @@ func (dep *scheduleStore) SchedulesInRange(ctx context.Context, staffId uint64, 
 
 	rows, err := dep.db.QueryContext(ctx, q, staffId, start, end)
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return nil, &utils.NotFoundError{Message: "error retrieve schedules in range"}
 	}
 
 	defer func(rs *sql.Rows) {
 		if err = rs.Close(); err != nil {
-			dep.logger.Error(err.Error())
+			dep.logger.Error(ctx, err.Error())
 			err = &utils.ServerError{Message: "error closing stream after schedules in range"}
 		}
 	}(rows)
@@ -58,7 +58,7 @@ func (dep *scheduleStore) SchedulesInRange(ctx context.Context, staffId uint64, 
 
 		err = rows.Scan(&s.ScheduleId, &s.Start, &s.End, &s.IsVisible, &s.IsReoccurring, &s.StaffId)
 		if err != nil {
-			dep.logger.Error(err.Error())
+			dep.logger.Error(ctx, err.Error())
 			return nil, &utils.ServerError{Message: "error scanning schedules in range"}
 		}
 
@@ -83,7 +83,7 @@ func (dep *scheduleStore) Save(ctx context.Context, s *schedule.ScheduleEntity) 
 	err := row.Scan(&s.ScheduleId, &s.Start, &s.End, &s.IsVisible, &s.IsReoccurring, &s.StaffId)
 
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return &utils.InsertionError{Message: "error saving schedule"}
 	}
 
@@ -99,13 +99,13 @@ func (dep *scheduleStore) Update(ctx context.Context, s *schedule.ScheduleEntity
 
 	res, err := dep.db.ExecContext(ctx, q, s.ScheduleId, s.IsVisible, s.IsReoccurring)
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return 0, &utils.InsertionError{Message: "error updating schedule"}
 	}
 
 	i, err := res.RowsAffected()
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return 0, &utils.InsertionError{Message: "error updating schedule no."}
 	}
 
@@ -126,7 +126,7 @@ func (dep *scheduleStore) CountExistingSchedulesForStaff(ctx context.Context, st
 	row := dep.db.QueryRowContext(ctx, q, staffId, start, end)
 
 	if err := row.Scan(&count); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return 0, &utils.NotFoundError{Message: "invalid staff id"}
 	} else if count == -1 {
 		return 0, &utils.NotFoundError{Message: "error counting existing schedules for staff"}
@@ -150,7 +150,7 @@ func (dep *scheduleStore) CountSchedulesInRangeAndVisibility(ctx context.Context
 
 	row := dep.db.QueryRowContext(ctx, q, staffId, start, end, isVisible)
 	if err := row.Scan(&count); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return 0, &utils.NotFoundError{Message: "error counting schedules in range & visibility"}
 	}
 
@@ -171,13 +171,13 @@ func (dep *scheduleStore) SchedulesWithinTimeframe(ctx context.Context, staffId 
 
 	rows, err := dep.db.QueryContext(ctx, q, staffId, start, end, isVisible, duration)
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return nil, &utils.NotFoundError{Message: "error retrieving available schedules in range"}
 	}
 
 	defer func(rs *sql.Rows) {
 		if err = rs.Close(); err != nil {
-			dep.logger.Error(err.Error())
+			dep.logger.Error(ctx, err.Error())
 			err = &utils.ServerError{Message: "error closing stream after schedules in range"}
 		}
 	}(rows)
@@ -188,7 +188,7 @@ func (dep *scheduleStore) SchedulesWithinTimeframe(ctx context.Context, staffId 
 
 		err = rows.Scan(&s.ScheduleId, &s.Start, &s.End, &s.IsVisible, &s.IsReoccurring, &s.StaffId)
 		if err != nil {
-			dep.logger.Error(err.Error())
+			dep.logger.Error(ctx, err.Error())
 			return nil, &utils.ServerError{Message: "error scanning schedules in range"}
 		}
 
@@ -205,7 +205,7 @@ func (dep *scheduleStore) ScheduleByScheduleId(ctx context.Context, scheduleId u
 	err := row.Scan(&s.ScheduleId, &s.Start, &s.End, &s.IsVisible, &s.IsReoccurring, &s.StaffId)
 
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return nil, &utils.NotFoundError{Message: "error retrieving schedules by id"}
 	}
 
@@ -215,13 +215,13 @@ func (dep *scheduleStore) ScheduleByScheduleId(ctx context.Context, scheduleId u
 func (dep *scheduleStore) Delete(ctx context.Context, scheduleId uint64) (int64, error) {
 	result, err := dep.db.ExecContext(ctx, "DELETE FROM schedule WHERE schedule_id = $1", scheduleId)
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return 0, &utils.InsertionError{Message: "error deleting schedule"}
 	}
 
 	i, err := result.RowsAffected()
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return 0, &utils.InsertionError{Message: "error deleting schedule. row"}
 	}
 	return i, nil

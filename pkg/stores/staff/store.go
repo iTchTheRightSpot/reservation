@@ -4,11 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/iTchTheRightSpot/erp-golang/pkg"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/utility/utils"
 	"strings"
 )
 
@@ -61,12 +60,12 @@ func (dep *staffStore) AllStaffs(ctx context.Context) ([]*staff.AllStaffsEntity,
 
 	rows, err := dep.db.QueryContext(ctx, q)
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return nil, &utils.NotFoundError{Message: "error retrieving all staffs"}
 	}
 	defer func(rows *sql.Rows) {
 		if err = rows.Close(); err != nil {
-			dep.logger.Error(err.Error())
+			dep.logger.Error(ctx, err.Error())
 			err = &utils.ServerError{Message: "error closing stream after retrieving all staffs"}
 		}
 	}(rows)
@@ -87,12 +86,12 @@ func (dep *staffStore) AllStaffs(ctx context.Context) ([]*staff.AllStaffsEntity,
 			&pd.Bio,
 			&rolePermData,
 		); err != nil {
-			dep.logger.Error(err.Error())
+			dep.logger.Error(ctx, err.Error())
 			return nil, &utils.ServerError{Message: "error scanning database rows after retrieving all staffs"}
 		}
 
 		if err = json.Unmarshal(rolePermData, &pd.AccessControls); err != nil {
-			dep.logger.Error(err.Error())
+			dep.logger.Error(ctx, err.Error())
 			return nil, &utils.ServerError{Message: "error unmarshalling all staffs"}
 		}
 
@@ -100,7 +99,7 @@ func (dep *staffStore) AllStaffs(ctx context.Context) ([]*staff.AllStaffsEntity,
 	}
 
 	if err = rows.Err(); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return nil, &utils.ServerError{Message: "error iterating through all staffs"}
 	}
 
@@ -111,7 +110,7 @@ func (dep *staffStore) StaffByProfileId(ctx context.Context, profileId uint64) (
 	var r staff.StaffEntity
 	row := dep.db.QueryRowContext(ctx, "SELECT * FROM staff WHERE profile_id = $1", profileId)
 	if err := row.Scan(&r.StaffId, &r.UUID, &r.Bio, &r.ProfileId); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return nil, &utils.NotFoundError{Message: "invalid staff with id"}
 	}
 	return &r, nil
@@ -119,7 +118,7 @@ func (dep *staffStore) StaffByProfileId(ctx context.Context, profileId uint64) (
 
 func (dep *staffStore) StaffsByServices(ctx context.Context, s *[]string) ([]*staff.StaffStoreFrontDb, error) {
 	if s == nil {
-		return nil, errors.New("services arr is nil")
+		return nil, &utils.ServerError{Message: "services arr is nil"}
 	}
 
 	// dynamically construct the placeholder part of the query (e.g., $1, $2, $3 for each service)
@@ -151,13 +150,13 @@ func (dep *staffStore) StaffsByServices(ctx context.Context, s *[]string) ([]*st
 
 	rows, err := dep.db.QueryContext(ctx, q, args...)
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return nil, &utils.NotFoundError{Message: "error retrieving staffs by services"}
 	}
 
 	defer func(rows *sql.Rows) {
 		if err = rows.Close(); err != nil {
-			dep.logger.Error(err.Error())
+			dep.logger.Error(ctx, err.Error())
 			err = &utils.ServerError{Message: "error closing stream after retrieving staffs by services"}
 		}
 	}(rows)
@@ -168,7 +167,7 @@ func (dep *staffStore) StaffsByServices(ctx context.Context, s *[]string) ([]*st
 		var sb staff.StaffStoreFrontDb
 
 		if err = rows.Scan(&sb.UUID, &sb.Name, &sb.ImageKey, &sb.Bio); err != nil {
-			dep.logger.Error(err)
+			dep.logger.Error(ctx, err.Error())
 			return nil, &utils.ServerError{Message: "exception scanning staffs by services"}
 		}
 
@@ -176,7 +175,7 @@ func (dep *staffStore) StaffsByServices(ctx context.Context, s *[]string) ([]*st
 	}
 
 	if err = rows.Err(); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return nil, &utils.ServerError{Message: "error iterating staffs by services"}
 	}
 
@@ -185,7 +184,7 @@ func (dep *staffStore) StaffsByServices(ctx context.Context, s *[]string) ([]*st
 
 func (dep *staffStore) Save(ctx context.Context, r *staff.StaffEntity) error {
 	if r == nil {
-		return errors.New("staff object is nil")
+		return &utils.ServerError{Message: "staff object is nil"}
 	}
 
 	q := `
@@ -199,8 +198,8 @@ func (dep *staffStore) Save(ctx context.Context, r *staff.StaffEntity) error {
 	err := row.Scan(&r.StaffId, &r.UUID, &r.Bio, &r.ProfileId)
 
 	if err != nil {
-		dep.logger.Error(err.Error())
-		return errors.New("exception saving to staff table")
+		dep.logger.Error(ctx, err.Error())
+		return &utils.InsertionError{Message: "exception saving to staff table"}
 	}
 
 	return nil
@@ -213,8 +212,8 @@ func (dep *staffStore) StaffByUUID(ctx context.Context, staffUUID string) (*staf
 	row := dep.db.QueryRowContext(ctx, q, staffUUID)
 	err := row.Scan(&r.StaffId, &r.UUID, &r.Bio, &r.ProfileId)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		return nil, fmt.Errorf("exception retrieving staff with uuid %s", staffUUID)
+		dep.logger.Error(ctx, err.Error())
+		return nil, &utils.NotFoundError{Message: "exception retrieving staff with uuid"}
 	}
 
 	return &r, nil

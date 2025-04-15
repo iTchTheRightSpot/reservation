@@ -18,6 +18,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
+	logg "github.com/iTchTheRightSpot/utility/utils"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -61,7 +62,7 @@ func TestServiceTypeHandler(t *testing.T) {
 	})
 
 	// given
-	logger := utils.NewDevLogger()
+	logger := logg.DevLogger("UTC")
 	mux := http.NewServeMux()
 	prov := stores.NewTransactionProvider(logger, db)
 	adapters := stores.NewAdapters(logger, db, prov)
@@ -96,7 +97,7 @@ func TestServiceTypeHandler(t *testing.T) {
 				Permissions: []models.PermissionEnum{models.WRITE, models.READ},
 			},
 		}
-		jwtObj, _ := jwtSer.Encode(
+		jwtObj, _ := jwtSer.Encode(context.Background(),
 			&models.JwtObj{
 				UserId:         "staff-uuid",
 				AccessControls: cred,
@@ -181,7 +182,7 @@ func TestServiceTypeHandler(t *testing.T) {
 		})
 
 		t.Run("should link service to staff & also reject", func(t *testing.T) {
-			obj, err := jwtSer.Encode(
+			obj, err := jwtSer.Encode(context.Background(),
 				&models.JwtObj{
 					UserId:         save.staff.UUID.String(),
 					AccessControls: cred,

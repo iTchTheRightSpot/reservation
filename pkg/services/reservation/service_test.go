@@ -12,7 +12,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	log "github.com/iTchTheRightSpot/utility/utils"
 	"testing"
 	"time"
 )
@@ -20,7 +20,7 @@ import (
 func TestReservationService(t *testing.T) {
 	t.Parallel()
 
-	mockLog := utils.NewDevLogger()
+	mockLog := log.DevLogger("UTC")
 
 	t.Run("creating a reservation", func(t *testing.T) {
 		t.Parallel()

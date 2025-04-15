@@ -13,7 +13,7 @@ import (
 	profileStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/profile"
 	serviceStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/service_type"
 	staffStore "github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/utility/utils"
 	"log"
 	"testing"
 	"time"
@@ -94,7 +94,7 @@ func preSaveService(a serviceStore.IServiceTypeStore) (*service_type.ServiceType
 }
 
 func TestReservationStore(t *testing.T) {
-	mockLog := utils.NewDevLogger()
+	mockLog := utils.DevLogger("UTC")
 
 	t.Run("should save reservation & count reservations in range", func(t *testing.T) {
 		tx, fn := setupTest(t)

@@ -7,7 +7,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/schedule"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores/staff"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/utility/utils"
 )
 
 type Adapters struct {

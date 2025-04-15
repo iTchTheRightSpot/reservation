@@ -1,15 +1,16 @@
 package auth
 
 import (
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"context"
+	"github.com/iTchTheRightSpot/utility/utils"
 	"golang.org/x/crypto/bcrypt"
 	"regexp"
 )
 
 type IPasswordService interface {
 	PasswordRegex(str string) error
-	Encode(str string) ([]byte, error)
-	Validate(hash, str []byte) error
+	Encode(ctx context.Context, str string) ([]byte, error)
+	Validate(ctx context.Context, hash, str []byte) error
 }
 
 type passwordService struct {
@@ -51,18 +52,18 @@ func (dep *passwordService) PasswordRegex(str string) error {
 	return nil
 }
 
-func (dep *passwordService) Encode(str string) ([]byte, error) {
+func (dep *passwordService) Encode(ctx context.Context, str string) ([]byte, error) {
 	ps, err := bcrypt.GenerateFromPassword([]byte(str), bcrypt.DefaultCost)
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return nil, &utils.ServerError{Message: "error encoding password"}
 	}
 	return ps, nil
 }
 
-func (dep *passwordService) Validate(hash, str []byte) error {
+func (dep *passwordService) Validate(ctx context.Context, hash, str []byte) error {
 	if err := bcrypt.CompareHashAndPassword(hash, str); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return &utils.AuthenticationError{Message: "invalid email or password"}
 	}
 	return nil

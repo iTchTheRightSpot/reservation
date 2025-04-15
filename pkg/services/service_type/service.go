@@ -5,7 +5,7 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/service_type"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
-	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/utility/utils"
 	"strings"
 )
 
@@ -31,7 +31,7 @@ func NewServiceImpl(l utils.ILogger, a *stores.Adapters) IServiceType {
 func (dep *serviceTypeImpl) Update(ctx context.Context, dto *service_type.ServiceTypePayload) error {
 	s, err := dep.adapters.ServiceStore.ServiceTypeByName(ctx, strings.TrimSpace(dto.Name))
 	if err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return err
 	}
 	s.Name = strings.TrimSpace(dto.Name)
@@ -45,7 +45,6 @@ func (dep *serviceTypeImpl) Update(ctx context.Context, dto *service_type.Servic
 func (dep *serviceTypeImpl) CRMServiceTypes(ctx context.Context) (interface{}, error) {
 	db, err := dep.adapters.ServiceStore.ServiceTypes(ctx)
 	if err != nil {
-		dep.logger.Error(err.Error())
 		return nil, err
 	}
 
@@ -73,7 +72,6 @@ func (dep *serviceTypeImpl) CRMServiceTypes(ctx context.Context) (interface{}, e
 func (dep *serviceTypeImpl) ServiceTypes(ctx context.Context) (interface{}, error) {
 	db, err := dep.adapters.ServiceStore.ServiceTypes(ctx)
 	if err != nil {
-		dep.logger.Error(err.Error())
 		return nil, err
 	}
 
@@ -101,7 +99,6 @@ func (dep *serviceTypeImpl) ServiceTypes(ctx context.Context) (interface{}, erro
 func (dep *serviceTypeImpl) StaffsByServiceTypes(ctx context.Context, services *[]string) (interface{}, error) {
 	stafs, err := dep.adapters.StaffStore.StaffsByServices(ctx, services)
 	if err != nil {
-		dep.logger.Error(err.Error())
 		return nil, err
 	}
 
@@ -140,7 +137,7 @@ func (dep *serviceTypeImpl) Create(ctx context.Context, p *service_type.ServiceT
 	}
 
 	if err := dep.adapters.ServiceStore.Save(ctx, &s); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Error(ctx, err.Error())
 		return err
 	}
 	return nil
@@ -180,7 +177,6 @@ func (dep *serviceTypeImpl) LinkServiceToStaff(ctx context.Context, obj *service
 func (dep *serviceTypeImpl) ServicesByStaffUUID(ctx context.Context, staffUUID string) (interface{}, error) {
 	arr, err := dep.adapters.ServiceStore.ServiceTypesByStaffUUID(ctx, strings.TrimSpace(staffUUID))
 	if err != nil {
-		dep.logger.Error(err.Error())
 		return nil, err
 	}
 

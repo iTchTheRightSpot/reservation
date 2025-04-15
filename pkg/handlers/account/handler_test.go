@@ -13,11 +13,12 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/middleware"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/models/staff"
-	pkg "github.com/iTchTheRightSpot/erp-golang/pkg/services"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/account"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/stores"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
+	"github.com/iTchTheRightSpot/utility/cache"
+	logg "github.com/iTchTheRightSpot/utility/utils"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -62,12 +63,12 @@ func TestAccountHandler(t *testing.T) {
 
 	// given
 	mux := http.NewServeMux()
-	l := utils.NewDevLogger()
+	l := logg.DevLogger("UTC")
 	prov := stores.NewTransactionProvider(l, db)
 	adp := stores.NewAdapters(l, db, prov)
 	jwtSer := auth.NewJwtServiceAsymmetric(l, env)
 	ps := auth.NewPasswordService(l)
-	acs := account.NewAccountService(l, adp, jwtSer, ps, pkg.NewInMemoryCache[string, []*staff.AllStaffsEntity](l, 10, 10))
+	acs := account.NewAccountService(l, adp, jwtSer, ps, cache.SyncMapInMemoryCache[string, []*staff.AllStaffsEntity](l, 10, 10))
 
 	// register handler
 	m := &middleware.Middleware{Logger: l, Auth: jwtSer, Param: env.CookieParam}
@@ -84,6 +85,7 @@ func TestAccountHandler(t *testing.T) {
 
 	t.Run("should register a user", func(t *testing.T) {
 		jwtObj, _ := jwtSer.Encode(
+			context.Background(),
 			&models.JwtObj{
 				UserId: p.Firstname,
 				AccessControls: []models.RolePermissionEnum{
@@ -150,7 +152,7 @@ func TestAccountHandler(t *testing.T) {
 			{Role: models.STAFF, Permissions: []models.PermissionEnum{models.READ}},
 		}
 
-		obj, err := jwtSer.Encode(
+		obj, err := jwtSer.Encode(context.Background(),
 			&models.JwtObj{
 				UserId:         staf.UUID.String(),
 				AccessControls: cred,
@@ -181,7 +183,7 @@ func TestAccountHandler(t *testing.T) {
 		}
 	})
 
-	jwtObj, _ := jwtSer.Encode(
+	jwtObj, _ := jwtSer.Encode(context.Background(),
 		&models.JwtObj{
 			UserId: p.Firstname,
 			AccessControls: []models.RolePermissionEnum{

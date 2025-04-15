@@ -9,19 +9,20 @@ import (
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/account"
 	"github.com/iTchTheRightSpot/erp-golang/pkg/services/auth"
 	"github.com/iTchTheRightSpot/erp-golang/utils"
+	log "github.com/iTchTheRightSpot/utility/utils"
 	"net/http"
 )
 
 type AccountHandler struct {
 	mux     *http.ServeMux
 	ware    *middleware.Middleware
-	logger  utils.ILogger
+	logger  log.ILogger
 	env     *config.SecretVariables
 	ps      auth.IPasswordService
 	service account.IAccountService
 }
 
-func NewAccountHandler(mux *http.ServeMux, w *middleware.Middleware, l utils.ILogger, env *config.SecretVariables, ps auth.IPasswordService, s account.IAccountService) *AccountHandler {
+func NewAccountHandler(mux *http.ServeMux, w *middleware.Middleware, l log.ILogger, env *config.SecretVariables, ps auth.IPasswordService, s account.IAccountService) *AccountHandler {
 	return &AccountHandler{mux: mux, ware: w, logger: l, env: env, ps: ps, service: s}
 }
 
@@ -64,14 +65,14 @@ func (dep *AccountHandler) Register() {
 func (dep *AccountHandler) activeUser(w http.ResponseWriter, r *http.Request) {
 	obj, ok := r.Context().Value(utils.UserContextKey).(*models.JwtObj)
 	if !ok || obj == nil {
-		dep.logger.Error("activeUser: invalid user context")
-		utils.ErrorResponse(w, &utils.AuthenticationError{})
+		dep.logger.Error(r.Context(), "activeUser: invalid user context")
+		log.ErrorResponse(w, &log.AuthenticationError{})
 		return
 	}
 
 	a, err := dep.service.ActiveUser(r.Context(), obj)
 	if err != nil {
-		utils.ErrorResponse(w, err)
+		log.ErrorResponse(w, err)
 		return
 	}
 
@@ -79,26 +80,27 @@ func (dep *AccountHandler) activeUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err = json.NewEncoder(w).Encode(a); err != nil {
-		dep.logger.Error(err.Error())
+		dep.logger.Critical(r.Context(), err.Error())
+		http.Error(w, "server error", 500)
 	}
 }
 
 func (dep *AccountHandler) register(w http.ResponseWriter, r *http.Request) {
-	p, err := pkg.ReadBody[models.ProfilePayload](r)
+	p, err := pkg.ReadBody[models.ProfilePayload](dep.logger, r)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
 	if err = dep.ps.PasswordRegex(p.Password); err != nil {
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	if err = dep.service.Register(r.Context(), p); err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, err)
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, err)
 		return
 	}
 
@@ -106,16 +108,16 @@ func (dep *AccountHandler) register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (dep *AccountHandler) login(w http.ResponseWriter, r *http.Request) {
-	p, err := pkg.ReadBody[models.Login](r)
+	p, err := pkg.ReadBody[models.Login](dep.logger, r)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	o, err := dep.service.Login(r.Context(), p)
 	if err != nil {
-		utils.ErrorResponse(w, err)
+		log.ErrorResponse(w, err)
 		return
 	}
 
@@ -125,15 +127,15 @@ func (dep *AccountHandler) login(w http.ResponseWriter, r *http.Request) {
 
 func (dep *AccountHandler) logout(w http.ResponseWriter, r *http.Request) {
 	if r.Cookies() == nil || len(r.Cookies()) == 0 {
-		dep.logger.Error("cookie present")
-		utils.ErrorResponse(w, &utils.AuthenticationError{})
+		dep.logger.Error(r.Context(), "cookie present")
+		log.ErrorResponse(w, &log.AuthenticationError{})
 		return
 	}
 
 	cookie, err := r.Cookie(dep.env.CookieParam.CookieName)
 	if err != nil || cookie == nil {
-		dep.logger.Error(err)
-		utils.ErrorResponse(w, &utils.AuthenticationError{Message: "invalid cookie"})
+		dep.logger.Error(r.Context(), err)
+		log.ErrorResponse(w, &log.AuthenticationError{Message: "invalid cookie"})
 		return
 	}
 
@@ -150,15 +152,15 @@ func (dep *AccountHandler) logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (dep *AccountHandler) addRoleAndPermission(w http.ResponseWriter, r *http.Request) {
-	p, err := pkg.ReadBody[models.RoleAndPermissionPayload](r)
+	p, err := pkg.ReadBody[models.RoleAndPermissionPayload](dep.logger, r)
 	if err != nil {
-		dep.logger.Error(err.Error())
-		utils.ErrorResponse(w, &utils.BadRequestError{Message: err.Error()})
+		dep.logger.Error(r.Context(), err.Error())
+		log.ErrorResponse(w, &log.BadRequestError{Message: err.Error()})
 		return
 	}
 
 	if err = dep.service.AddRoleAndPermission(r.Context(), p); err != nil {
-		utils.ErrorResponse(w, err)
+		log.ErrorResponse(w, err)
 		return
 	}
 
@@ -168,7 +170,7 @@ func (dep *AccountHandler) addRoleAndPermission(w http.ResponseWriter, r *http.R
 func (dep *AccountHandler) deleteRole(w http.ResponseWriter, r *http.Request) {
 	err := dep.service.DeleteRole(r.Context(), r.PathValue("staff_id"), r.PathValue("role"))
 	if err != nil {
-		utils.ErrorResponse(w, err)
+		log.ErrorResponse(w, err)
 		return
 	}
 
@@ -178,7 +180,7 @@ func (dep *AccountHandler) deleteRole(w http.ResponseWriter, r *http.Request) {
 func (dep *AccountHandler) deletePermission(w http.ResponseWriter, r *http.Request) {
 	err := dep.service.DeletePermission(r.Context(), r.PathValue("staff_id"), r.PathValue("role"), r.PathValue("permission"))
 	if err != nil {
-		utils.ErrorResponse(w, err)
+		log.ErrorResponse(w, err)
 		return
 	}
 
