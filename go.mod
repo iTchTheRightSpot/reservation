@@ -7,7 +7,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/golang-migrate/migrate/v4 v4.18.2
 	github.com/google/uuid v1.6.0
-	github.com/iTchTheRightSpot/utility v0.0.0-20250416221217-14b99680d6ed
+	github.com/iTchTheRightSpot/utility v0.0.0-20250416230949-a912fc63d21d
 	github.com/lib/pq v1.10.9
 	github.com/rs/cors v1.11.1
 	golang.org/x/crypto v0.37.0

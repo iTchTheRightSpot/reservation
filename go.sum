@@ -49,6 +49,10 @@ github.com/iTchTheRightSpot/utility v0.0.0-20250415191436-4297ca5c563a h1:XD26Nq
 github.com/iTchTheRightSpot/utility v0.0.0-20250415191436-4297ca5c563a/go.mod h1:tdFarp9WOhmHFM198ZQGL0UI9dDzM/vTBR0XExqWEYE=
 github.com/iTchTheRightSpot/utility v0.0.0-20250416221217-14b99680d6ed h1:duyksX8YkfYJPH+12cXv8kRe455mA1SHAEeQ0cOR9/U=
 github.com/iTchTheRightSpot/utility v0.0.0-20250416221217-14b99680d6ed/go.mod h1:tdFarp9WOhmHFM198ZQGL0UI9dDzM/vTBR0XExqWEYE=
+github.com/iTchTheRightSpot/utility v0.0.0-20250416225835-20298cdd3144 h1:5VKvENqe2RrDk0JyP10D+Xs+WcUHMGdJBipZXTVHFZM=
+github.com/iTchTheRightSpot/utility v0.0.0-20250416225835-20298cdd3144/go.mod h1:tdFarp9WOhmHFM198ZQGL0UI9dDzM/vTBR0XExqWEYE=
+github.com/iTchTheRightSpot/utility v0.0.0-20250416230949-a912fc63d21d h1:O0asrgQNNVWESpzu0qHE1iNLB2tTgMGzzkcTyaUuNHU=
+github.com/iTchTheRightSpot/utility v0.0.0-20250416230949-a912fc63d21d/go.mod h1:tdFarp9WOhmHFM198ZQGL0UI9dDzM/vTBR0XExqWEYE=
 github.com/leodido/go-urn v1.4.0 h1:WT9HwE9SGECu3lg4d/dIA+jxlljEa1/ffXKmRjqdmIQ=
 github.com/leodido/go-urn v1.4.0/go.mod h1:bvxc+MVxLKB4z00jd1z+Dvzr47oO32F/QSNjSBOlFxI=
 github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
