@@ -26,7 +26,6 @@ import (
 	"github.com/iTchTheRightSpot/reservation/utils"
 	"github.com/iTchTheRightSpot/utility/cache"
 	logg "github.com/iTchTheRightSpot/utility/utils"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -310,16 +309,14 @@ func TestReservationHandler(t *testing.T) {
 
 				if rr.Code != http.StatusBadRequest {
 					t.Errorf("expected status code %d, got %d", http.StatusBadRequest, rr.Code)
-				}
-
-				var obj logg.Error
-				if err = json.NewDecoder(rr.Body).Decode(&obj); err != nil {
-					t.Error(err.Error())
+					t.FailNow()
 				}
 
 				str := "reservation already cancelled"
-				if !strings.Contains(str, obj.Message) {
-					t.Errorf("expected to contain %s given %s", str, obj.Message)
+				s2 := strings.TrimSpace(rr.Body.String())
+				if !strings.Contains(s2, str) {
+					t.Errorf(`expect '%s' to contain %s, given %s`, s2, str, s2)
+					t.FailNow()
 				}
 			})
 
@@ -585,7 +582,7 @@ func randomTimezone() (*time.Location, error) {
 }
 
 func walkTzDir(path string, zones []string) []string {
-	fileInfos, err := ioutil.ReadDir(path)
+	fileInfos, err := os.ReadDir(path)
 	if err != nil {
 		return zones
 	}
