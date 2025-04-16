@@ -20,5 +20,5 @@ func NewTransactionProvider(l utils.ILogger, db *sql.DB) ITransactionProvider {
 }
 
 func (p *transactionProvider) RunInTransaction(ctx context.Context, txFunc func(*Adapters) error) error {
-	return utils.RunInTx(ctx, p.logger, p.db, func(tx *sql.Tx) error { return txFunc(NewAdapters(p.logger, p.db, nil)) })
+	return utils.RunInTx(ctx, p.logger, p.db, func(tx *sql.Tx) error { return txFunc(NewAdapters(p.logger, tx, nil)) })
 }
